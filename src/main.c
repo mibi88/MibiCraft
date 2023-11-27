@@ -25,6 +25,8 @@
 
 #define SZ_PLAYER_HITBOX 5
 
+#define RENDER_DISTANCE  2
+
 Entity player = {CHUNK_WIDTH, CHUNK_HEIGHT/2, CHUNK_DEPTH, 0, 0, 0, 0, 0, 0};
 int mx, my;
 
@@ -99,24 +101,17 @@ void draw(int delta) {
 }
 
 void keypress(int key) {
+    float sin_rx = sin((player.rx+90)/180*PI);
     switch(key) {
         case 'z':
-            player.x += 0.25;
+            player.x += cos((player.ry-90)/180*PI)*0.25*sin_rx;
+            player.y -= sin(player.rx/180*PI)*0.25;
+            player.z += sin((player.ry-90)/180*PI)*0.25*sin_rx;
             break;
         case 's':
-            player.x -= 0.25;
-            break;
-        case 'q':
-            player.z += 0.25;
-            break;
-        case 'd':
-            player.z -= 0.25;
-            break;
-        case 'e':
-            player.y += 0.25;
-            break;
-        case 'f':
-            player.y -= 0.25;
+            player.x -= cos((player.ry-90)/180*PI)*0.25*sin_rx;
+            player.y += sin(player.rx/180*PI)*0.25;
+            player.z -= sin((player.ry-90)/180*PI)*0.25*sin_rx;
             break;
         case 'p':
             focus = !focus;
@@ -136,7 +131,7 @@ int main(int argc, char **argv) {
                    CHUNK_DEPTH);
     texture = gfx_load_texture(blocks_width, blocks_height,
                                (unsigned char*)blocks_data);
-    world_init(&world, 7, 7, seed, texture);
+    world_init(&world, RENDER_DISTANCE*2+1, RENDER_DISTANCE*2+1, seed, texture);
     gfx_run(draw, keypress, mouse);
     world_free(&world);
     return EXIT_SUCCESS;

@@ -94,6 +94,7 @@ typedef struct {
     int chunk_indices[8*4*CHUNK_WIDTH*CHUNK_HEIGHT*CHUNK_DEPTH];
     float chunk_texture_coords[8*4*CHUNK_WIDTH*CHUNK_HEIGHT*CHUNK_DEPTH];
     GFXModel chunk_model;
+    int x, z;
 } Chunk;
 
 void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed);

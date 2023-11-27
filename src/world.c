@@ -48,6 +48,8 @@ Tile _modelgen_get_tile(Chunk *chunk, int x, int y, int z, int rx, int ry,
     return T_VOID;
 }
 
+#define GET_TILE chunk_get_tile
+
 void world_generate_data(World *world) {
     int x, y, pos;
     _world = world;
@@ -59,7 +61,7 @@ void world_generate_data(World *world) {
             chunk_generate_data(&world->chunks[pos], world->x+x*CHUNK_WIDTH,
                                 world->y+y*CHUNK_DEPTH, world->seed);
             chunk_generate_model(&world->chunks[pos], world->texture,
-                                 _modelgen_get_tile);
+                                 GET_TILE);
         }
     }
 }
@@ -72,7 +74,7 @@ void world_generate_models(World *world) {
             _cx = x;
             _cy = y;
             chunk_generate_model(&world->chunks[y*world->width+x],
-                                 world->texture, _modelgen_get_tile);
+                                 world->texture, GET_TILE);
         }
     }
 }
@@ -94,10 +96,15 @@ void world_init(World *world, int width, int height, int seed,
 }
 
 void world_update(World *world, float sx, float sz) {
+    int x, y;
     int chunk_x = (sx-world->x)/CHUNK_WIDTH;
     int chunk_y = (sz-world->y)/CHUNK_DEPTH;
     int center_x = world->width/2, center_y = world->height/2;
+    int old_x, old_y;
+    Chunk *chunk;
     while(chunk_x != center_x || chunk_y != center_y){
+        old_x = world->x;
+        old_y = world->y;
         if(chunk_y < center_y){
             world->y -= CHUNK_DEPTH;
         }
@@ -110,7 +117,31 @@ void world_update(World *world, float sx, float sz) {
         if(chunk_x > center_x){
             world->x += CHUNK_WIDTH;
         }
-        world_generate_data(world);
+        for(y=0;y<world->height;y++){
+            for(x=0;x<world->width;x++){
+                chunk = &world->chunks[y*world->width+x];
+                if(chunk->x < world->x){
+                    chunk_generate_data(chunk,
+                                        old_x+world->width*CHUNK_WIDTH,
+                                        chunk->z, world->seed);
+                    chunk_generate_model(chunk, world->texture, GET_TILE);
+                }else if(chunk->x >= world->x+world->width*CHUNK_WIDTH){
+                    chunk_generate_data(chunk, world->x, chunk->z,
+                                        world->seed);
+                    chunk_generate_model(chunk, world->texture, GET_TILE);
+                }
+                if(chunk->z < world->y){
+                    chunk_generate_data(chunk, chunk->x,
+                                old_y+world->height*CHUNK_DEPTH,
+                                        world->seed);
+                    chunk_generate_model(chunk, world->texture, GET_TILE);
+                }else if(chunk->z >= world->y+world->height*CHUNK_DEPTH){
+                    chunk_generate_data(chunk, chunk->x, world->y,
+                                        world->seed);
+                    chunk_generate_model(chunk, world->texture, GET_TILE);
+                }
+            }
+        }
         chunk_x = (sx-world->x)/CHUNK_WIDTH;
         chunk_y = (sz-world->y)/CHUNK_DEPTH;
         center_x = world->width/2, center_y = world->height/2;
@@ -118,13 +149,11 @@ void world_update(World *world, float sx, float sz) {
 }
 
 void world_render(World *world) {
-    int x, y;
-    for(y=0;y<world->height;y++) {
-        for(x=0;x<world->width;x++) {
-            gfx_draw_model(&world->chunks[y*world->width+x].chunk_model,
-                           world->x+x*CHUNK_WIDTH, -(CHUNK_HEIGHT/2),
-                           world->y+y*CHUNK_DEPTH, 0, 0, 0);
-        }
+    int i;
+    for(i=0;i<world->width*world->height;i++) {
+        gfx_draw_model(&world->chunks[i].chunk_model,
+                       world->chunks[i].x, -(CHUNK_HEIGHT/2),
+                       world->chunks[i].z, 0, 0, 0);
     }
 }
 

@@ -511,6 +511,8 @@ void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
             }
         }
     }
+    chunk->x = sx;
+    chunk->z = sz;
 }
 
 void chunk_generate_texture_coords(int tex_x, int tex_y) {
