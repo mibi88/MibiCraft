@@ -25,7 +25,7 @@
 
 #define SZ_PLAYER_HITBOX 5
 
-#define RENDER_DISTANCE  2
+#define RENDER_DISTANCE  4
 
 Entity player = {CHUNK_WIDTH, CHUNK_HEIGHT/2, CHUNK_DEPTH, 0, 0, 0, 0, 0, 0};
 int mx, my;
@@ -104,14 +104,14 @@ void keypress(int key) {
     float sin_rx = sin((player.rx+90)/180*PI);
     switch(key) {
         case 'z':
-            player.x += cos((player.ry-90)/180*PI)*0.25*sin_rx;
-            player.y -= sin(player.rx/180*PI)*0.25;
-            player.z += sin((player.ry-90)/180*PI)*0.25*sin_rx;
+            player.x += cos((player.ry-90)/180*PI)*0.25*sin_rx*mov_speed;
+            player.y -= sin(player.rx/180*PI)*0.25*mov_speed;
+            player.z += sin((player.ry-90)/180*PI)*0.25*sin_rx*mov_speed;
             break;
         case 's':
-            player.x -= cos((player.ry-90)/180*PI)*0.25*sin_rx;
-            player.y += sin(player.rx/180*PI)*0.25;
-            player.z -= sin((player.ry-90)/180*PI)*0.25*sin_rx;
+            player.x -= cos((player.ry-90)/180*PI)*0.25*sin_rx*mov_speed;
+            player.y += sin(player.rx/180*PI)*0.25*mov_speed;
+            player.z -= sin((player.ry-90)/180*PI)*0.25*sin_rx*mov_speed;
             break;
         case 'p':
             focus = !focus;
@@ -125,7 +125,7 @@ void mouse(int x, int y) {
 }
 
 int main(int argc, char **argv) {
-    gfx_init(&argc, argv, "MibiCraft");
+    gfx_init(&argc, argv, "MibiCraft", 1);
     gfx_set_clear_color(0.7, 0.9, 1.0);
     gfx_enable_fog(0.7, 0.9, 1.0, 0.01, CHUNK_DEPTH-1,
                    CHUNK_DEPTH);

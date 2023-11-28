@@ -332,7 +332,7 @@ void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
     float height, dirt_layer;
     float biome_height;
     float biome_step = 0.5/B_AMOUNT;
-    Biome biome = B_PLAINS;
+    Biome biome = B_PLAINS, tree_biome = B_PLAINS;
     int plant_tree = 0;
     int tree_y = 0, tree_x = 0, tree_z;
     int amplitude = (CHUNK_HEIGHT/2);
@@ -383,15 +383,28 @@ void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
                                               0, 0, 0, 0, seed) > 0.49){
                         tree_x = x+sx+x2;
                         tree_z = z+sz+y2;
-                        tree_y = stb_perlin_noise3_seed((float)(x+sx)/256,
-                                                        (float)(z+sz)/256, 0, 0,
-                                                        0, 0, seed)*amplitude+
+                        tree_y = stb_perlin_noise3_seed((float)(x+sx+x2)/256,
+                                                        (float)(z+sz+y2)/256, 0,
+                                                        0, 0, 0, seed)*
+                                                        amplitude+
                                                         (CHUNK_HEIGHT/2)+
                                                         TREE_HEIGHT-1;
+
+                        biome_height = stb_perlin_noise3_seed((float)(x+sx+x2)
+                                                              /512,
+                                                              (float)(z+sz+y2)
+                                                              /512, 0, 0, 0, 0,
+                                                              seed);
+                        for(i=0;i<B_AMOUNT;i++){
+                            if(biome_height < (i+1)*biome_step){
+                                tree_biome = i;
+                                break;
+                            }
+                        }
+
                         if(tree_y-(TREE_HEIGHT-1) >= (CHUNK_HEIGHT/2)){
                             plant_tree = 1;
                         }
-                        break;
                     }
                 }
                 if(plant_tree) break;
@@ -480,7 +493,7 @@ void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
                 }
                 if(chunk->chunk_data[x][y][z] == T_VOID && plant_tree &&
                    tree_y-y >= 0 && tree_y-y < TREE_HEIGHT){
-                    switch(biome){
+                    switch(tree_biome){
                         case B_TAIGA:
                             chunk->chunk_data[x][y][z] =
                             spruce_tree[tree_x-(sx+x)][tree_y-y][tree_z-(sz+z)];
@@ -624,16 +637,10 @@ void chunk_generate_model(Chunk *chunk, unsigned int texture,
             }
         }
     }
-    chunk->chunk_model.vertices = chunk->chunk_vertices;
-    chunk->chunk_model.indices = chunk->chunk_indices;
-    chunk->chunk_model.uv_coords = chunk->chunk_texture_coords;
-    
-    chunk->chunk_model.texture = texture;
-    
-    chunk->chunk_model.has_indices = 1;
-    chunk->chunk_model.has_texture = 1;
-    
-    chunk->chunk_model.triangles = triangles;
+
+    gfx_init_model(&chunk->chunk_model, chunk->chunk_vertices,
+                   chunk->chunk_indices, chunk->chunk_texture_coords, texture,
+                   1, 1, triangles);
 }
 
 void chunk_debug_display_model(Chunk *chunk) {

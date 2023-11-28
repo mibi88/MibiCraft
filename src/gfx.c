@@ -34,6 +34,8 @@ float _cam_x, _cam_y, _cam_z, _cam_rx, _cam_ry, _cam_rz;
 
 int _keys[256];
 
+int _use_arrays;
+
 int gfx_get_time(void) {
     return glutGet(GLUT_ELAPSED_TIME);
 }
@@ -90,9 +92,24 @@ void gfx_draw_point(float x, float y, float z, int size) {
     glEnd();
 }
 
+void gfx_init_model(GFXModel *model, float *vertices, int *indices,
+                    float *uv_coords, int texture, int has_indices,
+                    int has_texture, int triangles) {
+    model->vertices = vertices;
+    model->indices = indices;
+    model->uv_coords = uv_coords;
+
+    model->texture = texture;
+
+    model->has_indices = has_indices;
+    model->has_texture = has_texture;
+
+    model->triangles = triangles;
+}
+
 void gfx_draw_model(GFXModel *model, float x, float y, float z, float rx,
                     float ry, float rz) {
-    int i;
+    int i, vertices_num = 0;
     
     glPushMatrix();
     
@@ -110,76 +127,91 @@ void gfx_draw_model(GFXModel *model, float x, float y, float z, float rx,
     glRotatef(ry, 0, 1, 0);
     glRotatef(rz, 0, 0, 1);
     
-    glBegin(GL_TRIANGLES);
-    for(i=0;i<model->triangles;i++){
-        float x1, y1, z1;
-        float x2, y2, z2;
-        float x3, y3, z3;
+    if(_use_arrays){
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+        glVertexPointer(3, GL_FLOAT, 0, model->vertices);
+        glTexCoordPointer(2, GL_FLOAT, 0, model->uv_coords);
         
-        float u1, v1;
-        float u2, v2;
-        float u3, v3;
-        int indice1, indice2, indice3;
-        if(model->has_indices){
-            indice1 = model->indices[i*3];
-            indice2 = model->indices[i*3+1];
-            indice3 = model->indices[i*3+2];
+        glDrawElements(GL_TRIANGLES, model->triangles*3, GL_UNSIGNED_INT,
+                       model->indices);
+    }else{
+        glBegin(GL_TRIANGLES);
+        for(i=0;i<model->triangles;i++){
+            float x1, y1, z1;
+            float x2, y2, z2;
+            float x3, y3, z3;
             
-            x1 = model->vertices[indice1*3];
-            y1 = model->vertices[indice1*3+1];
-            z1 = model->vertices[indice1*3+2];
-            
-            x2 = model->vertices[indice2*3];
-            y2 = model->vertices[indice2*3+1];
-            z2 = model->vertices[indice2*3+2];
-            
-            x3 = model->vertices[indice3*3];
-            y3 = model->vertices[indice3*3+1];
-            z3 = model->vertices[indice3*3+2];
-            
-            u1 = model->uv_coords[indice1*2];
-            v1 = model->uv_coords[indice1*2+1];
-            
-            u2 = model->uv_coords[indice2*2];
-            v2 = model->uv_coords[indice2*2+1];
-            
-            u3 = model->uv_coords[indice3*2];
-            v3 = model->uv_coords[indice3*2+1];
-        }else{
-            x1 = model->vertices[i*9];
-            y1 = model->vertices[i*9+1];
-            z1 = model->vertices[i*9+2];
-            
-            x2 = model->vertices[i*9+3];
-            y2 = model->vertices[i*9+4];
-            z2 = model->vertices[i*9+5];
-            
-            x3 = model->vertices[i*9+6];
-            y3 = model->vertices[i*9+7];
-            z3 = model->vertices[i*9+8];
-            
-            u1 = model->uv_coords[i*6];
-            v1 = model->uv_coords[i*6+1];
-            
-            u2 = model->uv_coords[i*6+2];
-            v2 = model->uv_coords[i*6+3];
-            
-            u3 = model->uv_coords[i*6+4];
-            v3 = model->uv_coords[i*6+5];
+            float u1, v1;
+            float u2, v2;
+            float u3, v3;
+            int indice1, indice2, indice3;
+            if(model->has_indices){
+                indice1 = model->indices[i*3];
+                indice2 = model->indices[i*3+1];
+                indice3 = model->indices[i*3+2];
+
+                x1 = model->vertices[indice1*3];
+                y1 = model->vertices[indice1*3+1];
+                z1 = model->vertices[indice1*3+2];
+
+                x2 = model->vertices[indice2*3];
+                y2 = model->vertices[indice2*3+1];
+                z2 = model->vertices[indice2*3+2];
+
+                x3 = model->vertices[indice3*3];
+                y3 = model->vertices[indice3*3+1];
+                z3 = model->vertices[indice3*3+2];
+
+                u1 = model->uv_coords[indice1*2];
+                v1 = model->uv_coords[indice1*2+1];
+
+                u2 = model->uv_coords[indice2*2];
+                v2 = model->uv_coords[indice2*2+1];
+
+                u3 = model->uv_coords[indice3*2];
+                v3 = model->uv_coords[indice3*2+1];
+            }else{
+                x1 = model->vertices[i*9];
+                y1 = model->vertices[i*9+1];
+                z1 = model->vertices[i*9+2];
+
+                x2 = model->vertices[i*9+3];
+                y2 = model->vertices[i*9+4];
+                z2 = model->vertices[i*9+5];
+
+                x3 = model->vertices[i*9+6];
+                y3 = model->vertices[i*9+7];
+                z3 = model->vertices[i*9+8];
+
+                u1 = model->uv_coords[i*6];
+                v1 = model->uv_coords[i*6+1];
+
+                u2 = model->uv_coords[i*6+2];
+                v2 = model->uv_coords[i*6+3];
+
+                u3 = model->uv_coords[i*6+4];
+                v3 = model->uv_coords[i*6+5];
+            }
+            glTexCoord2f(u1, v1);
+            glVertex3f(x1, y1, z1);
+            glTexCoord2f(u2, v2);
+            glVertex3f(x2, y2, z2);
+            glTexCoord2f(u3, v3);
+            glVertex3f(x3, y3, z3);
         }
-        glTexCoord2f(u1, v1);
-        glVertex3f(x1, y1, z1);
-        glTexCoord2f(u2, v2);
-        glVertex3f(x2, y2, z2);
-        glTexCoord2f(u3, v3);
-        glVertex3f(x3, y3, z3);
+        glEnd();
     }
-    glEnd();
-        
+
     glPopMatrix();
 }
 
-void gfx_init(int *argc, char **argv, char *title) {
+void gfx_init(int *argc, char **argv, char *title, int use_arrays) {
+    _use_arrays = use_arrays;
+    if(_use_arrays){
+        glEnable(GL_VERTEX_ARRAY);
+    }
     glutInit(argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH | GLUT_MULTISAMPLE);
     glutInitWindowSize(500, 500);

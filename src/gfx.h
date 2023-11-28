@@ -56,12 +56,16 @@ void gfx_set_camera(float x, float y, float z, float rx, float ry, float rz);
 
 void gfx_draw_point(float x, float y, float z, int size);
 
+void gfx_init_model(GFXModel *model, float *vertices, int *indices,
+                    float *uv_coords, int texture, int has_indices,
+                    int has_texture, int triangles);
+
 void gfx_draw_model(GFXModel *model, float x, float y, float z, float rx,
                     float ry, float rz);
 
 void gfx_free(GFXModel *model);
 
-void gfx_init(int *argc, char **argv, char *title);
+void gfx_init(int *argc, char **argv, char *title, int use_arrays);
 
 void gfx_run(void draw(int), void keypress(int), void mouse(int, int));
 

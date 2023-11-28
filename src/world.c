@@ -35,17 +35,25 @@ Chunk *world_get_chunk(World *world, int x, int y) {
 
 Tile _modelgen_get_tile(Chunk *chunk, int x, int y, int z, int rx, int ry,
                         int rz) {
-    Chunk *real_chunk;
-    x += rx;
+    int i;
+    Chunk *tile_chunk;
+
+    x += rx+chunk->x;
     y += ry;
-    z += rz;
-    real_chunk = world_get_chunk(_world, _cx*CHUNK_WIDTH+x, _cy*CHUNK_DEPTH+z);
-    if(real_chunk){
-        x -= (_ncx-_cx)*CHUNK_WIDTH;
-        z -= (_ncy-_cy)*CHUNK_DEPTH;
-        return chunk_get_tile(real_chunk, x, y, z, 0, 0, 0);
+    z += rz+chunk->z;
+    if(x >= chunk->x && x < chunk->x+CHUNK_WIDTH &&
+       z >= chunk->z && z < chunk->z+CHUNK_DEPTH){
+        return chunk_get_tile(chunk, x-chunk->x, y, z-chunk->z, 0, 0, 0);
     }
-    return T_VOID;
+    for(i=0;i<_world->width*_world->height;i++){
+        tile_chunk = &_world->chunks[i];
+        if(x >= tile_chunk->x && x < tile_chunk->x+CHUNK_WIDTH &&
+           z >= tile_chunk->z && z < tile_chunk->z+CHUNK_DEPTH){
+               return chunk_get_tile(tile_chunk, x-chunk->x, y, z-chunk->z, 0,
+                                     0, 0);
+           }
+    }
+    return T_GRASS;
 }
 
 #define GET_TILE chunk_get_tile
