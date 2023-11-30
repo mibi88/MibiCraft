@@ -109,7 +109,7 @@ void gfx_init_model(GFXModel *model, float *vertices, int *indices,
 
 void gfx_draw_model(GFXModel *model, float x, float y, float z, float rx,
                     float ry, float rz) {
-    int i, vertices_num = 0;
+    int i;
     
     glPushMatrix();
     
@@ -213,7 +213,7 @@ void gfx_init(int *argc, char **argv, char *title, int use_arrays) {
         glEnable(GL_VERTEX_ARRAY);
     }
     glutInit(argc, argv);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH | GLUT_MULTISAMPLE);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutInitWindowSize(500, 500);
     glutInitWindowPosition(100, 100);
     glutCreateWindow(argv[0]);
@@ -222,6 +222,8 @@ void gfx_init(int *argc, char **argv, char *title, int use_arrays) {
     glShadeModel(GL_FLAT);
     glEnable(GL_DEPTH_TEST);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
+    glEnable(GL_ALPHA_TEST);
+    glAlphaFunc(GL_GREATER, 0.5);
 }
 
 void _display(void) {
@@ -238,7 +240,7 @@ void _display(void) {
     
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_TEXTURE_2D);
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
     _draw(frame_time);
 
@@ -310,7 +312,7 @@ unsigned int gfx_load_texture(int width, int height,
                               unsigned char *texture_data) {
     unsigned int id;
     
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
     
     glGenTextures(1, &id);
     glBindTexture(GL_TEXTURE_2D, id);
@@ -321,9 +323,8 @@ unsigned int gfx_load_texture(int width, int height,
                    GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, 
                    GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, 
-                height, 0, GL_RGB, GL_UNSIGNED_BYTE, 
-                texture_data);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, texture_data);
     
     return id;
 }

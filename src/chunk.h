@@ -19,9 +19,9 @@
 #ifndef CHUNK_H
 #define CHUNK_H
 
-#define CHUNK_WIDTH       16
+#define CHUNK_WIDTH       8
 #define CHUNK_HEIGHT      128
-#define CHUNK_DEPTH       16
+#define CHUNK_DEPTH       8
 
 #define TEX_WIDTH         256
 #define TEX_HEIGHT        256
@@ -77,6 +77,8 @@ typedef enum {
     T_PALM_LOG,
     T_PALM_LEAVES,
     T_CACTUS,
+    T_ROSE,
+    T_GRASS_PLANT,
     T_AMOUNT
 } Tile;
 
@@ -96,6 +98,17 @@ typedef struct {
     GFXModel chunk_model;
     int x, z;
 } Chunk;
+
+typedef enum {
+    S_CUBE,
+    S_CROSS,
+    S_AMOUNT
+} Block_shape;
+
+typedef struct {
+    Block_shape shape;
+    int transparent;
+} Block_property;
 
 void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed);
 void chunk_generate_texture_coords(int tex_x, int tex_y);

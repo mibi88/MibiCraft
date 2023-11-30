@@ -26,7 +26,7 @@ def conv(infile, outheader, outsource, prefix = ""):
     # If the input file is a png, we convert it.
     if ext == ".png":
         # We open the input file with Pillow
-        img = Image.open(infile).convert("RGB")
+        img = Image.open(infile).convert("RGBA")
         w, h = img.size
         # We create an array for the RGBA values of each pixel of the image.
         pixels = []
@@ -39,6 +39,7 @@ def conv(infile, outheader, outsource, prefix = ""):
                 pixels.append(pixel[0])
                 pixels.append(pixel[1])
                 pixels.append(pixel[2])
+                pixels.append(pixel[3])
 
         image_name = name
 
@@ -47,7 +48,7 @@ def conv(infile, outheader, outsource, prefix = ""):
 
 /* Image {name} converted with tools/imgconv_dir.py */
 
-const unsigned char {image_name}_data[{w*h*3}] = {{
+const unsigned char {image_name}_data[{w*h*4}] = {{
     """
         # We put the array of colors in out.
         for i in pixels:
@@ -68,7 +69,7 @@ const int {image_name}_height = {h};
             file.write(f"""#ifndef {image_name.upper()}_H
 #define {image_name.upper()}_H
 
-extern const unsigned char {image_name}_data[{w*h*3}];
+extern const unsigned char {image_name}_data[{w*h*4}];
 
 extern const int {image_name}_width;
 extern const int {image_name}_height;

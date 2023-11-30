@@ -129,23 +129,19 @@ void world_update(World *world, float sx, float sz) {
             for(x=0;x<world->width;x++){
                 chunk = &world->chunks[y*world->width+x];
                 if(chunk->x < world->x){
-                    chunk_generate_data(chunk,
-                                        old_x+world->width*CHUNK_WIDTH,
+                    chunk_generate_data(chunk, old_x+world->width*CHUNK_WIDTH,
                                         chunk->z, world->seed);
                     chunk_generate_model(chunk, world->texture, GET_TILE);
                 }else if(chunk->x >= world->x+world->width*CHUNK_WIDTH){
-                    chunk_generate_data(chunk, world->x, chunk->z,
-                                        world->seed);
+                    chunk_generate_data(chunk, world->x, chunk->z, world->seed);
                     chunk_generate_model(chunk, world->texture, GET_TILE);
                 }
                 if(chunk->z < world->y){
                     chunk_generate_data(chunk, chunk->x,
-                                old_y+world->height*CHUNK_DEPTH,
-                                        world->seed);
+                                old_y+world->height*CHUNK_DEPTH, world->seed);
                     chunk_generate_model(chunk, world->texture, GET_TILE);
                 }else if(chunk->z >= world->y+world->height*CHUNK_DEPTH){
-                    chunk_generate_data(chunk, chunk->x, world->y,
-                                        world->seed);
+                    chunk_generate_data(chunk, chunk->x, world->y, world->seed);
                     chunk_generate_model(chunk, world->texture, GET_TILE);
                 }
             }
