@@ -49,179 +49,150 @@ Block_property blocks[T_AMOUNT] = {
     {S_CUBE, 0},
     {S_CUBE, 0},
     {S_CUBE, 0},
-    {S_CUBE, 1},
+    {S_CROSS, 1},
+    {S_CROSS, 1},
     {S_CROSS, 1}
 };
 /**********/
 
 /* Trees */
-Tile oak_tree[5][8][5] = {
-    {
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES, T_VOID},
-        {T_VOID, T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-    },
-    {
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_OAK_LEAVES, T_VOID, T_VOID},
-        {T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES},
-        {T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES},
-        {T_VOID, T_VOID, T_OAK_LEAVES, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-    },
-    {
-        {T_VOID, T_VOID, T_OAK_LEAVES, T_VOID, T_VOID},
-        {T_VOID, T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES, T_VOID},
-        {T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LOG, T_OAK_LEAVES, T_OAK_LEAVES},
-        {T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LOG, T_OAK_LEAVES, T_OAK_LEAVES},
-        {T_VOID, T_OAK_LEAVES, T_OAK_LOG, T_OAK_LEAVES, T_VOID},
-        {T_VOID, T_VOID, T_OAK_LOG, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_OAK_LOG, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_OAK_LOG, T_VOID, T_VOID},
-    },
-    {
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_OAK_LEAVES, T_VOID, T_VOID},
-        {T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES},
-        {T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES},
-        {T_VOID, T_VOID, T_OAK_LEAVES, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-    },
-    {
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES, T_VOID},
-        {T_VOID, T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-    },
+Tile oak_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES, T_VOID,
+    T_VOID, T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_OAK_LEAVES, T_VOID, T_VOID,
+    T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES,
+    T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES,
+    T_VOID, T_VOID, T_OAK_LEAVES, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_OAK_LEAVES, T_VOID, T_VOID,
+    T_VOID, T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES, T_VOID,
+    T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LOG, T_OAK_LEAVES, T_OAK_LEAVES,
+    T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LOG, T_OAK_LEAVES, T_OAK_LEAVES,
+    T_VOID, T_OAK_LEAVES, T_OAK_LOG, T_OAK_LEAVES, T_VOID,
+    T_VOID, T_VOID, T_OAK_LOG, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_OAK_LOG, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_OAK_LOG, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_OAK_LEAVES, T_VOID, T_VOID,
+    T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES,
+    T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES,
+    T_VOID, T_VOID, T_OAK_LEAVES, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES, T_VOID,
+    T_VOID, T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID
 };
 
-Tile spruce_tree[5][8][5] = {
-    {
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES,
-            T_SPRUCE_LEAVES},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-    },
-    {
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_SPRUCE_LEAVES, T_VOID, T_VOID},
-        {T_VOID, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_VOID},
-        {T_VOID, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_VOID},
-        {T_VOID, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_VOID},
-        {T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES,
-            T_SPRUCE_LEAVES},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-    },
-    {
-        {T_VOID, T_VOID, T_SPRUCE_LEAVES, T_VOID, T_VOID},
-        {T_VOID, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_VOID},
-        {T_VOID, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_VOID},
-        {T_VOID, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_VOID},
-        {T_VOID, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_VOID},
-        {T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LOG, T_SPRUCE_LEAVES,
-            T_SPRUCE_LEAVES},
-        {T_VOID, T_VOID, T_SPRUCE_LOG, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_SPRUCE_LOG, T_VOID, T_VOID},
-    },
-    {
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_SPRUCE_LEAVES, T_VOID, T_VOID},
-        {T_VOID, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_VOID},
-        {T_VOID, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_VOID},
-        {T_VOID, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_VOID},
-        {T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES,
-            T_SPRUCE_LEAVES},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-    },
-    {
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES,
-            T_SPRUCE_LEAVES},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-    },
+Tile spruce_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES,
+        T_SPRUCE_LEAVES,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_SPRUCE_LEAVES, T_VOID, T_VOID,
+    T_VOID, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_VOID,
+    T_VOID, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_VOID,
+    T_VOID, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_VOID,
+    T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES,
+        T_SPRUCE_LEAVES,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_SPRUCE_LEAVES, T_VOID, T_VOID,
+    T_VOID, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_VOID,
+    T_VOID, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_VOID,
+    T_VOID, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_VOID,
+    T_VOID, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_VOID,
+    T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LOG, T_SPRUCE_LEAVES,
+        T_SPRUCE_LEAVES,
+    T_VOID, T_VOID, T_SPRUCE_LOG, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_SPRUCE_LOG, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_SPRUCE_LEAVES, T_VOID, T_VOID,
+    T_VOID, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_VOID,
+    T_VOID, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_VOID,
+    T_VOID, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_VOID,
+    T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES,
+        T_SPRUCE_LEAVES,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES, T_SPRUCE_LEAVES,
+        T_SPRUCE_LEAVES,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
 };
 
-Tile acacia_tree[5][8][5] = {
-    {
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_ACACIA_LEAVES,
-            T_ACACIA_LEAVES},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-    },
-    {
-        {T_VOID, T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_VOID},
-        {T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_ACACIA_LEAVES,
-            T_ACACIA_LEAVES},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-    },
-    {
-        {T_VOID, T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_VOID},
-        {T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_ACACIA_LEAVES,
-            T_ACACIA_LEAVES},
-        {T_VOID, T_VOID, T_ACACIA_LOG, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_ACACIA_LOG, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_ACACIA_LOG, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_ACACIA_LOG, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_ACACIA_LOG, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_ACACIA_LOG, T_VOID, T_VOID},
-    },
-    {
-        {T_VOID, T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_VOID},
-        {T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_ACACIA_LEAVES,
-            T_ACACIA_LEAVES},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-    },
-    {
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_ACACIA_LEAVES,
-            T_ACACIA_LEAVES},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-    },
+Tile acacia_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_ACACIA_LEAVES,
+        T_ACACIA_LEAVES,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_VOID,
+    T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_ACACIA_LEAVES,
+        T_ACACIA_LEAVES,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_VOID,
+    T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_ACACIA_LEAVES,
+        T_ACACIA_LEAVES,
+    T_VOID, T_VOID, T_ACACIA_LOG, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_ACACIA_LOG, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_ACACIA_LOG, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_ACACIA_LOG, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_ACACIA_LOG, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_ACACIA_LOG, T_VOID, T_VOID,
+    T_VOID, T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_VOID,
+    T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_ACACIA_LEAVES,
+        T_ACACIA_LEAVES,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_ACACIA_LEAVES,
+        T_ACACIA_LEAVES,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID
 };
 Tile palm_tree[5][8][5] = {
     {
@@ -275,57 +246,47 @@ Tile palm_tree[5][8][5] = {
         {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
     },
 };
-Tile cactus[5][8][5] = {
-    {
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-    },
-    {
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-    },
-    {
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_CACTUS, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_CACTUS, T_VOID, T_CACTUS},
-        {T_VOID, T_VOID, T_CACTUS, T_VOID, T_CACTUS},
-        {T_VOID, T_VOID, T_CACTUS, T_CACTUS, T_CACTUS},
-        {T_VOID, T_VOID, T_CACTUS, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_CACTUS, T_VOID, T_VOID},
-    },
-    {
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_CACTUS, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-    },
-    {
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_CACTUS, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_CACTUS, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_CACTUS, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_CACTUS, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_CACTUS, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-    },
+Tile cactus[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_CACTUS, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_CACTUS, T_VOID, T_CACTUS,
+        T_VOID, T_VOID, T_CACTUS, T_VOID, T_CACTUS,
+        T_VOID, T_VOID, T_CACTUS, T_CACTUS, T_CACTUS,
+        T_VOID, T_VOID, T_CACTUS, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_CACTUS, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_CACTUS, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_CACTUS, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_CACTUS, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_CACTUS, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_CACTUS, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_CACTUS, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID
 };
 /*********/
 
@@ -377,89 +338,107 @@ int indices[SZ_VERTICES*2];
 
 float texture_coords[SZ_TEX_COORDS];
 
-void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
-    int i, x, y, z, x2, y2;
-    float height, dirt_layer;
+Biome chunk_get_biome(int sx, int sz, int x, int z, int seed) {
+    int i;
     float biome_height;
     float biome_step = 0.5/B_AMOUNT;
-    Biome biome = B_PLAINS, tree_biome = B_PLAINS;
-    int plant_tree = 0;
-    int tree_y = 0, tree_x = 0, tree_z;
-    int amplitude = (CHUNK_HEIGHT/2);
-    float tree_frequency = 1.5;
+    biome_height = stb_perlin_noise3_seed((float)(x+sx)/512,
+                                          (float)(z+sz)/512, 0, 0, 0,
+                                          0, seed);
+    for(i=0;i<B_AMOUNT;i++){
+        if(biome_height < (i+1)*biome_step){
+            return i;
+            break;
+        }
+    }
+
+    return B_PLAINS;
+}
+
+float chunk_get_height(int sx, int sz, int x, int z, float amplitude,
+                       int seed) {
+    return stb_perlin_noise3_seed((float)(x+sx)/256, (float)(z+sz)/256, 0, 0, 0,
+                                  0, seed)*amplitude+(CHUNK_HEIGHT/2);
+}
+
+void chunk_place_structure(Chunk *chunk, int sx, int sy, int sz,
+                           Tile *structure, int width, int height,
+                           int depth) {
+    int x, y, z;
+    for(z=0;z<depth;z++){
+        for(x=0;x<width;x++){
+            for(y=0;y<height;y++){
+                if(sx+x >= 0 && sx+x < CHUNK_WIDTH &&
+                   sy+(height-y)-1 >= 0 &&
+                   sy+(height-y)-1 < CHUNK_HEIGHT &&
+                   sz+z >= 0 && sz+z < CHUNK_DEPTH &&
+                   structure[z*(width*height)+y*width+x] != T_VOID){
+                    chunk->chunk_data[sx+x][sy+(height-y)-1][sz+z] =
+                                         structure[z*(width*height)+y*width+x];
+                }
+            }
+        }
+    }
+}
+
+void chunk_generate_structure(Chunk *chunk, int sx, int sz,
+                              Tile *structure, int width, int height,
+                              int depth, int probability, int amplitude,
+                              int seed, Biome biome, int dx, int dz) {
+    int x, y, z;
+    Biome real_biome;
+    for(x=-width;x<CHUNK_WIDTH+width;x++){
+        for(z=-depth;z<CHUNK_DEPTH+depth;z++){
+            srand(seed+(sz+z)*CHUNK_WIDTH+(sx+x));
+            if(!(rand()%probability)){
+                y = chunk_get_height(sx, sz, x, z, amplitude, seed);
+                if(y >= CHUNK_HEIGHT/2){
+                    real_biome = chunk_get_biome(sx, sz, x, z, seed);
+                    if(real_biome == biome){
+                        chunk_place_structure(chunk, x-dx, y, z-dz, structure,
+                                              width, height, depth);
+                    }
+                }
+            }
+        }
+    }
+}
+
+void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
+    int x, y, z;
+    float height, dirt_layer;
+    Biome biome = B_PLAINS;
+    float amplitude = (CHUNK_HEIGHT/2);
+    int tree_probability = 48;
     srand(seed+sx+sz*CHUNK_WIDTH);
     for(x=0;x<CHUNK_WIDTH;x++){
         for(z=0;z<CHUNK_DEPTH;z++){
-            biome_height = stb_perlin_noise3_seed((float)(x+sx)/512,
-                                                  (float)(z+sz)/512, 0, 0, 0,
-                                                  0, seed);
-            for(i=0;i<B_AMOUNT;i++){
-                if(biome_height < (i+1)*biome_step){
-                    biome = i;
-                    break;
-                }
-            }
+            biome = chunk_get_biome(sx, sz, x, z, seed);
 
             switch(biome){
                 case B_TAIGA:
                     amplitude = (CHUNK_HEIGHT/1.8);
-                    tree_frequency = 1.2;
+                    tree_probability = 32;
                     break;
                 case B_SAVANNA:
                     amplitude = (CHUNK_HEIGHT/2.2);
-                    tree_frequency = 5;
+                    tree_probability = 128;
                     break;
                 case B_DESERT:
                     amplitude = (CHUNK_HEIGHT/2.2);
-                    tree_frequency = 40;
+                    tree_probability = 192;
+                    break;
                 default:
                     amplitude = (CHUNK_HEIGHT/2);
-                    tree_frequency = 1.5;
+                    tree_probability = 48;
                     break;
             }
 
-            height = stb_perlin_noise3_seed((float)(x+sx)/256,
-                                            (float)(z+sz)/256, 0, 0, 0, 0,
-                                            seed)*amplitude+(CHUNK_HEIGHT/2);
+            height = chunk_get_height(sx, sz, x, z, amplitude, seed);
+
             dirt_layer = stb_perlin_noise3_seed((float)(x+sx)/128,
                                                 (float)(z+sz)/128, 0, 0, 0, 0,
                                                 seed)*3+3;
-
-            plant_tree = 0;
-
-            for(y2=0;y2<TREE_DEPTH;y2++){
-                for(x2=0;x2<TREE_WIDTH;x2++){
-                    if(stb_perlin_noise3_seed((float)(x+sx+x2)/tree_frequency,
-                                              (float)(z+sz+y2)/tree_frequency,
-                                              0, 0, 0, 0, seed) > 0.49){
-                        tree_x = x+sx+x2;
-                        tree_z = z+sz+y2;
-                        tree_y = stb_perlin_noise3_seed((float)(x+sx+x2)/256,
-                                                        (float)(z+sz+y2)/256, 0,
-                                                        0, 0, 0, seed)*
-                                                        amplitude+
-                                                        (CHUNK_HEIGHT/2)+
-                                                        TREE_HEIGHT-1;
-
-                        biome_height = stb_perlin_noise3_seed((float)(x+sx+x2)
-                                                              /512,
-                                                              (float)(z+sz+y2)
-                                                              /512, 0, 0, 0, 0,
-                                                              seed);
-                        for(i=0;i<B_AMOUNT;i++){
-                            if(biome_height < (i+1)*biome_step){
-                                tree_biome = i;
-                                break;
-                            }
-                        }
-
-                        if(tree_y-(TREE_HEIGHT-1) >= (CHUNK_HEIGHT/2)){
-                            plant_tree = 1;
-                        }
-                    }
-                }
-                if(plant_tree) break;
-            }
 
             for(y=0;y<CHUNK_HEIGHT;y++){
                 if(y < (CHUNK_HEIGHT/2) && y > (int)height-1){
@@ -542,34 +521,41 @@ void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
                 if(y == 0){
                     chunk->chunk_data[x][y][z] = T_BEDROCK;
                 }
-                if(chunk->chunk_data[x][y][z] == T_VOID && plant_tree &&
-                   tree_y-y >= 0 && tree_y-y < TREE_HEIGHT){
-                    switch(tree_biome){
-                        case B_TAIGA:
-                            chunk->chunk_data[x][y][z] =
-                            spruce_tree[tree_x-(sx+x)][tree_y-y][tree_z-(sz+z)];
-                            break;
-                        case B_SAVANNA:
-                            chunk->chunk_data[x][y][z] =
-                            acacia_tree[tree_x-(sx+x)][tree_y-y][tree_z-(sz+z)];
-                            break;
-                        case B_DESERT:
-                            chunk->chunk_data[x][y][z] =
-                                cactus[tree_x-(sx+x)][tree_y-y][tree_z-(sz+z)];
-                            break;
-                        default:
-                            chunk->chunk_data[x][y][z] =
-                               oak_tree[tree_x-(sx+x)][tree_y-y][tree_z-(sz+z)];
-                    }
-                }
                 if((int)height-y == 0 && height > (CHUNK_HEIGHT/2) &&
                    chunk->chunk_data[x][y][z] == T_VOID &&
-                   stb_perlin_noise3_seed((float)(x+sx+x2)/1.1,
-                                          (float)(z+sz+y2)/1.1,
+                   stb_perlin_noise3_seed((float)(x+sx)/1.1,
+                                          (float)(z+sz)/1.1,
                                           0, 0, 0, 0, seed) > 0.49){
-                    chunk->chunk_data[x][y][z] = T_GRASS_PLANT;
+                    if(biome == B_DESERT){
+                        chunk->chunk_data[x][y][z] = T_DEAD_BUSH;
+                    }else{
+                        chunk->chunk_data[x][y][z] = T_GRASS_PLANT;
+                    }
                 }
             }
+        }
+    }
+    chunk->x = sx;
+    chunk->z = sz;
+    chunk_generate_structure(chunk, sx, sz, oak_tree, TREE_WIDTH, TREE_HEIGHT,
+                             TREE_DEPTH, tree_probability, amplitude, seed,
+                             B_PLAINS, TREE_WIDTH/2, TREE_DEPTH/2);
+    chunk_generate_structure(chunk, sx, sz, spruce_tree, TREE_WIDTH,
+                             TREE_HEIGHT, TREE_DEPTH, tree_probability,
+                             amplitude, seed, B_TAIGA, TREE_WIDTH/2,
+                             TREE_DEPTH/2);
+    chunk_generate_structure(chunk, sx, sz, acacia_tree, TREE_WIDTH,
+                             TREE_HEIGHT, TREE_DEPTH, tree_probability,
+                             amplitude, seed, B_SAVANNA, TREE_WIDTH/2,
+                             TREE_DEPTH/2);
+    chunk_generate_structure(chunk, sx, sz, cactus, TREE_WIDTH,
+                             TREE_HEIGHT, TREE_DEPTH, tree_probability,
+                             amplitude, seed, B_DESERT, TREE_WIDTH/2,
+                             TREE_DEPTH/2);
+    for(x=0;x<CHUNK_WIDTH;x++){
+        for(z=0;z<CHUNK_DEPTH;z++){
+            biome = chunk_get_biome(sx, sz, x, z, seed);
+            height = chunk_get_height(sx, sz, x, z, amplitude, seed);
             if(biome == B_TAIGA){
                 for(y=CHUNK_HEIGHT;y>0;y--){
                     if(height > CHUNK_HEIGHT/4*3 &&
@@ -582,8 +568,6 @@ void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
             }
         }
     }
-    chunk->x = sx;
-    chunk->z = sz;
 }
 
 void chunk_generate_texture_coords(int tex_x, int tex_y) {
@@ -824,7 +808,7 @@ void chunk_debug_display_model(Chunk *chunk) {
                 printf(", ");
             }
         }
-       puts("");
+        puts("");
     }
     puts("=============================");
 }

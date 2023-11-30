@@ -25,7 +25,7 @@
 
 #define SZ_PLAYER_HITBOX 5
 
-#define RENDER_DISTANCE  2
+#define RENDER_DISTANCE  5
 
 Entity player = {CHUNK_WIDTH, CHUNK_HEIGHT/2, CHUNK_DEPTH, 0, 0, 0, 0, 0, 0};
 int mx, my;
@@ -74,6 +74,7 @@ void get_rotation_from_mouse(void) {
     int cx = gfx_get_width()/2;
     int cy = gfx_get_height()/2;
     int mov_x, mov_y;
+    if(!mov_speed) return;
     if(focus){
         mov_x = mx-cx;
         mov_y = my-cy;

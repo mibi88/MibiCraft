@@ -43,9 +43,9 @@
 #define SZ_INDICES        6
 #define SZ_TEX_COORDS     8
 
-#define TREE_WIDTH 5
-#define TREE_HEIGHT 8
-#define TREE_DEPTH 5
+#define TREE_WIDTH        5
+#define TREE_HEIGHT       8
+#define TREE_DEPTH        5
 
 #include <gfx.h>
 #include <string.h>
@@ -79,6 +79,7 @@ typedef enum {
     T_CACTUS,
     T_ROSE,
     T_GRASS_PLANT,
+    T_DEAD_BUSH,
     T_AMOUNT
 } Tile;
 
@@ -92,9 +93,9 @@ typedef enum {
 
 typedef struct {
     Tile chunk_data[CHUNK_WIDTH][CHUNK_HEIGHT][CHUNK_DEPTH];
-    float chunk_vertices[8*4*CHUNK_WIDTH*CHUNK_HEIGHT*CHUNK_DEPTH];
-    int chunk_indices[8*4*CHUNK_WIDTH*CHUNK_HEIGHT*CHUNK_DEPTH];
-    float chunk_texture_coords[8*4*CHUNK_WIDTH*CHUNK_HEIGHT*CHUNK_DEPTH];
+    float chunk_vertices[8*6*CHUNK_WIDTH*CHUNK_HEIGHT*CHUNK_DEPTH];
+    int chunk_indices[8*6*CHUNK_WIDTH*CHUNK_HEIGHT*CHUNK_DEPTH];
+    float chunk_texture_coords[8*6*CHUNK_WIDTH*CHUNK_HEIGHT*CHUNK_DEPTH];
     GFXModel chunk_model;
     int x, z;
 } Chunk;
