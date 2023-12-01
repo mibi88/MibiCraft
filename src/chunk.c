@@ -473,8 +473,10 @@ void chunk_generate_snow(Chunk *chunk, int sx, int sz, float amplitude,
 void chunk_generate_plants(Chunk *chunk, int sx, int sz, int x, int z,
         float height, Tile plant, int probability, int seed) {
     if(height >= CHUNK_HEIGHT/2 && height < CHUNK_HEIGHT){
-        if(chunk_should_add(sx, sz, x, z, seed, probability)){
-            chunk->chunk_data[x][(int)height][z] = plant;
+        if(chunk->chunk_data[x][(int)height][z] != plant){
+            if(chunk_should_add(sx, sz, x, z, seed, probability)){
+                chunk->chunk_data[x][(int)height][z] = plant;
+            }
         }
     }
 }
@@ -504,11 +506,6 @@ void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
             height = chunk_get_height(sx, sz, x, z, properties->amplitude,
                     seed);
 
-            chunk_generate_plants(chunk, sx, sz, x, z, height,
-                                  properties->plants[0], 32, seed);
-            chunk_generate_plants(chunk, sx, sz, x, z, height,
-                                  properties->plants[1], 24, seed);
-
             for(y=0;y<CHUNK_HEIGHT;y++){
                 if(y < (CHUNK_HEIGHT/2) && y > (int)height-1){
                     chunk->chunk_data[x][y][z] = T_WATER;
@@ -517,6 +514,10 @@ void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
                 }else{
                     chunk->chunk_data[x][y][z] = T_VOID;
                 }
+                chunk_generate_plants(chunk, sx, sz, x, z, height,
+                                      properties->plants[0], 32, seed);
+                chunk_generate_plants(chunk, sx, sz, x, z, height,
+                                      properties->plants[1], 24, seed);
 
                 chunk_generate_layer(chunk, sx, sz, x, y, z, height, 3, 128, 3,
                                      properties->layer_top,
