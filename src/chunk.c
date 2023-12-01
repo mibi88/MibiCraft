@@ -504,6 +504,11 @@ void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
             height = chunk_get_height(sx, sz, x, z, properties->amplitude,
                     seed);
 
+            chunk_generate_plants(chunk, sx, sz, x, z, height,
+                                  properties->plants[0], 32, seed);
+            chunk_generate_plants(chunk, sx, sz, x, z, height,
+                                  properties->plants[1], 24, seed);
+
             for(y=0;y<CHUNK_HEIGHT;y++){
                 if(y < (CHUNK_HEIGHT/2) && y > (int)height-1){
                     chunk->chunk_data[x][y][z] = T_WATER;
@@ -513,10 +518,6 @@ void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
                     chunk->chunk_data[x][y][z] = T_VOID;
                 }
 
-                chunk_generate_plants(chunk, sx, sz, x, z, height,
-                                      properties->plants[0], 32, seed);
-                chunk_generate_plants(chunk, sx, sz, x, z, height,
-                                      properties->plants[1], 24, seed);
                 chunk_generate_layer(chunk, sx, sz, x, y, z, height, 3, 128, 3,
                                      properties->layer_top,
                                      properties->layer_material, seed);
