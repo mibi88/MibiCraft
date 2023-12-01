@@ -21,6 +21,15 @@
 #define STB_PERLIN_IMPLEMENTATION
 #include <stb/stb_perlin.h>
 
+/* Biomes */
+Biome_property biomes[B_AMOUNT] = {
+    {(CHUNK_HEIGHT/2), 32, T_GRASS, T_DIRT, {T_GRASS_PLANT, T_ROSE}},
+    {(CHUNK_HEIGHT/1.8), 16, T_PODZOL, T_DIRT, {T_BROWN_MUSHROOM,
+                                                T_RED_MUSHROOM}},
+    {(CHUNK_HEIGHT/2.2), 64, T_DRIED_GRASS, T_DIRT, {T_GRASS_PLANT, T_ROSE}},
+    {(CHUNK_HEIGHT/2.2), 96, T_SAND, T_SAND_STONE, {T_DEAD_BUSH, T_CACTUS}}
+};
+
 /* Blocks */
 Block_property blocks[T_AMOUNT] = {
     {S_CUBE, 1},
@@ -51,7 +60,11 @@ Block_property blocks[T_AMOUNT] = {
     {S_CUBE, 0},
     {S_CROSS, 1},
     {S_CROSS, 1},
-    {S_CROSS, 1}
+    {S_CROSS, 1},
+    {S_CROSS, 1},
+    {S_CROSS, 1},
+    {S_CUBE, 0},
+    {S_CUBE, 1}
 };
 /**********/
 
@@ -194,59 +207,49 @@ Tile acacia_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
     T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
     T_VOID, T_VOID, T_VOID, T_VOID, T_VOID
 };
-Tile palm_tree[5][8][5] = {
-    {
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_PALM_LEAVES, T_PALM_LEAVES, T_PALM_LEAVES, T_VOID},
-        {T_VOID, T_PALM_LEAVES, T_PALM_LEAVES, T_PALM_LEAVES, T_VOID},
-        {T_VOID, T_PALM_LEAVES, T_PALM_LEAVES, T_PALM_LEAVES, T_VOID},
-        {T_VOID, T_PALM_LEAVES, T_PALM_LEAVES, T_PALM_LEAVES, T_VOID},
-        {T_VOID, T_PALM_LEAVES, T_VOID, T_PALM_LEAVES, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-    },
-    {
-        {T_VOID, T_PALM_LEAVES, T_PALM_LEAVES, T_PALM_LEAVES, T_VOID},
-        {T_PALM_LEAVES, T_VOID, T_VOID, T_VOID, T_PALM_LEAVES},
-        {T_PALM_LEAVES, T_VOID, T_VOID, T_VOID, T_PALM_LEAVES},
-        {T_PALM_LEAVES, T_VOID, T_VOID, T_VOID, T_PALM_LEAVES},
-        {T_PALM_LEAVES, T_VOID, T_VOID, T_VOID, T_PALM_LEAVES},
-        {T_PALM_LEAVES, T_VOID, T_VOID, T_VOID, T_PALM_LEAVES},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-    },
-    {
-        {T_VOID, T_PALM_LEAVES, T_PALM_LEAVES, T_PALM_LEAVES, T_VOID},
-        {T_PALM_LEAVES, T_VOID, T_PALM_LOG, T_VOID, T_PALM_LEAVES},
-        {T_PALM_LEAVES, T_VOID, T_PALM_LOG, T_VOID, T_PALM_LEAVES},
-        {T_PALM_LEAVES, T_VOID, T_PALM_LOG, T_VOID, T_PALM_LEAVES},
-        {T_PALM_LEAVES, T_VOID, T_PALM_LOG, T_VOID, T_PALM_LEAVES},
-        {T_VOID, T_VOID, T_PALM_LOG, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_PALM_LOG, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_PALM_LOG, T_VOID, T_VOID},
-    },
-    {
-        {T_VOID, T_PALM_LEAVES, T_PALM_LEAVES, T_PALM_LEAVES, T_VOID},
-        {T_PALM_LEAVES, T_VOID, T_VOID, T_VOID, T_PALM_LEAVES},
-        {T_PALM_LEAVES, T_VOID, T_VOID, T_VOID, T_PALM_LEAVES},
-        {T_PALM_LEAVES, T_VOID, T_VOID, T_VOID, T_PALM_LEAVES},
-        {T_PALM_LEAVES, T_VOID, T_VOID, T_VOID, T_PALM_LEAVES},
-        {T_PALM_LEAVES, T_VOID, T_VOID, T_VOID, T_PALM_LEAVES},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-    },
-    {
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_PALM_LEAVES, T_PALM_LEAVES, T_PALM_LEAVES, T_VOID},
-        {T_VOID, T_PALM_LEAVES, T_PALM_LEAVES, T_PALM_LEAVES, T_VOID},
-        {T_VOID, T_PALM_LEAVES, T_PALM_LEAVES, T_PALM_LEAVES, T_VOID},
-        {T_VOID, T_PALM_LEAVES, T_PALM_LEAVES, T_PALM_LEAVES, T_VOID},
-        {T_VOID, T_PALM_LEAVES, T_VOID, T_PALM_LEAVES, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-        {T_VOID, T_VOID, T_VOID, T_VOID, T_VOID},
-    },
+Tile fallen_oak_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_BROWN_MUSHROOM, T_BROWN_MUSHROOM, T_RED_MUSHROOM, T_VOID,
+        T_OAK_LOG, T_OAK_LOG, T_OAK_LOG, T_OAK_LOG, T_OAK_LOG
 };
-Tile cactus[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
+Tile fallen_spruce_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
         T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
         T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
         T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
@@ -265,28 +268,28 @@ Tile cactus[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
         T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
         T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
         T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_CACTUS, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_CACTUS, T_VOID, T_CACTUS,
-        T_VOID, T_VOID, T_CACTUS, T_VOID, T_CACTUS,
-        T_VOID, T_VOID, T_CACTUS, T_CACTUS, T_CACTUS,
-        T_VOID, T_VOID, T_CACTUS, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_CACTUS, T_VOID, T_VOID,
         T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
         T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
         T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
         T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
         T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_CACTUS, T_VOID, T_VOID,
         T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
         T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
         T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_CACTUS, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_CACTUS, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_CACTUS, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_CACTUS, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_CACTUS, T_VOID, T_VOID,
         T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+        T_VOID, T_BROWN_MUSHROOM, T_BROWN_MUSHROOM, T_VOID, T_BROWN_MUSHROOM,
+        T_SPRUCE_LOG, T_SPRUCE_LOG, T_SPRUCE_LOG, T_SPRUCE_LOG, T_SPRUCE_LOG
 };
 /*********/
 
@@ -316,14 +319,14 @@ int base_indices[SZ_INDICES] = {
 };
 
 float cross_vertices[SZ_VERTICES*2] = {
+    -0.5, 0.5, -1,
+    -0.5, -0.5, -1,
+    0.5, -0.5, 0,
+    0.5, 0.5, 0,
     -0.5, 0.5, 0,
     -0.5, -0.5, 0,
-    0.5, -0.5, 1,
-    0.5, 0.5, 1,
-    -0.5, 0.5, 1,
-    -0.5, -0.5, 1,
-    0.5, -0.5, 0,
-    0.5, 0.5, 0
+    0.5, -0.5, -1,
+    0.5, 0.5, -1
 };
 int cross_indices[SZ_INDICES*2] = {
     0, 1, 3,
@@ -361,6 +364,11 @@ float chunk_get_height(int sx, int sz, int x, int z, float amplitude,
                                   0, seed)*amplitude+(CHUNK_HEIGHT/2);
 }
 
+int chunk_should_add(int sx, int sz, int x, int z, int seed, int probability) {
+    srand(seed+(sz+z)*(sx+x)+(sx+x));
+    return !(rand()%probability);
+}
+
 void chunk_place_structure(Chunk *chunk, int sx, int sy, int sz,
                            Tile *structure, int width, int height,
                            int depth) {
@@ -389,10 +397,10 @@ void chunk_generate_structure(Chunk *chunk, int sx, int sz,
     Biome real_biome;
     for(x=-width;x<CHUNK_WIDTH+width;x++){
         for(z=-depth;z<CHUNK_DEPTH+depth;z++){
-            srand(seed+(sz+z)*CHUNK_WIDTH+(sx+x));
-            if(!(rand()%probability)){
+            srand(seed*((sz+z)*CHUNK_WIDTH+(sx+x)));
+            if(y >= CHUNK_HEIGHT/2){
                 y = chunk_get_height(sx, sz, x, z, amplitude, seed);
-                if(y >= CHUNK_HEIGHT/2){
+                if(chunk_should_add(sx, sz ,x, z, seed, probability)){
                     real_biome = chunk_get_biome(sx, sz, x, z, seed);
                     if(real_biome == biome){
                         chunk_place_structure(chunk, x-dx, y, z-dz, structure,
@@ -404,154 +412,46 @@ void chunk_generate_structure(Chunk *chunk, int sx, int sz,
     }
 }
 
-void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
-    int x, y, z;
-    float height, dirt_layer;
-    Biome biome = B_PLAINS;
-    float amplitude = (CHUNK_HEIGHT/2);
-    int tree_probability = 48;
-    srand(seed+sx+sz*CHUNK_WIDTH);
-    for(x=0;x<CHUNK_WIDTH;x++){
-        for(z=0;z<CHUNK_DEPTH;z++){
-            biome = chunk_get_biome(sx, sz, x, z, seed);
-
-            switch(biome){
-                case B_TAIGA:
-                    amplitude = (CHUNK_HEIGHT/1.8);
-                    tree_probability = 32;
-                    break;
-                case B_SAVANNA:
-                    amplitude = (CHUNK_HEIGHT/2.2);
-                    tree_probability = 128;
-                    break;
-                case B_DESERT:
-                    amplitude = (CHUNK_HEIGHT/2.2);
-                    tree_probability = 192;
-                    break;
-                default:
-                    amplitude = (CHUNK_HEIGHT/2);
-                    tree_probability = 48;
-                    break;
-            }
-
-            height = chunk_get_height(sx, sz, x, z, amplitude, seed);
-
-            dirt_layer = stb_perlin_noise3_seed((float)(x+sx)/128,
-                                                (float)(z+sz)/128, 0, 0, 0, 0,
-                                                seed)*3+3;
-
-            for(y=0;y<CHUNK_HEIGHT;y++){
-                if(y < (CHUNK_HEIGHT/2) && y > (int)height-1){
-                    chunk->chunk_data[x][y][z] = T_WATER;
-                }else if(y < (int)height &&
-                         y > (int)height-(int)dirt_layer &&
-                         height > (CHUNK_HEIGHT/2) &&
-                         height < (CHUNK_HEIGHT/2)+(int)dirt_layer){
-                    switch(biome){
-                        case B_DESERT:
-                            chunk->chunk_data[x][y][z] = T_DIRT;
-                            break;
-                        default:
-                            chunk->chunk_data[x][y][z] = T_SAND;
-                    }
-                }else if((int)height-y == 1 && height > (CHUNK_HEIGHT/2)){
-                    switch(biome){
-                        case B_TAIGA:
-                            chunk->chunk_data[x][y][z] = T_PODZOL;
-                            break;
-                        case B_SAVANNA:
-                            chunk->chunk_data[x][y][z] = T_DRIED_GRASS;
-                            break;
-                        case B_DESERT:
-                            chunk->chunk_data[x][y][z] = T_SAND;
-                            break;
-                        default:
-                            chunk->chunk_data[x][y][z] = T_GRASS;
-                    }
-                }else if((int)height-y <= (int)dirt_layer &&
-                         (int)height-y > 0 && height > (CHUNK_HEIGHT/2)){
-                    switch(biome){
-                        case B_DESERT:
-                            chunk->chunk_data[x][y][z] = T_SAND_STONE;
-                            break;
-                        default:
-                            chunk->chunk_data[x][y][z] = T_DIRT;
-                    }
-                }else if(y < (int)height){
-                    if(stb_perlin_noise3_seed((float)(x+sx)/24, (float)y/24,
-                                              (float)(z+sz)/24, 0, 0, 0,
-                                              seed) > 0.25) {
-                        chunk->chunk_data[x][y][z] = T_VOID;
-                    }else if(stb_perlin_noise3_seed((float)(x+sx)/3, (float)y/3,
-                                                    (float)(z+sz)/3, 0, 0, 0,
-                                                    seed) > 0.7 &&
-                                                    y < (int)height/8) {
-                        chunk->chunk_data[x][y][z] = T_DIAMOND;
-                    }else if(stb_perlin_noise3_seed((float)(x+sx)/4.5,
-                                                    (float)y/4.5,
-                                                    (float)(z+sz)/4.5, 0, 0, 0,
-                                                    seed) > 0.75 &&
-                                                    y < (int)height/8*2) {
-                        chunk->chunk_data[x][y][z] = T_LAPIS;
-                    }else if(stb_perlin_noise3_seed((float)(x+sx)/4, (float)y/4,
-                                                    (float)(z+sz)/4, 0, 0, 0,
-                                                    seed) > 0.7 &&
-                                                    y < (int)height/8*3) {
-                        chunk->chunk_data[x][y][z] = T_REDSTONE;
-                    }else if(stb_perlin_noise3_seed((float)(x+sx)/5, (float)y/5,
-                                                    (float)(z+sz)/5, 0, 0, 0,
-                                                    seed) > 0.65 &&
-                                                    y < (int)height/8*4) {
-                        chunk->chunk_data[x][y][z] = T_GOLD;
-                    }else if(stb_perlin_noise3_seed((float)(x+sx)/6, (float)y/6,
-                                                    (float)(z+sz)/6, 0, 0, 0,
-                                                    seed) > 0.6 &&
-                                                    y < (int)height/8*5) {
-                        chunk->chunk_data[x][y][z] = T_IRON;
-                    }else if(stb_perlin_noise3_seed((float)(x+sx)/4, (float)y/4,
-                                                    (float)(z+sz)/4, 0, 0, 0,
-                                                    seed) > 0.5) {
-                        chunk->chunk_data[x][y][z] = T_COAL;
-                    }else{
-                        chunk->chunk_data[x][y][z] = T_STONE;
-                    }
-                }else{
-                    chunk->chunk_data[x][y][z] = T_VOID;
-                }
-                if(y == 0){
-                    chunk->chunk_data[x][y][z] = T_BEDROCK;
-                }
-                if((int)height-y == 0 && height > (CHUNK_HEIGHT/2) &&
-                   chunk->chunk_data[x][y][z] == T_VOID &&
-                   stb_perlin_noise3_seed((float)(x+sx)/1.1,
-                                          (float)(z+sz)/1.1,
-                                          0, 0, 0, 0, seed) > 0.49){
-                    if(biome == B_DESERT){
-                        chunk->chunk_data[x][y][z] = T_DEAD_BUSH;
-                    }else{
-                        chunk->chunk_data[x][y][z] = T_GRASS_PLANT;
-                    }
-                }
-            }
-        }
+void chunk_generate_ores(Chunk *chunk, int sx, int sz, int x, int y, int z,
+                         float height, Tile material, Tile ore,
+                         float amplitude, float probability, int depth,
+                         int seed) {
+    if(stb_perlin_noise3_seed((float)(x+sx)/amplitude, (float)y/amplitude,
+                              (float)(z+sz)/amplitude, 0, 0, 0,
+                              seed) > probability && y < (int)height/depth &&
+                              chunk->chunk_data[x][y][z] == material) {
+        chunk->chunk_data[x][y][z] = ore;
     }
-    chunk->x = sx;
-    chunk->z = sz;
-    chunk_generate_structure(chunk, sx, sz, oak_tree, TREE_WIDTH, TREE_HEIGHT,
-                             TREE_DEPTH, tree_probability, amplitude, seed,
-                             B_PLAINS, TREE_WIDTH/2, TREE_DEPTH/2);
-    chunk_generate_structure(chunk, sx, sz, spruce_tree, TREE_WIDTH,
-                             TREE_HEIGHT, TREE_DEPTH, tree_probability,
-                             amplitude, seed, B_TAIGA, TREE_WIDTH/2,
-                             TREE_DEPTH/2);
-    chunk_generate_structure(chunk, sx, sz, acacia_tree, TREE_WIDTH,
-                             TREE_HEIGHT, TREE_DEPTH, tree_probability,
-                             amplitude, seed, B_SAVANNA, TREE_WIDTH/2,
-                             TREE_DEPTH/2);
-    chunk_generate_structure(chunk, sx, sz, cactus, TREE_WIDTH,
-                             TREE_HEIGHT, TREE_DEPTH, tree_probability,
-                             amplitude, seed, B_DESERT, TREE_WIDTH/2,
-                             TREE_DEPTH/2);
+}
+
+void chunk_generate_layer(Chunk *chunk, int sx, int sz, int x, int y, int z,
+                          float height, float min, float step, float amplitude,
+                          Tile top, Tile material, int seed) {
+    float layer;
+    layer = stb_perlin_noise3_seed((float)(x+sx)/step, (float)(z+sz)/step, 0, 0,
+                                   0, 0, seed)*amplitude+min;
+    if(y<(int)height && y>=(int)(height-layer)){
+        chunk->chunk_data[x][y][z] = (int)height-y == 1 ? top : material;
+    }
+}
+
+void chunk_generate_beaches(Chunk *chunk, int sx, int sz, int x, int y, int z,
+                            float height, float min, float step,
+                            float amplitude, Tile material, int seed) {
+    float layer;
+    layer = stb_perlin_noise3_seed((float)(x+sx)/step, (float)(z+sz)/step, 0, 0,
+                                   0, 0, seed)*amplitude+min;
+    if(y>(CHUNK_HEIGHT/2)-layer && y<(CHUNK_HEIGHT/2)+layer &&
+       (int)height+layer > CHUNK_HEIGHT/2){
+        chunk->chunk_data[x][y][z] = material;
+    }
+}
+
+void chunk_generate_snow(Chunk *chunk, int sx, int sz, float amplitude,
+                         int seed) {
+    int x, y, z;
+    float height;
+    Biome biome;
     for(x=0;x<CHUNK_WIDTH;x++){
         for(z=0;z<CHUNK_DEPTH;z++){
             biome = chunk_get_biome(sx, sz, x, z, seed);
@@ -568,6 +468,109 @@ void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
             }
         }
     }
+}
+
+void chunk_generate_plants(Chunk *chunk, int sx, int sz, int x, int z,
+        float height, Tile plant, int probability, int seed) {
+    if(height >= CHUNK_HEIGHT/2 && height < CHUNK_HEIGHT){
+        if(chunk_should_add(sx, sz, x, z, seed, probability)){
+            chunk->chunk_data[x][(int)height][z] = plant;
+        }
+    }
+}
+
+void chunk_generate_caves(Chunk *chunk, int sx, int sz, int x, int y, int z,
+                          float step, float probability, Tile material,
+                          int seed) {
+    if(chunk->chunk_data[x][y][z] == material &&
+       stb_perlin_noise3_seed((float)(x+sx)/step, (float)y/step,
+               (float)(z+sz)/step, 0, 0, 0, seed) > probability){
+        chunk->chunk_data[x][y][z] = T_VOID;
+    }
+}
+
+void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
+    int x, y, z;
+    float height;
+    Biome biome = B_PLAINS;
+    Biome_property *properties;
+    srand(seed+sx+sz*CHUNK_WIDTH);
+    for(x=0;x<CHUNK_WIDTH;x++){
+        for(z=0;z<CHUNK_DEPTH;z++){
+            biome = chunk_get_biome(sx, sz, x, z, seed);
+
+            properties = &biomes[biome];
+
+            height = chunk_get_height(sx, sz, x, z, properties->amplitude,
+                    seed);
+
+            for(y=0;y<CHUNK_HEIGHT;y++){
+                if(y < (CHUNK_HEIGHT/2) && y > (int)height-1){
+                    chunk->chunk_data[x][y][z] = T_WATER;
+                }else if(y < (int)height){
+                    chunk->chunk_data[x][y][z] = T_STONE;
+                }else{
+                    chunk->chunk_data[x][y][z] = T_VOID;
+                }
+
+                chunk_generate_plants(chunk, sx, sz, x, z, height,
+                                      properties->plants[0], 32, seed);
+                chunk_generate_plants(chunk, sx, sz, x, z, height,
+                                      properties->plants[1], 24, seed);
+                chunk_generate_layer(chunk, sx, sz, x, y, z, height, 3, 128, 3,
+                                     properties->layer_top,
+                                     properties->layer_material, seed);
+                chunk_generate_beaches(chunk, sx, sz, x, y, z, height, 0, 16, 3,
+                                       T_SAND, seed);
+                chunk_generate_caves(chunk, sx, sz, x, y, z, 8, 0.25, T_STONE,
+                                     seed);
+                chunk_generate_caves(chunk, sx, sz, x, y, z, 32, 0.75, T_STONE,
+                                     seed);
+                chunk_generate_ores(chunk, sx, sz, x, y, z, height, T_STONE,
+                                    T_DIAMOND, 2, 0.7, 6, seed);
+                chunk_generate_ores(chunk, sx, sz, x, y, z, height, T_STONE,
+                                    T_LAPIS, 3, 0.6, 5, seed);
+                chunk_generate_ores(chunk, sx, sz, x, y, z, height, T_STONE,
+                                    T_REDSTONE, 4, 0.5, 4, seed);
+                chunk_generate_ores(chunk, sx, sz, x, y, z, height, T_STONE,
+                                    T_GOLD, 5, 0.4, 3, seed);
+                chunk_generate_ores(chunk, sx, sz, x, y, z, height, T_STONE,
+                                    T_IRON, 5, 0.3, 2, seed);
+                chunk_generate_ores(chunk, sx, sz, x, y, z, height, T_STONE,
+                                    T_COAL, 6, 0.2, 1, seed);
+                if(y == 0){
+                    chunk->chunk_data[x][y][z] = T_BEDROCK;
+                }
+            }
+        }
+    }
+    chunk->x = sx;
+    chunk->z = sz;
+    chunk_generate_structure(chunk, sx, sz, fallen_oak_tree, TREE_WIDTH,
+                             TREE_HEIGHT, TREE_DEPTH,
+                             properties->tree_probability*3,
+                             properties->amplitude, seed, B_PLAINS,
+                             TREE_WIDTH/2, TREE_DEPTH/2);
+    chunk_generate_structure(chunk, sx, sz, oak_tree, TREE_WIDTH, TREE_HEIGHT,
+                             TREE_DEPTH, properties->tree_probability,
+                             properties->amplitude, seed, B_PLAINS,
+                             TREE_WIDTH/2, TREE_DEPTH/2);
+    chunk_generate_structure(chunk, sx, sz, fallen_spruce_tree, TREE_WIDTH,
+                             TREE_HEIGHT, TREE_DEPTH,
+                             properties->tree_probability*3,
+                             properties->amplitude, seed, B_TAIGA, TREE_WIDTH/2,
+                             TREE_DEPTH/2);
+    chunk_generate_structure(chunk, sx, sz, spruce_tree, TREE_WIDTH,
+                             TREE_HEIGHT, TREE_DEPTH,
+                             properties->tree_probability,
+                             properties->amplitude, seed, B_TAIGA, TREE_WIDTH/2,
+                             TREE_DEPTH/2);
+    chunk_generate_structure(chunk, sx, sz, acacia_tree, TREE_WIDTH,
+                             TREE_HEIGHT, TREE_DEPTH,
+                             properties->tree_probability,
+                             properties->amplitude, seed, B_SAVANNA,
+                             TREE_WIDTH/2, TREE_DEPTH/2);
+    chunk_generate_snow(chunk, sx, sz, properties->amplitude, seed);
 }
 
 void chunk_generate_texture_coords(int tex_x, int tex_y) {
@@ -749,67 +752,5 @@ void chunk_generate_model(Chunk *chunk, unsigned int texture,
     gfx_init_model(&chunk->chunk_model, chunk->chunk_vertices,
                    chunk->chunk_indices, chunk->chunk_texture_coords, texture,
                    1, 1, triangles);
-}
-
-void chunk_debug_display_model(Chunk *chunk) {
-    int a, b, c, cur;
-    printf("===== Chunk model debug =====\n"
-           "Texture id: %d\n"
-           "Triangles:  %d\n"
-           "Vertices:   ",
-           chunk->chunk_model.texture,
-           chunk->chunk_model.triangles);
-    cur = 0;
-    for(a=0;a<chunk->chunk_model.triangles;a++){
-        if(a > 0){
-            printf("            ");
-        }
-        for(b=0;b<3;b++){
-            for(c=0;c<3;c++){
-                printf("%f", chunk->chunk_model.vertices[cur++]);
-                if(c < 2){
-                    printf(";");
-                }
-            }
-            if(b < 2){
-                printf(", ");
-            }
-        }
-       puts("");
-    }
-    printf("Indices:    ");
-    cur = 0;
-    for(a=0;a<chunk->chunk_model.triangles;a++){
-        if(a > 0){
-            printf("            ");
-        }
-        for(b=0;b<3;b++){
-            printf("%d", chunk->chunk_model.indices[cur++]);
-            if(b < 2){
-                printf(", ");
-            }
-        }
-       puts("");
-    }
-    printf("UV coords:  ");
-    cur = 0;
-    for(a=0;a<chunk->chunk_model.triangles;a++){
-        if(a > 0){
-            printf("            ");
-        }
-        for(b=0;b<3;b++){
-            for(c=0;c<2;c++){
-                printf("%f", chunk->chunk_model.uv_coords[cur++]);
-                if(c < 1){
-                    printf(";");
-                }
-            }
-            if(b < 2){
-                printf(", ");
-            }
-        }
-        puts("");
-    }
-    puts("=============================");
 }
 

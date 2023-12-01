@@ -47,6 +47,8 @@
 #define TREE_HEIGHT       8
 #define TREE_DEPTH        5
 
+#define PLANTS            2
+
 #include <gfx.h>
 #include <string.h>
 
@@ -80,6 +82,10 @@ typedef enum {
     T_ROSE,
     T_GRASS_PLANT,
     T_DEAD_BUSH,
+    T_BROWN_MUSHROOM,
+    T_RED_MUSHROOM,
+    T_SPRUCE_PLANKS,
+    T_GLASS,
     T_AMOUNT
 } Tile;
 
@@ -110,6 +116,14 @@ typedef struct {
     Block_shape shape;
     int transparent;
 } Block_property;
+
+typedef struct {
+    float amplitude;
+    int tree_probability;
+    Tile layer_top;
+    Tile layer_material;
+    Tile plants[PLANTS];
+} Biome_property;
 
 void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed);
 void chunk_generate_texture_coords(int tex_x, int tex_y);
