@@ -24,7 +24,7 @@
 /* Biomes */
 const Biome_property biomes[B_AMOUNT] = {
     {(CHUNK_HEIGHT/2), 32, T_GRASS, T_DIRT,
-     {T_GRASS_PLANT, T_ROSE, T_VOID, T_VOID}, {24, 32}},
+     {T_GRASS_PLANT, T_DANDELION, T_ROSE, T_VOID}, {8, 12, 48}},
     {(CHUNK_HEIGHT/1.8), 16, T_PODZOL, T_DIRT,
      {T_BROWN_MUSHROOM, T_RED_MUSHROOM, T_BERRY_BUSH, T_FRUIT_BERRY_BUSH},
      {8, 12, 20, 24}},
