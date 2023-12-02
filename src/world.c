@@ -18,6 +18,10 @@
 
 #include <world.h>
 
+#if THREADING
+#include <pthread.h>
+#endif
+
 World *_world;
 int _cx, _cy;
 int _ncx, _ncy;
@@ -61,30 +65,38 @@ Tile _modelgen_get_tile(Chunk *chunk, int x, int y, int z, int rx, int ry,
 void world_generate_data(World *world) {
     int x, y, pos;
     _world = world;
+    world->finished = 0;
     for(y=0;y<world->height;y++) {
         for(x=0;x<world->width;x++) {
             _cx = x;
             _cy = y;
             pos = y*world->width+x;
+            world->chunks[pos].ready = 0;
             chunk_generate_data(&world->chunks[pos], world->x+x*CHUNK_WIDTH,
                                 world->y+y*CHUNK_DEPTH, world->seed);
             chunk_generate_model(&world->chunks[pos], world->texture,
                                  GET_TILE);
+            world->chunks[pos].ready = 1;
         }
     }
+    world->finished = 1;
 }
 
 void world_generate_models(World *world) {
     int x, y;
     _world = world;
+    world->finished = 0;
     for(y=0;y<world->height;y++) {
         for(x=0;x<world->width;x++) {
             _cx = x;
             _cy = y;
+            world->chunks[y*world->width+x].ready = 0;
             chunk_generate_model(&world->chunks[y*world->width+x],
                                  world->texture, GET_TILE);
+            world->chunks[y*world->width+x].ready = 1;
         }
     }
+    world->finished = 1;
 }
 
 void world_init(World *world, int width, int height, int seed,
@@ -103,13 +115,20 @@ void world_init(World *world, int width, int height, int seed,
     world_generate_data(world);
 }
 
-void world_update(World *world, float sx, float sz) {
+void *_world_update(void *vworld) {
+    World *world = (World*)vworld;
     int x, y;
-    int chunk_x = (sx-world->x)/CHUNK_WIDTH;
-    int chunk_y = (sz-world->y)/CHUNK_DEPTH;
+    int chunk_x = (world->new_x-world->x)/CHUNK_WIDTH;
+    int chunk_y = (world->new_z-world->y)/CHUNK_DEPTH;
     int center_x = world->width/2, center_y = world->height/2;
     int old_x, old_y;
     Chunk *chunk;
+#if THREADING
+    if(!world->finished){
+        pthread_exit(NULL);
+    }
+#endif
+    world->finished = 0;
     while(chunk_x != center_x || chunk_y != center_y){
         old_x = world->x;
         old_y = world->y;
@@ -129,32 +148,61 @@ void world_update(World *world, float sx, float sz) {
             for(x=0;x<world->width;x++){
                 chunk = &world->chunks[y*world->width+x];
                 if(chunk->x < world->x){
+                    chunk->ready = 0;
                     chunk_generate_data(chunk, old_x+world->width*CHUNK_WIDTH,
                                         chunk->z, world->seed);
                     chunk_generate_model(chunk, world->texture, GET_TILE);
+                    chunk->ready = 1;
                 }else if(chunk->x >= world->x+world->width*CHUNK_WIDTH){
+                    chunk->ready = 0;
                     chunk_generate_data(chunk, world->x, chunk->z, world->seed);
                     chunk_generate_model(chunk, world->texture, GET_TILE);
+                    chunk->ready = 1;
                 }
                 if(chunk->z < world->y){
+                    chunk->ready = 0;
                     chunk_generate_data(chunk, chunk->x,
                                 old_y+world->height*CHUNK_DEPTH, world->seed);
                     chunk_generate_model(chunk, world->texture, GET_TILE);
+                    chunk->ready = 1;
                 }else if(chunk->z >= world->y+world->height*CHUNK_DEPTH){
+                    chunk->ready = 0;
                     chunk_generate_data(chunk, chunk->x, world->y, world->seed);
                     chunk_generate_model(chunk, world->texture, GET_TILE);
+                    chunk->ready = 1;
                 }
             }
         }
-        chunk_x = (sx-world->x)/CHUNK_WIDTH;
-        chunk_y = (sz-world->y)/CHUNK_DEPTH;
+        chunk_x = (world->new_x-world->x)/CHUNK_WIDTH;
+        chunk_y = (world->new_z-world->y)/CHUNK_DEPTH;
         center_x = world->width/2, center_y = world->height/2;
     }
+    world->finished = 1;
+#if THREADING
+    pthread_exit(NULL);
+#else
+    return NULL;
+#endif
+}
+
+void world_update(World *world, float sx, float sz) {
+#if THREADING
+    pthread_t id;
+    world->new_x = sx;
+    world->new_z = sz;
+    pthread_create(&id, NULL, _world_update, (void*)world);
+    pthread_detach(id);
+#else
+    world->new_x = sx;
+    world->new_z = sz;
+    _world_update((void*)world);
+#endif
 }
 
 void world_render(World *world) {
     int i;
     for(i=0;i<world->width*world->height;i++) {
+        if(!world->chunks[i].ready) continue;
         gfx_draw_model(&world->chunks[i].chunk_model,
                        world->chunks[i].x, -(CHUNK_HEIGHT/2),
                        world->chunks[i].z, 0, 0, 0);

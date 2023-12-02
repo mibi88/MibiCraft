@@ -22,7 +22,7 @@
 #include <stb/stb_perlin.h>
 
 /* Biomes */
-Biome_property biomes[B_AMOUNT] = {
+const Biome_property biomes[B_AMOUNT] = {
     {(CHUNK_HEIGHT/2), 32, T_GRASS, T_DIRT, {T_GRASS_PLANT, T_ROSE}},
     {(CHUNK_HEIGHT/1.8), 16, T_PODZOL, T_DIRT, {T_BROWN_MUSHROOM,
                                                 T_RED_MUSHROOM}},
@@ -31,7 +31,7 @@ Biome_property biomes[B_AMOUNT] = {
 };
 
 /* Blocks */
-Block_property blocks[T_AMOUNT] = {
+const Block_property blocks[T_AMOUNT] = {
     {S_CUBE, 1},
     {S_CUBE, 0},
     {S_CUBE, 0},
@@ -69,7 +69,7 @@ Block_property blocks[T_AMOUNT] = {
 /**********/
 
 /* Trees */
-Tile oak_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
+const Tile oak_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
     T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
     T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
     T_VOID, T_OAK_LEAVES, T_OAK_LEAVES, T_OAK_LEAVES, T_VOID,
@@ -112,7 +112,7 @@ Tile oak_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
     T_VOID, T_VOID, T_VOID, T_VOID, T_VOID
 };
 
-Tile spruce_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
+const Tile spruce_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
     T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
     T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
     T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
@@ -160,7 +160,7 @@ Tile spruce_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
     T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
 };
 
-Tile acacia_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
+const Tile acacia_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
     T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
     T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_ACACIA_LEAVES, T_ACACIA_LEAVES,
         T_ACACIA_LEAVES,
@@ -207,7 +207,7 @@ Tile acacia_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
     T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
     T_VOID, T_VOID, T_VOID, T_VOID, T_VOID
 };
-Tile fallen_oak_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
+const Tile fallen_oak_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
         T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
         T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
         T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
@@ -249,7 +249,7 @@ Tile fallen_oak_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
         T_VOID, T_BROWN_MUSHROOM, T_BROWN_MUSHROOM, T_RED_MUSHROOM, T_VOID,
         T_OAK_LOG, T_OAK_LOG, T_OAK_LOG, T_OAK_LOG, T_OAK_LOG
 };
-Tile fallen_spruce_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
+const Tile fallen_spruce_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
         T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
         T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
         T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
@@ -294,31 +294,31 @@ Tile fallen_spruce_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
 /*********/
 
 /* Front face */
-float front_vertices[SZ_VERTICES] = {
+const float front_vertices[SZ_VERTICES] = {
     -0.5, 0.5, 0,
     -0.5, -0.5, 0,
     0.5, -0.5, 0,
     0.5, 0.5, 0
 };
-float top_vertices[SZ_VERTICES] = {
+const float top_vertices[SZ_VERTICES] = {
     -0.5, 0.5, 0,
     -0.5, 0.5, -1,
     0.5, 0.5, -1,
     0.5, 0.5, 0
 };
-float left_vertices[SZ_VERTICES] = {
+const float left_vertices[SZ_VERTICES] = {
     0.5, -0.5, -1,
     0.5, 0.5, -1,
     0.5, 0.5, 0,
     0.5, -0.5, 0
 };
 
-int base_indices[SZ_INDICES] = {
+const int base_indices[SZ_INDICES] = {
     0, 1, 3,
     3, 1, 2
 };
 
-float cross_vertices[SZ_VERTICES*2] = {
+const float cross_vertices[SZ_VERTICES*2] = {
     -0.5, 0.5, -1,
     -0.5, -0.5, -1,
     0.5, -0.5, 0,
@@ -328,18 +328,13 @@ float cross_vertices[SZ_VERTICES*2] = {
     0.5, -0.5, -1,
     0.5, 0.5, -1
 };
-int cross_indices[SZ_INDICES*2] = {
+const int cross_indices[SZ_INDICES*2] = {
     0, 1, 3,
     3, 1, 2,
     4, 5, 7,
     7, 5, 6
 };
 /**************/
-
-float vertices[SZ_VERTICES*2];
-int indices[SZ_VERTICES*2];
-
-float texture_coords[SZ_TEX_COORDS];
 
 Biome chunk_get_biome(int sx, int sz, int x, int z, int seed) {
     int i;
@@ -370,7 +365,7 @@ int chunk_should_add(int sx, int sz, int x, int z, int seed, int probability) {
 }
 
 void chunk_place_structure(Chunk *chunk, int sx, int sy, int sz,
-                           Tile *structure, int width, int height,
+                           const Tile *structure, int width, int height,
                            int depth) {
     int x, y, z;
     for(z=0;z<depth;z++){
@@ -390,7 +385,7 @@ void chunk_place_structure(Chunk *chunk, int sx, int sy, int sz,
 }
 
 void chunk_generate_structure(Chunk *chunk, int sx, int sz,
-                              Tile *structure, int width, int height,
+                              const Tile *structure, int width, int height,
                               int depth, int probability, int amplitude,
                               int seed, Biome biome, int dx, int dz) {
     int x, y, z;
@@ -501,7 +496,7 @@ void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
         for(z=0;z<CHUNK_DEPTH;z++){
             biome = chunk_get_biome(sx, sz, x, z, seed);
 
-            properties = &biomes[biome];
+            properties = (Biome_property*)&biomes[biome];
 
             height = chunk_get_height(sx, sz, x, z, properties->amplitude,
                     seed);
@@ -575,21 +570,21 @@ void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
     chunk_generate_snow(chunk, sx, sz, properties->amplitude, seed);
 }
 
-void chunk_generate_texture_coords(int tex_x, int tex_y) {
+void chunk_generate_texture_coords(Chunk *chunk, int tex_x, int tex_y) {
     float x = (float)tex_x, y = (float)tex_y;
     /* Position of the vertices for a square facing the player */
     /* Bottom left */
-    texture_coords[0] = x*TILE_FWIDTH;
-    texture_coords[1] = y*TILE_FHEIGHT;
+    chunk->texture_coords[0] = x*TILE_FWIDTH;
+    chunk->texture_coords[1] = y*TILE_FHEIGHT;
     /* Top left */
-    texture_coords[2] = x*TILE_FWIDTH;
-    texture_coords[3] = (y+1)*TILE_FHEIGHT;
+    chunk->texture_coords[2] = x*TILE_FWIDTH;
+    chunk->texture_coords[3] = (y+1)*TILE_FHEIGHT;
     /* Top right */
-    texture_coords[4] = (x+1)*TILE_FWIDTH;
-    texture_coords[5] = (y+1)*TILE_FHEIGHT;
+    chunk->texture_coords[4] = (x+1)*TILE_FWIDTH;
+    chunk->texture_coords[5] = (y+1)*TILE_FHEIGHT;
     /* Bottom right */
-    texture_coords[6] = (x+1)*TILE_FWIDTH;
-    texture_coords[7] = y*TILE_FHEIGHT;
+    chunk->texture_coords[6] = (x+1)*TILE_FWIDTH;
+    chunk->texture_coords[7] = y*TILE_FHEIGHT;
 }
 
 Tile chunk_get_tile(Chunk *chunk, int x, int y, int z, int rx, int ry, int rz) {
@@ -610,40 +605,32 @@ void chunk_set_tile(Chunk *chunk, Tile tile, int x, int y, int z) {
    }
 }
 
-float *vert_ptr;
-float *tex_ptr;
-int *indices_ptr;
-int triangles;
-int _x, _y, _z;
-int tex_x, tex_y;
-
-void chunk_add_face_to_model(float *face_vertices, float rx,
+void chunk_add_face_to_model(Chunk *chunk, const float *face_vertices, float rx,
                              float ry, float rz) {
     int i;
-    chunk_generate_texture_coords(tex_x, tex_y);
+    chunk_generate_texture_coords(chunk, chunk->tex_x, chunk->tex_y);
     /* Front face */
-    memcpy(vertices, face_vertices,
+    memcpy(chunk->vertices, face_vertices,
            SZ_VERTICES*sizeof(float));
     for(i=0;i<VERTICES_AMOUNT;i++){
-        vertices[i*3] += (float)_x+rx;
-        vertices[i*3+1] += (float)_y+ry;
-        vertices[i*3+2] += (float)_z+rz;
+        chunk->vertices[i*3] += (float)chunk->_x+rx;
+        chunk->vertices[i*3+1] += (float)chunk->_y+ry;
+        chunk->vertices[i*3+2] += (float)chunk->_z+rz;
     }
-    memcpy(vert_ptr, vertices, SZ_VERTICES*sizeof(float));
-    vert_ptr += SZ_VERTICES;
-    memcpy(indices, base_indices, SZ_INDICES*sizeof(int));
+    memcpy(chunk->vert_ptr, chunk->vertices, SZ_VERTICES*sizeof(float));
+    chunk->vert_ptr += SZ_VERTICES;
+    memcpy(chunk->indices, base_indices, SZ_INDICES*sizeof(int));
     for(i=0;i<SZ_INDICES;i++){
-        indices[i] += triangles/TRIANGLES_AMOUNT*
+        chunk->indices[i] += chunk->triangles/TRIANGLES_AMOUNT*
                       VERTICES_AMOUNT;
     }
-    memcpy(indices_ptr, indices, SZ_INDICES*sizeof(int));
-    indices_ptr += SZ_INDICES;
+    memcpy(chunk->indices_ptr, chunk->indices, SZ_INDICES*sizeof(int));
+    chunk->indices_ptr += SZ_INDICES;
     
-    memcpy(tex_ptr, texture_coords,
-           SZ_TEX_COORDS*sizeof(float));
-    tex_ptr += SZ_TEX_COORDS;
+    memcpy(chunk->tex_ptr, chunk->texture_coords, SZ_TEX_COORDS*sizeof(float));
+    chunk->tex_ptr += SZ_TEX_COORDS;
     
-    triangles += 2;
+    chunk->triangles += 2;
 }
 
 void chunk_generate_model(Chunk *chunk, unsigned int texture,
@@ -651,101 +638,119 @@ void chunk_generate_model(Chunk *chunk, unsigned int texture,
                                         int rx, int ry, int rz)) {
     int i;
     Tile tile = T_VOID, real_tile, side_tile;
-    vert_ptr = chunk->chunk_vertices;
-    tex_ptr = chunk->chunk_texture_coords;
-    indices_ptr = chunk->chunk_indices;
-    triangles = 0;
-    for(_x=0;_x<CHUNK_WIDTH;_x++){
-        for(_y=0;_y<CHUNK_HEIGHT;_y++){
-            for(_z=0;_z<CHUNK_DEPTH;_z++){
-                tile = chunk->chunk_data[_x][_y][_z];
+    chunk->vert_ptr = chunk->chunk_vertices;
+    chunk->tex_ptr = chunk->chunk_texture_coords;
+    chunk->indices_ptr = chunk->chunk_indices;
+    chunk->triangles = 0;
+    for(chunk->_x=0;chunk->_x<CHUNK_WIDTH;chunk->_x++){
+        for(chunk->_y=0;chunk->_y<CHUNK_HEIGHT;chunk->_y++){
+            for(chunk->_z=0;chunk->_z<CHUNK_DEPTH;chunk->_z++){
+                tile = chunk->chunk_data[chunk->_x][chunk->_y][chunk->_z];
                 if(blocks[tile].shape == S_CUBE && !blocks[tile].transparent) {
                     real_tile = tile-1;
-                    tex_x = real_tile%TILE_AWIDTH;
-                    tex_y = real_tile/TILE_AWIDTH;
-                    side_tile = get_tile(chunk, _x, _y, _z, 0, 0, 1);
+                    chunk->tex_x = real_tile%TILE_AWIDTH;
+                    chunk->tex_y = real_tile/TILE_AWIDTH;
+                    side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
+                                         0, 0, 1);
                     if(blocks[side_tile].transparent){
-                        chunk_add_face_to_model(front_vertices, 0, 0, 0);
+                        chunk_add_face_to_model(chunk, front_vertices, 0, 0, 0);
                     }
-                    side_tile = get_tile(chunk, _x, _y, _z, 0, 0, -1);
+                    side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
+                                         0, 0, -1);
                     if(blocks[side_tile].transparent){
-                        chunk_add_face_to_model(front_vertices, 0, 0, -1);
+                        chunk_add_face_to_model(chunk, front_vertices, 0, 0,
+                                                -1);
                     }
-                    side_tile = get_tile(chunk, _x, _y, _z, 0, 1, 0);
+                    side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
+                                         0, 1, 0);
                     if(blocks[side_tile].transparent){
-                        chunk_add_face_to_model(top_vertices, 0, 0, 0);
+                        chunk_add_face_to_model(chunk, top_vertices, 0, 0, 0);
                     }
-                    side_tile = get_tile(chunk, _x, _y, _z, 0, -1, 0);
+                    side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
+                                         0, -1, 0);
                     if(blocks[side_tile].transparent){
-                        chunk_add_face_to_model(top_vertices, 0, -1, 0);
+                        chunk_add_face_to_model(chunk, top_vertices, 0, -1, 0);
                     }
-                    side_tile = get_tile(chunk, _x, _y, _z, 1, 0, 0);
+                    side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
+                                         1, 0, 0);
                     if(blocks[side_tile].transparent){
-                        chunk_add_face_to_model(left_vertices, 0, 0, 0);
+                        chunk_add_face_to_model(chunk, left_vertices, 0, 0, 0);
                     }
-                    side_tile = get_tile(chunk, _x, _y, _z, -1, 0, 0);
+                    side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
+                                         -1, 0, 0);
                     if(blocks[side_tile].transparent){
-                        chunk_add_face_to_model(left_vertices, -1, 0, 0);
+                        chunk_add_face_to_model(chunk, left_vertices, -1, 0, 0);
                     }
                 }else if(blocks[tile].shape == S_CUBE && tile != T_VOID){
                     real_tile = tile-1;
-                    tex_x = real_tile%TILE_AWIDTH;
-                    tex_y = real_tile/TILE_AWIDTH;
-                    side_tile = get_tile(chunk, _x, _y, _z, 0, 0, 1);
+                    chunk->tex_x = real_tile%TILE_AWIDTH;
+                    chunk->tex_y = real_tile/TILE_AWIDTH;
+                    side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
+                                         0, 0, 1);
                     if(!blocks[side_tile].transparent || side_tile == T_VOID){
-                        chunk_add_face_to_model(front_vertices, 0, 0, 0);
+                        chunk_add_face_to_model(chunk, front_vertices, 0, 0, 0);
                     }
-                    side_tile = get_tile(chunk, _x, _y, _z, 0, 0, -1);
+                    side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
+                                         0, 0, -1);
                     if(!blocks[side_tile].transparent || side_tile == T_VOID){
-                        chunk_add_face_to_model(front_vertices, 0, 0, -1);
+                        chunk_add_face_to_model(chunk, front_vertices, 0, 0,
+                                                -1);
                     }
-                    side_tile = get_tile(chunk, _x, _y, _z, 0, 1, 0);
+                    side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
+                                         0, 1, 0);
                     if(!blocks[side_tile].transparent || side_tile == T_VOID){
-                        chunk_add_face_to_model(top_vertices, 0, 0, 0);
+                        chunk_add_face_to_model(chunk, top_vertices, 0, 0, 0);
                     }
-                    side_tile = get_tile(chunk, _x, _y, _z, 0, -1, 0);
+                    side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
+                                         0, -1, 0);
                     if(!blocks[side_tile].transparent || side_tile == T_VOID){
-                        chunk_add_face_to_model(top_vertices, 0, -1, 0);
+                        chunk_add_face_to_model(chunk, top_vertices, 0, -1, 0);
                     }
-                    side_tile = get_tile(chunk, _x, _y, _z, 1, 0, 0);
+                    side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
+                                         1, 0, 0);
                     if(!blocks[side_tile].transparent || side_tile == T_VOID){
-                        chunk_add_face_to_model(left_vertices, 0, 0, 0);
+                        chunk_add_face_to_model(chunk, left_vertices, 0, 0, 0);
                     }
-                    side_tile = get_tile(chunk, _x, _y, _z, -1, 0, 0);
+                    side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
+                                         -1, 0, 0);
                     if(!blocks[side_tile].transparent || side_tile == T_VOID){
-                        chunk_add_face_to_model(left_vertices, -1, 0, 0);
+                        chunk_add_face_to_model(chunk, left_vertices, -1, 0, 0);
                     }
                 }else if(blocks[tile].shape == S_CROSS && tile != T_VOID){
                     real_tile = tile-1;
-                    tex_x = real_tile%TILE_AWIDTH;
-                    tex_y = real_tile/TILE_AWIDTH;
-                    chunk_generate_texture_coords(tex_x, tex_y);
+                    chunk->tex_x = real_tile%TILE_AWIDTH;
+                    chunk->tex_y = real_tile/TILE_AWIDTH;
+                    chunk_generate_texture_coords(chunk, chunk->tex_x,
+                                                  chunk->tex_y);
                     /* Front face */
-                    memcpy(vertices, cross_vertices,
+                    memcpy(chunk->vertices, cross_vertices,
                            SZ_VERTICES*2*sizeof(float));
                     for(i=0;i<VERTICES_AMOUNT*2;i++){
-                        vertices[i*3] += (float)_x;
-                        vertices[i*3+1] += (float)_y;
-                        vertices[i*3+2] += (float)_z;
+                        chunk->vertices[i*3] += (float)chunk->_x;
+                        chunk->vertices[i*3+1] += (float)chunk->_y;
+                        chunk->vertices[i*3+2] += (float)chunk->_z;
                     }
-                    memcpy(vert_ptr, vertices, SZ_VERTICES*2*sizeof(float));
-                    vert_ptr += SZ_VERTICES*2;
-                    memcpy(indices, cross_indices, SZ_INDICES*2*sizeof(int));
+                    memcpy(chunk->vert_ptr, chunk->vertices,
+                           SZ_VERTICES*2*sizeof(float));
+                    chunk->vert_ptr += SZ_VERTICES*2;
+                    memcpy(chunk->indices, cross_indices,
+                           SZ_INDICES*2*sizeof(int));
                     for(i=0;i<SZ_INDICES*2;i++){
-                        indices[i] += triangles/TRIANGLES_AMOUNT*
+                        chunk->indices[i] += chunk->triangles/TRIANGLES_AMOUNT*
                                       VERTICES_AMOUNT;
                     }
-                    memcpy(indices_ptr, indices, SZ_INDICES*2*sizeof(int));
-                    indices_ptr += SZ_INDICES*2;
+                    memcpy(chunk->indices_ptr, chunk->indices,
+                           SZ_INDICES*2*sizeof(int));
+                    chunk->indices_ptr += SZ_INDICES*2;
 
-                    memcpy(tex_ptr, texture_coords,
+                    memcpy(chunk->tex_ptr, chunk->texture_coords,
                            SZ_TEX_COORDS*sizeof(float));
-                    tex_ptr += SZ_TEX_COORDS;
-                    memcpy(tex_ptr, texture_coords,
+                    chunk->tex_ptr += SZ_TEX_COORDS;
+                    memcpy(chunk->tex_ptr, chunk->texture_coords,
                            SZ_TEX_COORDS*sizeof(float));
-                    tex_ptr += SZ_TEX_COORDS;
+                    chunk->tex_ptr += SZ_TEX_COORDS;
 
-                    triangles += 4;
+                    chunk->triangles += 4;
                 }
             }
         }
@@ -753,6 +758,6 @@ void chunk_generate_model(Chunk *chunk, unsigned int texture,
 
     gfx_init_model(&chunk->chunk_model, chunk->chunk_vertices,
                    chunk->chunk_indices, chunk->chunk_texture_coords, texture,
-                   1, 1, triangles);
+                   1, 1, chunk->triangles);
 }
 

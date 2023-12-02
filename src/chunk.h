@@ -104,6 +104,20 @@ typedef struct {
     float chunk_texture_coords[8*6*CHUNK_WIDTH*CHUNK_HEIGHT*CHUNK_DEPTH];
     GFXModel chunk_model;
     int x, z;
+    /* For model generation */
+    float *vert_ptr;
+    float *tex_ptr;
+    int *indices_ptr;
+    int triangles;
+    int _x, _y, _z;
+    int tex_x, tex_y;
+
+    float vertices[SZ_VERTICES*2];
+    int indices[SZ_VERTICES*2];
+
+    float texture_coords[SZ_TEX_COORDS];
+
+    int ready;
 } Chunk;
 
 typedef enum {
@@ -126,7 +140,7 @@ typedef struct {
 } Biome_property;
 
 void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed);
-void chunk_generate_texture_coords(int tex_x, int tex_y);
+void chunk_generate_texture_coords(Chunk *chunk, int tex_x, int tex_y);
 Tile chunk_get_tile(Chunk *chunk, int x, int y, int z, int rx, int ry, int rz);
 void chunk_set_tile(Chunk *chunk, Tile tile, int x, int y, int z);
 void chunk_generate_model(Chunk *chunk, unsigned int texture,

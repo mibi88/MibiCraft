@@ -25,7 +25,7 @@
 
 #define SZ_PLAYER_HITBOX 5
 
-#define RENDER_DISTANCE  2
+#define RENDER_DISTANCE  9
 
 Entity player = {CHUNK_WIDTH, CHUNK_HEIGHT/2, CHUNK_DEPTH, 0, 0, 0, 0, 0, 0};
 int mx, my;
@@ -59,8 +59,8 @@ float player_hitbox[SZ_PLAYER_HITBOX*2] = {
 };
 
 void respawn(void) {
-    player.x = CHUNK_WIDTH;
-    player.y = CHUNK_HEIGHT/2;
+    player.x = 0;
+    player.y = 0;
     player.z = CHUNK_DEPTH;
     world.x = player.x;
     world.y = player.z;

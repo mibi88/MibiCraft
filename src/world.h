@@ -19,6 +19,8 @@
 #ifndef WORLD_H
 #define WORLD_H
 
+#define THREADING (1)
+
 #include <chunk.h>
 
 typedef struct {
@@ -27,6 +29,10 @@ typedef struct {
     int x, y;
     int seed;
     unsigned int texture;
+    /* World update */
+    int new_x, new_z;
+    int finished;
+    /****************/
 } World;
 
 void world_init(World *world, int width, int height, int seed,

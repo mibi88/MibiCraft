@@ -13,6 +13,7 @@ mibicraft_deps = [
   dependency('glu', native: true),
   dependency('freeglut', native: true),
   meson.get_compiler('c').find_library('m', required: true),
+  meson.get_compiler('c').find_library('pthread', required: true),
 ]
 
 executable('MibiCraft', mibicraft_sources,
