@@ -47,7 +47,7 @@
 #define TREE_HEIGHT       8
 #define TREE_DEPTH        5
 
-#define PLANTS            2
+#define PLANTS            4
 
 #include <gfx.h>
 #include <string.h>
@@ -86,6 +86,9 @@ typedef enum {
     T_RED_MUSHROOM,
     T_SPRUCE_PLANKS,
     T_GLASS,
+    T_DANDELION,
+    T_BERRY_BUSH,
+    T_FRUIT_BERRY_BUSH,
     T_AMOUNT
 } Tile;
 
@@ -136,7 +139,8 @@ typedef struct {
     int tree_probability;
     Tile layer_top;
     Tile layer_material;
-    Tile plants[PLANTS];
+    int plants[PLANTS];
+    int plant_probability[PLANTS];
 } Biome_property;
 
 void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed);

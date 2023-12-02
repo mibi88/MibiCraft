@@ -23,11 +23,16 @@
 
 /* Biomes */
 const Biome_property biomes[B_AMOUNT] = {
-    {(CHUNK_HEIGHT/2), 32, T_GRASS, T_DIRT, {T_GRASS_PLANT, T_ROSE}},
-    {(CHUNK_HEIGHT/1.8), 16, T_PODZOL, T_DIRT, {T_BROWN_MUSHROOM,
-                                                T_RED_MUSHROOM}},
-    {(CHUNK_HEIGHT/2.2), 64, T_DRIED_GRASS, T_DIRT, {T_GRASS_PLANT, T_ROSE}},
-    {(CHUNK_HEIGHT/2.2), 96, T_SAND, T_SAND_STONE, {T_DEAD_BUSH, T_CACTUS}}
+    {(CHUNK_HEIGHT/2), 32, T_GRASS, T_DIRT,
+     {T_GRASS_PLANT, T_ROSE, T_VOID, T_VOID}, {24, 32}},
+    {(CHUNK_HEIGHT/1.8), 16, T_PODZOL, T_DIRT,
+     {T_BROWN_MUSHROOM, T_RED_MUSHROOM, T_BERRY_BUSH, T_FRUIT_BERRY_BUSH},
+     {8, 12, 20, 24}},
+    {(CHUNK_HEIGHT/2.2), 64, T_DRIED_GRASS, T_DIRT,
+     {T_GRASS_PLANT, T_ROSE, T_VOID, T_VOID},
+     {32, 48}},
+    {(CHUNK_HEIGHT/2.2), 96, T_SAND, T_SAND_STONE,
+     {T_DEAD_BUSH, T_CACTUS, T_VOID, T_VOID}, {256, 512}}
 };
 
 /* Blocks */
@@ -64,7 +69,10 @@ const Block_property blocks[T_AMOUNT] = {
     {S_CROSS, 1},
     {S_CROSS, 1},
     {S_CUBE, 0},
-    {S_CUBE, 1}
+    {S_CUBE, 1},
+    {S_CROSS, 1},
+    {S_CROSS, 1},
+    {S_CROSS, 1}
 };
 /**********/
 
@@ -487,7 +495,7 @@ void chunk_generate_caves(Chunk *chunk, int sx, int sz, int x, int y, int z,
 }
 
 void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
-    int x, y, z;
+    int i, x, y, z;
     float height;
     Biome biome = B_PLAINS;
     Biome_property *properties;
@@ -509,10 +517,15 @@ void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
                 }else{
                     chunk->chunk_data[x][y][z] = T_VOID;
                 }
-                chunk_generate_plants(chunk, sx, sz, x, z, height,
-                                      properties->plants[0], 32, seed);
-                chunk_generate_plants(chunk, sx, sz, x, z, height,
-                                      properties->plants[1], 24, seed);
+                for(i=0;i<PLANTS;i++){
+                    if(properties->plants[i] > T_VOID &&
+                       properties->plants[i] < T_AMOUNT){
+                        chunk_generate_plants(chunk, sx, sz, x, z, height,
+                                              properties->plants[i],
+                                              properties->plant_probability[i],
+                                              seed);
+                    }
+                }
 
                 chunk_generate_layer(chunk, sx, sz, x, y, z, height, 3, 128, 3,
                                      properties->layer_top,
