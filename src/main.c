@@ -26,7 +26,7 @@
 
 #define SZ_PLAYER_HITBOX 5
 
-#define RENDER_DISTANCE  9
+#define RENDER_DISTANCE  64
 
 Entity player = {CHUNK_WIDTH, CHUNK_HEIGHT/2, CHUNK_DEPTH, 0, 0, 0, 0, 0, 0};
 int mx, my;
@@ -129,8 +129,8 @@ void mouse(int x, int y) {
 int main(int argc, char **argv) {
     gfx_init(&argc, argv, "MibiCraft", 1);
     gfx_set_clear_color(0.7, 0.9, 1.0);
-    gfx_enable_fog(0.7, 0.9, 1.0, 0.01, CHUNK_DEPTH-1,
-                   CHUNK_DEPTH);
+    /*gfx_enable_fog(0.7, 0.9, 1.0, 0.01, CHUNK_DEPTH-1,
+                   CHUNK_DEPTH);*/
     texture = gfx_load_texture(blocks_width, blocks_height,
                                (unsigned char*)blocks_data);
     respawn();

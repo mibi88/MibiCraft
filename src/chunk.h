@@ -101,7 +101,7 @@ typedef enum {
 } Biome;
 
 typedef struct {
-    Tile chunk_data[CHUNK_WIDTH][CHUNK_HEIGHT][CHUNK_DEPTH];
+    unsigned char chunk_data[CHUNK_WIDTH][CHUNK_HEIGHT][CHUNK_DEPTH];
     float chunk_vertices[8*6*CHUNK_WIDTH*CHUNK_HEIGHT*CHUNK_DEPTH];
     int chunk_indices[8*6*CHUNK_WIDTH*CHUNK_HEIGHT*CHUNK_DEPTH];
     float chunk_texture_coords[8*6*CHUNK_WIDTH*CHUNK_HEIGHT*CHUNK_DEPTH];
