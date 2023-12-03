@@ -149,7 +149,8 @@ Tile chunk_get_tile(Chunk *chunk, int x, int y, int z, int rx, int ry, int rz);
 void chunk_set_tile(Chunk *chunk, Tile tile, int x, int y, int z);
 void chunk_generate_model(Chunk *chunk, unsigned int texture,
                           Tile get_tile(Chunk *chunk, int x, int y, int z,
-                                        int rx, int ry, int rz));
+                                        int rx, int ry, int rz, void *extra),
+                          void *extra);
 
 #endif
 

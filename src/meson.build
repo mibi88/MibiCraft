@@ -4,6 +4,7 @@ mibicraft_sources += [
   'chunk.c',
   'world.c',
   'entity.c',
+  'raycast.c',
 ]
 
 mibicraft_incdirs = include_directories('.')

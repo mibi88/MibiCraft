@@ -35,6 +35,9 @@ typedef struct {
     /****************/
 } World;
 
+void world_generate_data(World *world);
+void world_generate_models(World *world);
+
 void world_init(World *world, int width, int height, int seed,
                 unsigned int texture);
 

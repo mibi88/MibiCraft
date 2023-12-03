@@ -17,6 +17,7 @@
  */
 
 #include <world.h>
+#include <raycast.h>
 
 #include <blocks.h>
 #include <math.h>
@@ -61,9 +62,9 @@ float player_hitbox[SZ_PLAYER_HITBOX*2] = {
 void respawn(void) {
     player.x = 0;
     player.y = 0;
-    player.z = CHUNK_DEPTH;
-    world.x = player.x;
-    world.y = player.z;
+    player.z = 0;
+    world.x = -(RENDER_DISTANCE*CHUNK_WIDTH+CHUNK_WIDTH/2);
+    world.y = -(RENDER_DISTANCE*CHUNK_DEPTH+CHUNK_DEPTH/2);
     player.ry = 0;
     player.rx = 0;
     player.x_velocity = 0;
@@ -78,8 +79,8 @@ void get_rotation_from_mouse(void) {
     if(focus){
         mov_x = mx-cx;
         mov_y = my-cy;
-        player.ry += (float)mov_x/rot_speed*mov_speed;
-        player.rx += (float)mov_y/rot_speed*mov_speed;
+        player.ry += (float)mov_x/rot_speed;
+        player.rx += (float)mov_y/rot_speed;
         if(player.rx > 90) player.rx = 90;
         else if(player.rx < -90) player.rx = -90;
         gfx_set_pointer_pos(cx, cy);
@@ -132,6 +133,7 @@ int main(int argc, char **argv) {
                    CHUNK_DEPTH);
     texture = gfx_load_texture(blocks_width, blocks_height,
                                (unsigned char*)blocks_data);
+    respawn();
     world_init(&world, RENDER_DISTANCE*2+1, RENDER_DISTANCE*2+1, seed, texture);
     gfx_run(draw, keypress, mouse);
     world_free(&world);
