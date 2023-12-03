@@ -26,7 +26,7 @@
 
 #define SZ_PLAYER_HITBOX 5
 
-#define RENDER_DISTANCE  64
+#define RENDER_DISTANCE  9
 
 Entity player = {CHUNK_WIDTH, CHUNK_HEIGHT/2, CHUNK_DEPTH, 0, 0, 0, 0, 0, 0};
 int mx, my;
@@ -50,6 +50,8 @@ int jump;
 World world;
 
 float mov_speed;
+
+int fog_enabled = 1;
 
 float player_hitbox[SZ_PLAYER_HITBOX*2] = {
     -0.8, -0.8,
@@ -115,9 +117,22 @@ void keypress(int key) {
             player.y += sin(player.rx/180*PI)*0.25*mov_speed;
             player.z -= sin((player.ry-90)/180*PI)*0.25*sin_rx*mov_speed;
             break;
+    }
+}
+
+void keyrelease(int key) {
+    switch(key) {
         case 'p':
             focus = !focus;
             break;
+        case 'f':
+            if(fog_enabled){
+                gfx_disable_fog();
+            }else{
+                gfx_enable_fog(0.7, 0.9, 1.0, 0.01, CHUNK_DEPTH-1,
+                               CHUNK_DEPTH);
+            }
+            fog_enabled = !fog_enabled;
     }
 }
 
@@ -129,13 +144,13 @@ void mouse(int x, int y) {
 int main(int argc, char **argv) {
     gfx_init(&argc, argv, "MibiCraft", 1);
     gfx_set_clear_color(0.7, 0.9, 1.0);
-    /*gfx_enable_fog(0.7, 0.9, 1.0, 0.01, CHUNK_DEPTH-1,
-                   CHUNK_DEPTH);*/
+    gfx_enable_fog(0.7, 0.9, 1.0, 0.01, CHUNK_DEPTH-1,
+                   CHUNK_DEPTH);
     texture = gfx_load_texture(blocks_width, blocks_height,
                                (unsigned char*)blocks_data);
     respawn();
     world_init(&world, RENDER_DISTANCE*2+1, RENDER_DISTANCE*2+1, seed, texture);
-    gfx_run(draw, keypress, mouse);
+    gfx_run(draw, keypress, keyrelease, mouse);
     world_free(&world);
     return EXIT_SUCCESS;
 }

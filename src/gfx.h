@@ -48,6 +48,8 @@ int gfx_get_height(void);
 void gfx_enable_fog(float r, float g, float b, float density, float start,
                     float end);
 
+void gfx_disable_fog(void);
+
 void gfx_set_clear_color(float r, float g, float b);
 
 void gfx_set_color(float r, float g, float b);
@@ -67,7 +69,8 @@ void gfx_free(GFXModel *model);
 
 void gfx_init(int *argc, char **argv, char *title, int use_arrays);
 
-void gfx_run(void draw(int), void keypress(int), void mouse(int, int));
+void gfx_run(void draw(int), void keypress(int), void keyrelease(int),
+             void mouse(int, int));
 
 unsigned int gfx_load_texture(int width, int height,
                               unsigned char *texture_data);

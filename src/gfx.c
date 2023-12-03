@@ -25,6 +25,7 @@
 
 void (*_draw)(int);
 void (*_keypress)(int);
+void (*_keyrelease)(int);
 
 int _w = 0, _h = 0;
 
@@ -65,6 +66,10 @@ void gfx_enable_fog(float r, float g, float b, float density, float start,
     glHint(GL_FOG_HINT, GL_DONT_CARE);
     glFogf(GL_FOG_START, start);
     glFogf(GL_FOG_END, end);
+}
+
+void gfx_disable_fog(void) {
+    glDisable(GL_FOG);
 }
 
 void gfx_set_clear_color(float r, float g, float b) {
@@ -267,16 +272,19 @@ void _keyboard(unsigned char key, int x, int y) {
 
 void _release(unsigned char key, int x, int y) {
     _keys[key] = 0;
+    _keyrelease(key);
 }
 
 void _idle(void) {
     glutPostRedisplay();
 }
 
-void gfx_run(void draw(int), void keypress(int), void mouse(int, int)) {
+void gfx_run(void draw(int), void keypress(int), void keyrelease(int),
+             void mouse(int, int)) {
     _old_time = gfx_get_time();
     _draw = draw;
     _keypress = keypress;
+    _keyrelease = keyrelease;
     glutDisplayFunc(_display);
     glutIdleFunc(_idle);
     glutReshapeFunc(_reshape);
