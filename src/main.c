@@ -20,20 +20,23 @@
 #include <raycast.h>
 
 #include <blocks.h>
+#include <crosshair.h>
 #include <math.h>
 
 #include <entity.h>
 
 #define SZ_PLAYER_HITBOX 5
 
-#define RENDER_DISTANCE  9
+#define RENDER_DISTANCE  4
 
 Entity player = {CHUNK_WIDTH, CHUNK_HEIGHT/2, CHUNK_DEPTH, 0, 0, 0, 0, 0, 0};
 int mx, my;
 
 float step = 0.01;
 
-unsigned int texture = 0;
+float gui_scale = 1;
+
+unsigned int texture = 0, crosshair;
 
 float rot_speed = 4;
 
@@ -92,11 +95,17 @@ void get_rotation_from_mouse(void) {
 }
 
 void draw(int delta) {
+    int crosshair_x = (int)((float)gfx_get_width()/2-
+                            (crosshair_width*gui_scale)/2);
+    int crosshair_y = (int)((float)gfx_get_height()/2-
+                            (crosshair_height*gui_scale)/2);
     int fps = 0;
     mov_speed = (float)delta/16;
     if(delta != 0) fps = 1000/delta;
     printf("FPS: %d\r", fps);
     world_render(&world);
+    gfx_draw_image(crosshair_x, crosshair_y, crosshair, crosshair_width,
+                   crosshair_height, gui_scale);
     gfx_set_camera(player.x, player.y, player.z, player.rx, player.ry, 0);
 
     get_rotation_from_mouse();
@@ -124,6 +133,11 @@ void keyrelease(int key) {
     switch(key) {
         case 'p':
             focus = !focus;
+            if(focus){
+                gfx_cursor_hide();
+            }else{
+                gfx_cursor_show();
+            }
             break;
         case 'f':
             if(fog_enabled){
@@ -133,6 +147,14 @@ void keyrelease(int key) {
                                CHUNK_DEPTH);
             }
             fog_enabled = !fog_enabled;
+            break;
+        case 'w':
+            gui_scale += 0.5;
+            break;
+        case 'x':
+            if(gui_scale > 0.5){
+                gui_scale -= 0.5;
+            }
     }
 }
 
@@ -148,8 +170,15 @@ int main(int argc, char **argv) {
                    CHUNK_DEPTH);
     texture = gfx_load_texture(blocks_width, blocks_height,
                                (unsigned char*)blocks_data);
+    crosshair = gfx_load_texture(crosshair_width, crosshair_height,
+                                 (unsigned char*)crosshair_data);
     respawn();
     world_init(&world, RENDER_DISTANCE*2+1, RENDER_DISTANCE*2+1, seed, texture);
+    if(focus){
+        gfx_cursor_hide();
+    }else{
+        gfx_cursor_show();
+    }
     gfx_run(draw, keypress, keyrelease, mouse);
     world_free(&world);
     return EXIT_SUCCESS;

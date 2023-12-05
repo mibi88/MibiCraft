@@ -41,6 +41,10 @@ int gfx_get_time(void);
 
 void gfx_set_pointer_pos(int x, int y);
 
+void gfx_cursor_hide(void);
+
+void gfx_cursor_show(void);
+
 int gfx_get_width(void);
 
 int gfx_get_height(void);
@@ -64,6 +68,9 @@ void gfx_init_model(GFXModel *model, float *vertices, int *indices,
 
 void gfx_draw_model(GFXModel *model, float x, float y, float z, float rx,
                     float ry, float rz);
+
+void gfx_draw_image(int sx, int sy, unsigned int texture, int width,
+                    int height, float scale);
 
 void gfx_free(GFXModel *model);
 

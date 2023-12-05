@@ -45,6 +45,14 @@ void gfx_set_pointer_pos(int x, int y) {
     glutWarpPointer(x, y);
 }
 
+void gfx_cursor_hide(void) {
+    glutSetCursor(GLUT_CURSOR_NONE);
+}
+
+void gfx_cursor_show(void) {
+    glutSetCursor(GLUT_CURSOR_RIGHT_ARROW);
+}
+
 int gfx_get_width(void) {
     return _w;
 }
@@ -295,6 +303,40 @@ void gfx_run(void draw(int), void keypress(int), void keyrelease(int),
     glutMainLoop();
 }
 
+void gfx_draw_image(int sx, int sy, unsigned int texture, int width,
+                    int height, float scale) {
+    float x2 = (float)width*scale, y2 = (float)height*scale;
+
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluOrtho2D(0, gfx_get_width(), gfx_get_height(), 0);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glTranslatef(sx, sy, 0);
+
+    glDisable(GL_DEPTH_TEST);
+
+    glBegin(GL_QUADS);
+
+    glVertex2i(0, 0);
+    glTexCoord2i(0, 0);
+    glVertex2f(x2, 0);
+    glTexCoord2i(1, 0);
+    glVertex2f(x2, y2);
+    glTexCoord2i(1, 1);
+    glVertex2f(0, y2);
+    glTexCoord2i(0, 1);
+
+    glEnd();
+
+    glPopMatrix();
+    glEnable(GL_DEPTH_TEST);
+
+    _reshape(gfx_get_width(), gfx_get_height());
+}
+
 void gfx_free(GFXModel *model) {
     glDeleteTextures(1, &model->texture);
 }
@@ -320,7 +362,7 @@ unsigned int gfx_load_texture(int width, int height,
                               unsigned char *texture_data) {
     unsigned int id;
     
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     
     glGenTextures(1, &id);
     glBindTexture(GL_TEXTURE_2D, id);
