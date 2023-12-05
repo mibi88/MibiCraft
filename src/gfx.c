@@ -262,16 +262,19 @@ void _display(void) {
     glutSwapBuffers();
 }
 
+void _3d_projection_matrix(int w, int h) {
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(72, (float)w/(float)h, 0.1, 1000);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+}
+
 void _reshape(int w, int h) {
     _w = w;
     _h = h;
-   glViewport(0, 0, (GLsizei) w, (GLsizei) h);
-   glMatrixMode(GL_PROJECTION);
-   glLoadIdentity();
-   gluPerspective(72, (float) w/(float) h, 0.1, 1000);
-   glMatrixMode(GL_MODELVIEW);
-   glLoadIdentity();
-   glTranslatef(0.0, 0.0, -3.6);
+   glViewport(0, 0, (GLsizei)w, (GLsizei)h);
+   _3d_projection_matrix(w, h);
 }
 
 void _keyboard(unsigned char key, int x, int y) {
@@ -303,20 +306,29 @@ void gfx_run(void draw(int), void keypress(int), void keyrelease(int),
     glutMainLoop();
 }
 
+void gfx_start_2d(void) {
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluOrtho2D(0, gfx_get_width(), gfx_get_height(), 0);
+    glMatrixMode(GL_MODELVIEW);
+
+    glDisable(GL_DEPTH_TEST);
+}
+
+void gfx_end_2d(void) {
+    glEnable(GL_DEPTH_TEST);
+
+    _3d_projection_matrix(gfx_get_width(), gfx_get_height());
+}
+
 void gfx_draw_image(int sx, int sy, unsigned int texture, int width,
                     int height, float scale) {
     float x2 = (float)width*scale, y2 = (float)height*scale;
 
     glBindTexture(GL_TEXTURE_2D, texture);
 
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluOrtho2D(0, gfx_get_width(), gfx_get_height(), 0);
-    glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glTranslatef(sx, sy, 0);
-
-    glDisable(GL_DEPTH_TEST);
 
     glBegin(GL_QUADS);
 
@@ -330,11 +342,6 @@ void gfx_draw_image(int sx, int sy, unsigned int texture, int width,
     glTexCoord2i(0, 1);
 
     glEnd();
-
-    glPopMatrix();
-    glEnable(GL_DEPTH_TEST);
-
-    _reshape(gfx_get_width(), gfx_get_height());
 }
 
 void gfx_free(GFXModel *model) {

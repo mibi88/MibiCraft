@@ -104,8 +104,12 @@ void draw(int delta) {
     if(delta != 0) fps = 1000/delta;
     printf("FPS: %d\r", fps);
     world_render(&world);
+
+    gfx_start_2d();
     gfx_draw_image(crosshair_x, crosshair_y, crosshair, crosshair_width,
                    crosshair_height, gui_scale);
+    gfx_end_2d();
+
     gfx_set_camera(player.x, player.y, player.z, player.rx, player.ry, 0);
 
     get_rotation_from_mouse();
