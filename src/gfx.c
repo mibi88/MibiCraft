@@ -333,13 +333,13 @@ void gfx_draw_image(int sx, int sy, unsigned int texture, int width,
     glBegin(GL_QUADS);
 
     glVertex2i(0, 0);
-    glTexCoord2i(0, 0);
-    glVertex2f(x2, 0);
     glTexCoord2i(1, 0);
-    glVertex2f(x2, y2);
+    glVertex2f(x2, 0);
     glTexCoord2i(1, 1);
-    glVertex2f(0, y2);
+    glVertex2f(x2, y2);
     glTexCoord2i(0, 1);
+    glVertex2f(0, y2);
+    glTexCoord2i(0, 0);
 
     glEnd();
 }
