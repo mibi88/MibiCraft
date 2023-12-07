@@ -76,6 +76,13 @@ void gfx_end_2d(void);
 void gfx_draw_image(int sx, int sy, unsigned int texture, int width,
                     int height, float scale);
 
+void gfx_draw_image_from_atlas(int sx, int sy, unsigned int texture, int width,
+                               int height, float scale, int cell_w, int cell_h,
+                               int atlas_w, int atlas_h, int num);
+
+void gfx_draw_string(float sx, float sy, char *string, unsigned int font,
+                     int char_w, int char_h, float scale);
+
 void gfx_free(GFXModel *model);
 
 void gfx_init(int *argc, char **argv, char *title, int use_arrays);

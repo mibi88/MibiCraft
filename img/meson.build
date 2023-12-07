@@ -1,6 +1,7 @@
 assets_sources = [
   'blocks.png',
   'crosshair.png',
+  'font.png',
 ]
 
 pymod = import('python')

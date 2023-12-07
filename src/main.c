@@ -21,9 +21,13 @@
 
 #include <blocks.h>
 #include <crosshair.h>
+#include <font.h>
+
 #include <math.h>
 
 #include <entity.h>
+
+#include <stdio.h>
 
 #define SZ_PLAYER_HITBOX 5
 
@@ -36,7 +40,7 @@ float step = 0.01;
 
 float gui_scale = 1;
 
-unsigned int texture = 0, crosshair;
+unsigned int texture = 0, crosshair = 0, font = 0;
 
 float rot_speed = 4;
 
@@ -55,6 +59,8 @@ World world;
 float mov_speed;
 
 int fog_enabled = 1;
+
+char fps_str[20];
 
 float player_hitbox[SZ_PLAYER_HITBOX*2] = {
     -0.8, -0.8,
@@ -102,12 +108,13 @@ void draw(int delta) {
     int fps = 0;
     mov_speed = (float)delta/16;
     if(delta != 0) fps = 1000/delta;
-    printf("FPS: %d\r", fps);
+    snprintf(fps_str, 20, "FPS: %d", fps);
     world_render(&world);
 
     gfx_start_2d();
     gfx_draw_image(crosshair_x, crosshair_y, crosshair, crosshair_width,
                    crosshair_height, gui_scale);
+    gfx_draw_string(0, 0, fps_str, font, 8, 8, gui_scale+4);
     gfx_end_2d();
 
     gfx_set_camera(player.x, player.y, player.z, player.rx, player.ry, 0);
@@ -176,6 +183,8 @@ int main(int argc, char **argv) {
                                (unsigned char*)blocks_data);
     crosshair = gfx_load_texture(crosshair_width, crosshair_height,
                                  (unsigned char*)crosshair_data);
+    font = gfx_load_texture(font_width, font_height,
+                            (unsigned char*)font_data);
     respawn();
     world_init(&world, RENDER_DISTANCE*2+1, RENDER_DISTANCE*2+1, seed, texture);
     if(focus){

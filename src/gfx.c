@@ -20,6 +20,10 @@
 
 #include <string.h>
 #include <GL/freeglut.h>
+#include <GL/glu.h>
+#include <GL/gl.h>
+
+#include <string.h>
 
 #define STARTSWITH(string, start) !strncmp(string, start, (int)strlen(start))
 
@@ -332,16 +336,66 @@ void gfx_draw_image(int sx, int sy, unsigned int texture, int width,
 
     glBegin(GL_QUADS);
 
+    glTexCoord2i(0, 0);
     glVertex2i(0, 0);
-    glTexCoord2i(1, 0);
+    glTexCoord2i(0, 1);
     glVertex2f(x2, 0);
     glTexCoord2i(1, 1);
     glVertex2f(x2, y2);
-    glTexCoord2i(0, 1);
+    glTexCoord2i(1, 0);
     glVertex2f(0, y2);
-    glTexCoord2i(0, 0);
 
     glEnd();
+}
+
+void gfx_draw_image_from_atlas(int sx, int sy, unsigned int texture, int width,
+                               int height, float scale, int cell_w, int cell_h,
+                               int atlas_w, int atlas_h, int num) {
+    float x2 = (float)width*scale, y2 = (float)height*scale;
+    int tex_x = num%atlas_w, tex_y = num/atlas_w;
+    int total_w = atlas_w*cell_w, total_h = atlas_h*cell_h;
+
+    float step_x = (float)cell_w/(float)total_w;
+    float step_y = (float)cell_h/(float)total_h;
+
+    float u1 = (float)tex_x*step_x;
+    float v1 = (float)tex_y*step_y;
+    float u2 = u1+step_x;
+    float v2 = v1+step_y;
+
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    glLoadIdentity();
+    glTranslatef(sx, sy, 0);
+
+    glBegin(GL_QUADS);
+
+    glTexCoord2f(u1, v1);
+    glVertex2i(0, 0);
+    glTexCoord2f(u2, v1);
+    glVertex2f(x2, 0);
+    glTexCoord2f(u2, v2);
+    glVertex2f(x2, y2);
+    glTexCoord2f(u1, v2);
+    glVertex2f(0, y2);
+
+    glEnd();
+}
+
+void gfx_draw_string(float sx, float sy, char *string, unsigned int font,
+                     int char_w, int char_h, float scale) {
+    int i;
+    int org_sx = sx;
+    for(i=0;i<strlen(string);i++){
+        if(string[i] == '\n'){
+            sy += char_h*scale;
+            sx = org_sx;
+            continue;
+        }
+        gfx_draw_image_from_atlas(sx, sy, font, char_w, char_h, scale, char_w,
+                                  char_h, 16, 6, string[i]-0x20);
+        sx += char_w*scale;
+    }
 }
 
 void gfx_free(GFXModel *model) {
