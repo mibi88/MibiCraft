@@ -31,6 +31,9 @@ void (*_draw)(int);
 void (*_keypress)(int);
 void (*_keyrelease)(int);
 
+void (*_right_click)(void);
+void (*_left_click)(void);
+
 int _w = 0, _h = 0;
 
 int _old_time = 0;
@@ -294,8 +297,20 @@ void _idle(void) {
     glutPostRedisplay();
 }
 
+void _click(int button, int state, int x, int y) {
+    if(button == GLUT_LEFT_BUTTON) {
+        _left_click();
+    }
+    if(button == GLUT_RIGHT_BUTTON) {
+        _right_click();
+    }
+}
+
 void gfx_run(void draw(int), void keypress(int), void keyrelease(int),
-             void mouse(int, int)) {
+             void mouse(int, int), void left_click(void),
+             void right_click(void)) {
+    _left_click = left_click;
+    _right_click = right_click;
     _old_time = gfx_get_time();
     _draw = draw;
     _keypress = keypress;
@@ -307,6 +322,7 @@ void gfx_run(void draw(int), void keypress(int), void keyrelease(int),
     glutKeyboardUpFunc(_release);
     glutPassiveMotionFunc(mouse);
     glutMotionFunc(mouse);
+    glutMouseFunc(_click);
     glutMainLoop();
 }
 
@@ -393,7 +409,7 @@ void gfx_draw_string(float sx, float sy, char *string, unsigned int font,
             continue;
         }
         gfx_draw_image_from_atlas(sx, sy, font, char_w, char_h, scale, char_w,
-                                  char_h, 16, 6, string[i]-0x20);
+                                  char_h, 16, 16, string[i]-0x20);
         sx += char_w*scale;
     }
 }

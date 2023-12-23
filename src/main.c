@@ -28,6 +28,7 @@
 #include <entity.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #define SZ_PLAYER_HITBOX 5
 
@@ -108,13 +109,13 @@ void draw(int delta) {
     int fps = 0;
     mov_speed = (float)delta/16;
     if(delta != 0) fps = 1000/delta;
-    snprintf(fps_str, 20, "FPS: %d", fps);
+    sprintf(fps_str, "FPS: %d", fps);
     world_render(&world);
 
     gfx_start_2d();
     gfx_draw_image(crosshair_x, crosshair_y, crosshair, crosshair_width,
                    crosshair_height, gui_scale);
-    gfx_draw_string(0, 0, fps_str, font, 8, 8, gui_scale+4);
+    gfx_draw_string(0, 0, fps_str, font, 8, 8, gui_scale+1);
     gfx_end_2d();
 
     gfx_set_camera(player.x, player.y, player.z, player.rx, player.ry, 0);
@@ -138,6 +139,34 @@ void keypress(int key) {
             player.z -= sin((player.ry-90)/180*PI)*0.25*sin_rx*mov_speed;
             break;
     }
+}
+
+int break_block(int x, int y, int z, void *vworld) {
+    World *world = (World*)vworld;
+    if(world_get_tile(world, x, y, z)){
+        world_set_tile(world, T_VOID, x, y, z);
+        return 1;
+    }
+    return 0;
+}
+
+int old_x = 0;
+int old_y = 0;
+int old_z = 0;
+int raycasting_step = 0;
+
+int place_block(int x, int y, int z, void *vworld) {
+    World *world = (World*)vworld;
+    /*if(world_get_tile(world, x, y, z) && step != 0){
+        world_set_tile(world, T_GLASS, old_x, old_y, old_z);
+        return 1;
+    }*/
+    world_set_tile(world, T_SPRUCE_PLANKS, x, y, z);
+    old_x = x;
+    old_y = y;
+    old_z = z;
+    raycasting_step++;
+    return 0;
 }
 
 void keyrelease(int key) {
@@ -169,6 +198,15 @@ void keyrelease(int key) {
     }
 }
 
+void left_click(void) {
+    raycast(&world, &player, 4.2, break_block);
+}
+
+void right_click(void) {
+    raycasting_step = 0;
+    raycast(&world, &player, 20, place_block);
+}
+
 void mouse(int x, int y) {
     mx = x;
     my = y;
@@ -192,7 +230,7 @@ int main(int argc, char **argv) {
     }else{
         gfx_cursor_show();
     }
-    gfx_run(draw, keypress, keyrelease, mouse);
+    gfx_run(draw, keypress, keyrelease, mouse, left_click, right_click);
     world_free(&world);
     return EXIT_SUCCESS;
 }

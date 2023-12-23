@@ -47,8 +47,8 @@ void world_render(World *world);
 
 void world_update(World *world, float x, float z);
 
-Tile world_get_tile(World *world, float sx, float sy, float sz);
-void world_set_tile(World *world, Tile tile, float sx, float sy, float sz);
+Tile world_get_tile(World *world, float x, float y, float z);
+void world_set_tile(World *world, Tile tile, int x, int y, int z);
 void world_update_chunk_model_at(World *world, float sx, float sz);
 
 void world_free(World *world);

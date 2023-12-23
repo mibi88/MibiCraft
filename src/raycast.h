@@ -2,8 +2,9 @@
 #define RAYCAST_H
 
 #include <world.h>
+#include <entity.h>
 
-void raycast(World *world, int *cx, int *cy, int *cz, float sx, float sy,
-             float sz, float rx, float ry, float length);
+void raycast(World *world, Entity *player, float len,
+             int voxel(int x, int y, int z, void *data));
 
 #endif

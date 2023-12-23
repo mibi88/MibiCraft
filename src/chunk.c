@@ -303,22 +303,22 @@ const Tile fallen_spruce_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
 
 /* Front face */
 const float front_vertices[SZ_VERTICES] = {
-    -0.5, 0.5, 0,
-    -0.5, -0.5, 0,
-    0.5, -0.5, 0,
-    0.5, 0.5, 0
+    -0.5, 0.5, 0.5,
+    -0.5, -0.5, 0.5,
+    0.5, -0.5, 0.5,
+    0.5, 0.5, 0.5
 };
 const float top_vertices[SZ_VERTICES] = {
-    -0.5, 0.5, 0,
-    -0.5, 0.5, -1,
-    0.5, 0.5, -1,
-    0.5, 0.5, 0
+    -0.5, 0.5, 0.5,
+    -0.5, 0.5, -0.5,
+    0.5, 0.5, -0.5,
+    0.5, 0.5, 0.5
 };
 const float left_vertices[SZ_VERTICES] = {
-    0.5, -0.5, -1,
-    0.5, 0.5, -1,
-    0.5, 0.5, 0,
-    0.5, -0.5, 0
+    0.5, -0.5, -0.5,
+    0.5, 0.5, -0.5,
+    0.5, 0.5, 0.5,
+    0.5, -0.5, 0.5
 };
 
 const int base_indices[SZ_INDICES] = {
@@ -327,14 +327,14 @@ const int base_indices[SZ_INDICES] = {
 };
 
 const float cross_vertices[SZ_VERTICES*2] = {
-    -0.5, 0.5, -1,
-    -0.5, -0.5, -1,
-    0.5, -0.5, 0,
-    0.5, 0.5, 0,
-    -0.5, 0.5, 0,
-    -0.5, -0.5, 0,
-    0.5, -0.5, -1,
-    0.5, 0.5, -1
+    -0.5, 0.5, -0.5,
+    -0.5, -0.5, -0.5,
+    0.5, -0.5, 0.5,
+    0.5, 0.5, 0.5,
+    -0.5, 0.5, 0.5,
+    -0.5, -0.5, 0.5,
+    0.5, -0.5, -0.5,
+    0.5, 0.5, -0.5
 };
 const int cross_indices[SZ_INDICES*2] = {
     0, 1, 3,

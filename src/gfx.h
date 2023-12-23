@@ -88,7 +88,8 @@ void gfx_free(GFXModel *model);
 void gfx_init(int *argc, char **argv, char *title, int use_arrays);
 
 void gfx_run(void draw(int), void keypress(int), void keyrelease(int),
-             void mouse(int, int));
+             void mouse(int, int), void left_click(void),
+             void right_click(void));
 
 unsigned int gfx_load_texture(int width, int height,
                               unsigned char *texture_data);
