@@ -32,7 +32,7 @@
 
 #define SZ_PLAYER_HITBOX 5
 
-#define RENDER_DISTANCE  4
+#define RENDER_DISTANCE  1
 
 Entity player = {CHUNK_WIDTH, CHUNK_HEIGHT/2, CHUNK_DEPTH, 0, 0, 0, 0, 0, 0};
 int mx, my;

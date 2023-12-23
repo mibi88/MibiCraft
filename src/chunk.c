@@ -517,15 +517,6 @@ void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
                 }else{
                     chunk->chunk_data[x][y][z] = T_VOID;
                 }
-                for(i=0;i<PLANTS;i++){
-                    if(properties->plants[i] > T_VOID &&
-                       properties->plants[i] < T_AMOUNT){
-                        chunk_generate_plants(chunk, sx, sz, x, z, height,
-                                              properties->plants[i],
-                                              properties->plant_probability[i],
-                                              seed);
-                    }
-                }
 
                 chunk_generate_layer(chunk, sx, sz, x, y, z, height, 3, 128, 3,
                                      properties->layer_top,
@@ -550,6 +541,15 @@ void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
                                     T_COAL, 6, 0.2, 1, seed);
                 if(y == 0){
                     chunk->chunk_data[x][y][z] = T_BEDROCK;
+                }
+            }
+            for(i=0;i<PLANTS;i++){
+                if(properties->plants[i] > T_VOID &&
+                   properties->plants[i] < T_AMOUNT){
+                    chunk_generate_plants(chunk, sx, sz, x, z, height,
+                                          properties->plants[i],
+                                          properties->plant_probability[i],
+                                          seed);
                 }
             }
         }
