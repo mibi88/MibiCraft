@@ -394,17 +394,18 @@ void chunk_place_structure(Chunk *chunk, int sx, int sy, int sz,
 
 void chunk_generate_structure(Chunk *chunk, int sx, int sz,
                               const Tile *structure, int width, int height,
-                              int depth, int probability, int amplitude,
-                              int seed, Biome biome, int dx, int dz) {
+                              int depth, int probability, int seed, Biome biome,
+                              int dx, int dz) {
     int x, y, z;
     Biome real_biome;
+    Biome_property *properties;
     for(x=-width;x<CHUNK_WIDTH+width;x++){
         for(z=-depth;z<CHUNK_DEPTH+depth;z++){
-            srand(seed*((sz+z)*CHUNK_WIDTH+(sx+x)));
+            real_biome = chunk_get_biome(sx, sz, x, z, seed);
+            properties = (Biome_property*)&biomes[real_biome];
+            y = chunk_get_height(sx, sz, x, z, properties->amplitude, seed);
             if(y >= CHUNK_HEIGHT/2){
-                y = chunk_get_height(sx, sz, x, z, amplitude, seed);
-                if(chunk_should_add(sx, sz ,x, z, seed, probability)){
-                    real_biome = chunk_get_biome(sx, sz, x, z, seed);
+                if(chunk_should_add(sx, sz, x, z, seed, probability)){
                     if(real_biome == biome){
                         chunk_place_structure(chunk, x-dx, y, z-dz, structure,
                                               width, height, depth);
@@ -499,7 +500,6 @@ void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
     float height;
     Biome biome = B_PLAINS;
     Biome_property *properties;
-    srand(seed+sx+sz*CHUNK_WIDTH);
     for(x=0;x<CHUNK_WIDTH;x++){
         for(z=0;z<CHUNK_DEPTH;z++){
             biome = chunk_get_biome(sx, sz, x, z, seed);
@@ -558,27 +558,23 @@ void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
     chunk->z = sz;
     chunk_generate_structure(chunk, sx, sz, fallen_oak_tree, TREE_WIDTH,
                              TREE_HEIGHT, TREE_DEPTH,
-                             properties->tree_probability*3,
-                             properties->amplitude, seed, B_PLAINS,
+                             properties->tree_probability*3, seed, B_PLAINS,
                              TREE_WIDTH/2, TREE_DEPTH/2);
     chunk_generate_structure(chunk, sx, sz, oak_tree, TREE_WIDTH, TREE_HEIGHT,
-                             TREE_DEPTH, properties->tree_probability,
-                             properties->amplitude, seed, B_PLAINS,
-                             TREE_WIDTH/2, TREE_DEPTH/2);
+                             TREE_DEPTH, properties->tree_probability, seed,
+                             B_PLAINS, TREE_WIDTH/2, TREE_DEPTH/2);
     chunk_generate_structure(chunk, sx, sz, fallen_spruce_tree, TREE_WIDTH,
                              TREE_HEIGHT, TREE_DEPTH,
-                             properties->tree_probability*3,
-                             properties->amplitude, seed, B_TAIGA, TREE_WIDTH/2,
+                             properties->tree_probability*3, seed, B_TAIGA,
+                             TREE_WIDTH/2,
                              TREE_DEPTH/2);
     chunk_generate_structure(chunk, sx, sz, spruce_tree, TREE_WIDTH,
                              TREE_HEIGHT, TREE_DEPTH,
-                             properties->tree_probability,
-                             properties->amplitude, seed, B_TAIGA, TREE_WIDTH/2,
-                             TREE_DEPTH/2);
+                             properties->tree_probability, seed, B_TAIGA,
+                             TREE_WIDTH/2, TREE_DEPTH/2);
     chunk_generate_structure(chunk, sx, sz, acacia_tree, TREE_WIDTH,
                              TREE_HEIGHT, TREE_DEPTH,
-                             properties->tree_probability,
-                             properties->amplitude, seed, B_SAVANNA,
+                             properties->tree_probability, seed, B_SAVANNA,
                              TREE_WIDTH/2, TREE_DEPTH/2);
     chunk_generate_snow(chunk, sx, sz, properties->amplitude, seed);
 }
