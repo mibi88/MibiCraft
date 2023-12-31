@@ -42,7 +42,12 @@ float _cam_x, _cam_y, _cam_z, _cam_rx, _cam_ry, _cam_rz;
 
 int _keys[256];
 
-int _use_arrays;
+int _motion_blur_step;
+
+struct {
+    int use_arrays;
+    int motion_blur;
+} _config;
 
 int gfx_get_time(void) {
     return glutGet(GLUT_ELAPSED_TIME);
@@ -66,6 +71,10 @@ int gfx_get_width(void) {
 
 int gfx_get_height(void) {
     return _h;
+}
+
+int gfx_get_motion_blur(void) {
+    return _config.motion_blur;
 }
 
 void gfx_enable_fog(float r, float g, float b, float density, float start,
@@ -93,6 +102,10 @@ void gfx_set_clear_color(float r, float g, float b) {
 
 void gfx_set_color(float r, float g, float b) {
     glColor3f(r, g, b);
+}
+
+void gfx_set_motion_blur(int v) {
+    _config.motion_blur = v;
 }
 
 void gfx_set_camera(float x, float y, float z, float rx, float ry, float rz) {
@@ -127,6 +140,19 @@ void gfx_init_model(GFXModel *model, float *vertices, int *indices,
     model->triangles = triangles;
 }
 
+void gfx_create_modelview_matrix(float x, float y, float z, float rx, float ry,
+                                 float rz) {
+    glLoadIdentity();
+    glRotatef(_cam_rx, 1, 0, 0);
+    glRotatef(_cam_ry, 0, 1, 0);
+    glRotatef(_cam_rz, 0, 0, 1);
+    glTranslatef(-_cam_x, -_cam_y, -_cam_z);
+    glTranslatef(x, y, z);
+    glRotatef(rx, 1, 0, 0);
+    glRotatef(ry, 0, 1, 0);
+    glRotatef(rz, 0, 0, 1);
+}
+
 void gfx_draw_model(GFXModel *model, float x, float y, float z, float rx,
                     float ry, float rz) {
     int i;
@@ -137,17 +163,9 @@ void gfx_draw_model(GFXModel *model, float x, float y, float z, float rx,
         glBindTexture(GL_TEXTURE_2D, model->texture);
     }
     
-    glLoadIdentity();
-    glRotatef(_cam_rx, 1, 0, 0);
-    glRotatef(_cam_ry, 0, 1, 0);
-    glRotatef(_cam_rz, 0, 0, 1);
-    glTranslatef(-_cam_x, -_cam_y, -_cam_z);
-    glTranslatef(x, y, z);
-    glRotatef(rx, 1, 0, 0);
-    glRotatef(ry, 0, 1, 0);
-    glRotatef(rz, 0, 0, 1);
+    gfx_create_modelview_matrix(x, y, z, rx, ry, rz);
     
-    if(_use_arrays){
+    if(_config.use_arrays){
         glEnableClientState(GL_VERTEX_ARRAY);
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
@@ -227,9 +245,11 @@ void gfx_draw_model(GFXModel *model, float x, float y, float z, float rx,
     glPopMatrix();
 }
 
-void gfx_init(int *argc, char **argv, char *title, int use_arrays) {
-    _use_arrays = use_arrays;
-    if(_use_arrays){
+void gfx_init(int *argc, char **argv, char *title, int use_arrays,
+              int motion_blur) {
+    _config.use_arrays = use_arrays;
+    _config.motion_blur = motion_blur;
+    if(_config.use_arrays){
         glEnable(GL_VERTEX_ARRAY);
     }
     glutInit(argc, argv);
@@ -245,6 +265,16 @@ void gfx_init(int *argc, char **argv, char *title, int use_arrays) {
     glEnable(GL_ALPHA_TEST);
     glAlphaFunc(GL_GREATER, 0.5);
 }
+
+void _3d_projection_matrix(float w, float h) {
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(72, (float)w/(float)h, 0.1, 1000);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+}
+
+_motion_blur_step = 0;
 
 void _display(void) {
     int i, frame_time;
@@ -264,17 +294,25 @@ void _display(void) {
 
     _draw(frame_time);
 
-    glFlush();
-    glDisable(GL_TEXTURE_2D);
-    glutSwapBuffers();
-}
-
-void _3d_projection_matrix(int w, int h) {
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(72, (float)w/(float)h, 0.1, 1000);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+    if(_config.motion_blur){
+        if(_motion_blur_step == 0){
+            glAccum(GL_LOAD, 1.0/_config.motion_blur);
+        }else{
+            glAccum(GL_ACCUM, 1.0/_config.motion_blur);
+        }
+        _motion_blur_step++;
+        if(_motion_blur_step >= _config.motion_blur){
+            _motion_blur_step = 0;
+            glAccum(GL_RETURN, 1.0);
+            glFlush();
+            glDisable(GL_TEXTURE_2D);
+            glutSwapBuffers();
+        }
+    }else{
+        glFlush();
+        glDisable(GL_TEXTURE_2D);
+        glutSwapBuffers();
+    }
 }
 
 void _reshape(int w, int h) {

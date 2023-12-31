@@ -566,8 +566,7 @@ void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
     chunk_generate_structure(chunk, sx, sz, fallen_spruce_tree, TREE_WIDTH,
                              TREE_HEIGHT, TREE_DEPTH,
                              properties->tree_probability*3, seed, B_TAIGA,
-                             TREE_WIDTH/2,
-                             TREE_DEPTH/2);
+                             TREE_WIDTH/2, TREE_DEPTH/2);
     chunk_generate_structure(chunk, sx, sz, spruce_tree, TREE_WIDTH,
                              TREE_HEIGHT, TREE_DEPTH,
                              properties->tree_probability, seed, B_TAIGA,

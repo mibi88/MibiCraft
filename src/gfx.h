@@ -49,6 +49,8 @@ int gfx_get_width(void);
 
 int gfx_get_height(void);
 
+int gfx_get_motion_blur(void);
+
 void gfx_enable_fog(float r, float g, float b, float density, float start,
                     float end);
 
@@ -57,6 +59,8 @@ void gfx_disable_fog(void);
 void gfx_set_clear_color(float r, float g, float b);
 
 void gfx_set_color(float r, float g, float b);
+
+void gfx_set_motion_blur(int v);
 
 void gfx_set_camera(float x, float y, float z, float rx, float ry, float rz);
 
@@ -85,7 +89,8 @@ void gfx_draw_string(float sx, float sy, char *string, unsigned int font,
 
 void gfx_free(GFXModel *model);
 
-void gfx_init(int *argc, char **argv, char *title, int use_arrays);
+void gfx_init(int *argc, char **argv, char *title, int use_arrays,
+              int motion_blur);
 
 void gfx_run(void draw(int), void keypress(int), void keyrelease(int),
              void mouse(int, int), void left_click(void),

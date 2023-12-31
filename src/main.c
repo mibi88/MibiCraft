@@ -195,6 +195,13 @@ void keyrelease(int key) {
             if(gui_scale > 0.5){
                 gui_scale -= 0.5;
             }
+            break;
+        case 'm':
+            if(gfx_get_motion_blur()){
+                gfx_set_motion_blur(0);
+            }else{
+                gfx_set_motion_blur(128);
+            }
     }
 }
 
@@ -213,7 +220,7 @@ void mouse(int x, int y) {
 }
 
 int main(int argc, char **argv) {
-    gfx_init(&argc, argv, "MibiCraft", 1);
+    gfx_init(&argc, argv, "MibiCraft", 1, 0);
     gfx_set_clear_color(0.7, 0.9, 1.0);
     gfx_enable_fog(0.7, 0.9, 1.0, 0.01, CHUNK_DEPTH-1,
                    CHUNK_DEPTH);
