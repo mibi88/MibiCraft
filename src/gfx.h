@@ -73,6 +73,8 @@ void gfx_init_model(GFXModel *model, float *vertices, int *indices,
 void gfx_draw_model(GFXModel *model, float x, float y, float z, float rx,
                     float ry, float rz);
 
+void gfx_render_wire_cube(float x, float y, float z, float s);
+
 void gfx_start_2d(void);
 
 void gfx_end_2d(void);

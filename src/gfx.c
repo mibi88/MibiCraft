@@ -153,6 +153,16 @@ void gfx_create_modelview_matrix(float x, float y, float z, float rx, float ry,
     glRotatef(rz, 0, 0, 1);
 }
 
+void gfx_render_wire_cube(float x, float y, float z, float s) {
+    printf("Draw cube at %f, %f, %f of size %f\n", x, y, z, s);
+    gfx_create_modelview_matrix(x, y, z, 0, 0, 0);
+    glDisable(GL_TEXTURE_2D);
+    glColor3i(0, 0, 0);
+    glLineWidth(5.0);
+    glutWireCube(s);
+    glEnable(GL_TEXTURE_2D);
+}
+
 void gfx_draw_model(GFXModel *model, float x, float y, float z, float rx,
                     float ry, float rz) {
     int i;
@@ -337,10 +347,10 @@ void _idle(void) {
 
 void _click(int button, int state, int x, int y) {
     if(button == GLUT_LEFT_BUTTON) {
-        _left_click();
+        if(state == 0)_left_click();
     }
     if(button == GLUT_RIGHT_BUTTON) {
-        _right_click();
+        if(state == 0) _right_click();
     }
 }
 
