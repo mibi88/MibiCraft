@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <gfx.h>
 
-#define STEP 0.0001
+#define STEP 0.05
 
 void raycast(World *world, Entity *player, float len,
              int voxel(int x, int y, int z, void *data)) {
@@ -17,29 +17,32 @@ void raycast(World *world, Entity *player, float len,
     step_x = x-fx > 0 ? -1 : 1;
     y = player->y;
     step_y = y-fy > 0 ? -1 : 1;*/
-    float cos_rx = cos((player->rx)/180*PI);
-    float xinc = cos((player->ry-90)/180*PI)*cos_rx;
-    float yinc = -sin(player->rx/180*PI);
-    float zinc = sin((player->ry-90)/180*PI)*cos_rx;
-    float x = player->x;
-    float y = player->y;
-    float z = player->z;
-    int old_x = x;
-    int old_y = y;
-    int old_z = z;
-    float l = 0;
+    double cos_rx = cos((player->rx)/180*PI);
+    double xinc = cos((player->ry-90)/180*PI)*cos_rx;
+    double yinc = -sin(player->rx/180*PI);
+    double zinc = sin((player->ry-90)/180*PI)*cos_rx;
+    double x = player->x;
+    double y = player->y+CHUNK_HEIGHT/2;
+    double z = player->z;
+    double old_x = floor(x);
+    double old_y = floor(y);
+    double old_z = floor(z);
+    double l = 0;
+    puts("Raycasting");
     while(l < len){
         x += xinc*STEP;
         y += yinc*STEP;
         z += zinc*STEP;
         l += STEP;
-        if((int)x != old_x || (int)y != old_y || (int)z != old_z){
-            if(voxel(x, y+CHUNK_HEIGHT/2, z, world)){
+        if(floor(x) != old_x || floor(y) != old_y || floor(z) != old_z){
+            if(voxel(floor(x+0.5), floor(y+0.5), floor(z+0.5), world)){
+                printf("Point at: %f, %f, %f\n", x, y, z);
+                gfx_render_wire_cube(x, y, z, 0.5);
                 break;
             }
-            old_x = x;
-            old_y = y;
-            old_z = z;
+            old_x = floor(x);
+            old_y = floor(y);
+            old_z = floor(z);
         }
     }
 }

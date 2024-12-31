@@ -112,9 +112,15 @@ void draw(int delta) {
     int crosshair_y = (int)((float)gfx_get_height()/2-
                             (crosshair_height*gui_scale)/2);
     int fps = 0;
-    float x, y, z;
     mov_speed = (float)delta/16*0.25;
     if(delta != 0) fps = 1000/delta;
+
+    gfx_set_camera(player.x, player.y, player.z, player.rx, player.ry, 0);
+
+    get_rotation_from_mouse();
+
+    world_update(&world, player.x, player.z);
+
     sprintf(fps_str, "FPS: %d", fps);
     sprintf(pos_str, "X: %.02f Y: %.02f Z: %.02f", player.x, player.y,
             player.z);
@@ -122,7 +128,7 @@ void draw(int delta) {
     /* Display the selected block */
     raycast(&world, &player, RAYCAST_DISTANCE, selection_draw);
     /* gfx_render_wire_cube((int)player.x, (int)player.y, (int)player.z, 1); */
-    gfx_render_wire_cube((int)x, (int)y, (int)z, 1);
+    /* gfx_render_wire_cube(player.x, player.y, player.z, 1); */
 
     gfx_start_2d();
     gfx_draw_image(crosshair_x, crosshair_y, crosshair, crosshair_width,
@@ -130,12 +136,6 @@ void draw(int delta) {
     gfx_draw_string(0, 0, fps_str, font, 8, 8, gui_scale+1);
     gfx_draw_string(0, 8+8*gui_scale, pos_str, font, 8, 8, gui_scale+1);
     gfx_end_2d();
-
-    gfx_set_camera(player.x, player.y, player.z, player.rx, player.ry, 0);
-
-    get_rotation_from_mouse();
-
-    world_update(&world, player.x, player.z);
 }
 
 int selection_draw(int x, int y, int z, void *data) {
@@ -143,6 +143,7 @@ int selection_draw(int x, int y, int z, void *data) {
         gfx_render_wire_cube(x, y-CHUNK_HEIGHT/2, z, 1);
         return 1;
     }
+    /* gfx_render_wire_cube(x, y-CHUNK_HEIGHT/2, z, 1); */
     return 0;
 }
 

@@ -119,10 +119,14 @@ void gfx_set_camera(float x, float y, float z, float rx, float ry, float rz) {
 }
 
 void gfx_draw_point(float x, float y, float z, int size) {
+    gfx_create_modelview_matrix(x, y, z, 0, 0, 0);
+    glDisable(GL_TEXTURE_2D);
     glPointSize(size);
     glBegin(GL_POINTS);
-    glVertex3f(x, y, z);
+    glColor3i(0, 0, 0);
+    glVertex3i(0, 0, 0);
     glEnd();
+    glEnable(GL_TEXTURE_2D);
 }
 
 void gfx_init_model(GFXModel *model, float *vertices, int *indices,
