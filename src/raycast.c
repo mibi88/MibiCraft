@@ -49,9 +49,9 @@ void raycast(World *world, Entity *player, float len,
     float steplen_x, steplen_y, steplen_z;
     float rays_x, rays_y, rays_z;
     float end_len;
-    raystep_x = (yinc*len)/fabs(xinc*len != 0 ? xinc*len : FLT_MIN);
-    raystep_y = (xinc*len)/fabs(yinc*len != 0 ? yinc*len : FLT_MIN);
-    raystep_z = (xinc*len)/fabs(zinc*len != 0 ? zinc*len : FLT_MIN);
+    raystep_x = 1/(xinc != 0 ? xinc : FLT_MIN);
+    raystep_y = 1/(yinc != 0 ? yinc : FLT_MIN);
+    raystep_z = 1/(zinc != 0 ? zinc : FLT_MIN);
     steplen_x = sqrt(raystep_x*raystep_x+1);
     steplen_y = sqrt(raystep_y*raystep_y+1);
     steplen_z = sqrt(raystep_z*raystep_z+1);
