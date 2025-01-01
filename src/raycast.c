@@ -44,15 +44,14 @@ void raycast(World *world, Entity *player, float len,
     int px = (int)x;
     int py = (int)y;
     int pz = (int)z;
-    float raystep_x, raystep_y;
-    float start_x, start_y;
-    float steplen_x, steplen_y;
-    float rays_x, rays_y;
+    float raystep_x, raystep_y, raystep_z;
+    float start_x, start_y, start_z;
+    float steplen_x, steplen_y, steplen_z;
+    float rays_x, rays_y, rays_z;
     float end_len;
-    raystep_x = fabs((yinc*len)/(xinc*len != 0 ? xinc*len : FLT_MIN));
-    raystep_y = fabs((xinc*len)/(yinc*len != 0 ? yinc*len : FLT_MIN));
-    steplen_x = sqrt(raystep_x*raystep_x+1);
-    steplen_y = sqrt(raystep_y*raystep_y+1);
+    steplen_x = (xinc > 0 ? 1 : (xinc != 0 ? -1 : 0))/(xinc*len);
+    steplen_y = (yinc > 0 ? 1 : (yinc != 0 ? -1 : 0))/(yinc*len);
+    steplen_z = (zinc > 0 ? 1 : (zinc != 0 ? -1 : 0))/(zinc*len);
     if(xinc*len > 0){
         if(x > 0) start_x = 1-(x-floor(x));
         else start_x = 1-(x-ceil(x));
@@ -67,24 +66,46 @@ void raycast(World *world, Entity *player, float len,
         if(y > 0) start_y = y-floor(y);
         else start_y = y-ceil(y);
     }
+    if(zinc*len > 0){
+        if(z > 0) start_z = 1-(z-floor(z));
+        else start_z = 1-(z-ceil(z));
+    }else{
+        if(z > 0) start_z = z-floor(z);
+        else start_z = z-ceil(z);
+    }
     rays_x = steplen_x*start_x;
     rays_y = steplen_y*start_y;
+    rays_z = steplen_z*start_z;
     if(rays_x < rays_y){
-        end_len = rays_x;
+        end_len = rays_x < rays_z ? rays_x : rays_z;
     }else{
-        end_len = rays_y;
+        end_len = rays_y < rays_z ? rays_y : rays_z;
     }
     while(end_len < len){
         if(rays_x < rays_y){
-            px += xinc*len > 0 ? 1 : -1;
-            rays_x += steplen_x;
+            if(rays_x < rays_z){
+                px += xinc*len > 0 ? 1 : -1;
+                rays_x += steplen_x;
+            }else{
+                pz += zinc*len > 0 ? 1 : -1;
+                rays_z += steplen_z;
+            }
         }else{
-            py += yinc*len > 0 ? 1 : -1;
-            rays_y += steplen_y;
+            if(rays_y < rays_z){
+                py += yinc*len > 0 ? 1 : -1;
+                rays_y += steplen_y;
+            }else{
+                pz += zinc*len > 0 ? 1 : -1;
+                rays_z += steplen_z;
+            }
         }
         if(voxel(px, py, pz, world)){
             break;
         }
-        end_len = rays_x < rays_y ? rays_x : rays_y;
+        if(rays_x < rays_z){
+            end_len = rays_x < rays_y ? rays_x : rays_y;
+        }else{
+            end_len = rays_z < rays_y ? rays_z : rays_y;
+        }
     }
 }
