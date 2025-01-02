@@ -23,16 +23,16 @@
 
 /* Biomes */
 const Biome_property biomes[B_AMOUNT] = {
-    {(CHUNK_HEIGHT/2), 32, T_GRASS, T_DIRT,
-     {T_GRASS_PLANT, T_DANDELION, T_ROSE, T_VOID}, {8, 12, 48}},
-    {(CHUNK_HEIGHT/1.8), 16, T_PODZOL, T_DIRT,
+    {(CHUNK_HEIGHT/2), 10, T_GRASS, T_DIRT,
+     {T_GRASS_PLANT, T_DANDELION, T_ROSE, T_VOID}, {8, 12, 20, 0}},
+    {(CHUNK_HEIGHT/1.8), 20, T_PODZOL, T_DIRT,
      {T_BROWN_MUSHROOM, T_RED_MUSHROOM, T_BERRY_BUSH, T_FRUIT_BERRY_BUSH},
-     {8, 12, 20, 24}},
-    {(CHUNK_HEIGHT/2.2), 64, T_DRIED_GRASS, T_DIRT,
+     {8, 16, 20, 24}},
+    {(CHUNK_HEIGHT/2.2), 10, T_DRIED_GRASS, T_DIRT,
      {T_GRASS_PLANT, T_ROSE, T_VOID, T_VOID},
-     {32, 48}},
-    {(CHUNK_HEIGHT/2.2), 96, T_SAND, T_SAND_STONE,
-     {T_DEAD_BUSH, T_CACTUS, T_VOID, T_VOID}, {256, 512}}
+     {4, 8, 0, 0}},
+    {(CHUNK_HEIGHT/2.2), 15, T_SAND, T_SAND_STONE,
+     {T_DEAD_BUSH, T_CACTUS, T_VOID, T_VOID}, {4, 12, 0, 0}}
 };
 
 /* Blocks */
@@ -367,9 +367,17 @@ float chunk_get_height(int sx, int sz, int x, int z, float amplitude,
                                   0, seed)*amplitude+(CHUNK_HEIGHT/2);
 }
 
-int chunk_should_add(int sx, int sz, int x, int z, int seed, int probability) {
-    srand(seed+(sz+z)*(sx+x)+(sx+x));
-    return !(rand()%probability);
+int xorshift(int *seed) {
+    /* Algorithm "xor" from p. 4 of Marsaglia, "Xorshift RNGs" */
+    *seed ^= *seed << 13;
+    *seed ^= *seed >> 17;
+    *seed ^= *seed << 5;
+    return *seed;
+}
+
+int chunk_rand(int sx, int sz, int x, int z, int seed, int probability) {
+    seed = seed+(xorshift(&sz)+z)*(xorshift(&sx)+x)+(xorshift(&sx)+x);
+    return xorshift(&seed)%probability;
 }
 
 void chunk_place_structure(Chunk *chunk, int sx, int sy, int sz,
@@ -397,20 +405,24 @@ void chunk_generate_structure(Chunk *chunk, int sx, int sz,
                               int depth, int probability, int seed, Biome biome,
                               int dx, int dz) {
     int x, y, z;
+    int i;
+    int amount;
     Biome real_biome;
     Biome_property *properties;
-    for(x=-width;x<CHUNK_WIDTH+width;x++){
-        for(z=-depth;z<CHUNK_DEPTH+depth;z++){
-            real_biome = chunk_get_biome(sx, sz, x, z, seed);
-            properties = (Biome_property*)&biomes[real_biome];
-            y = chunk_get_height(sx, sz, x, z, properties->amplitude, seed);
-            if(y >= CHUNK_HEIGHT/2){
-                if(chunk_should_add(sx, sz, x, z, seed, probability)){
-                    if(real_biome == biome){
-                        chunk_place_structure(chunk, x-dx, y, z-dz, structure,
-                                              width, height, depth);
-                    }
-                }
+    int pos_seed = seed;
+    amount = probability/2+chunk_rand(sx, sz, 0, 0, seed, probability/2);
+    for(i=0;i<amount;i++){
+        x = chunk_rand(sx, sz, 0, 0, xorshift(&pos_seed), CHUNK_WIDTH);
+        z = chunk_rand(sx, sz, 0, 0, xorshift(&pos_seed), CHUNK_DEPTH);
+        real_biome = chunk_get_biome(sx, sz, x, z, seed);
+        properties = (Biome_property*)&biomes[real_biome];
+        y = chunk_get_height(sx, sz, x, z, properties->amplitude, seed);
+        real_biome = chunk_get_biome(sx, sz, x, z, seed);
+        properties = (Biome_property*)&biomes[real_biome];
+        if(y >= CHUNK_HEIGHT/2){
+            if(real_biome == biome){
+                chunk_place_structure(chunk, x-dx, y, z-dz, structure,
+                                      width, height, depth);
             }
         }
     }
@@ -420,11 +432,12 @@ void chunk_generate_ores(Chunk *chunk, int sx, int sz, int x, int y, int z,
                          float height, Tile material, Tile ore,
                          float amplitude, float probability, int depth,
                          int seed) {
-    if(stb_perlin_noise3_seed((float)(x+sx)/amplitude, (float)y/amplitude,
-                              (float)(z+sz)/amplitude, 0, 0, 0,
-                              seed) > probability && y < (int)height/depth &&
-                              chunk->chunk_data[x][y][z] == material) {
-        chunk->chunk_data[x][y][z] = ore;
+    if(chunk->chunk_data[x][y][z] == material){
+        if(stb_perlin_noise3_seed((float)(x+sx)/amplitude, (float)y/amplitude,
+                                  (float)(z+sz)/amplitude, 0, 0, 0,
+                                  seed) > probability && y < (int)height/depth){
+            chunk->chunk_data[x][y][z] = ore;
+        }
     }
 }
 
@@ -474,12 +487,56 @@ void chunk_generate_snow(Chunk *chunk, int sx, int sz, float amplitude,
     }
 }
 
-void chunk_generate_plants(Chunk *chunk, int sx, int sz, int x, int z,
-        float height, Tile plant, int probability, int seed) {
-    if(height >= CHUNK_HEIGHT/2 && height < CHUNK_HEIGHT){
-        if(chunk->chunk_data[x][(int)height][z] != plant){
-            if(chunk_should_add(sx, sz, x, z, seed, probability)){
-                chunk->chunk_data[x][(int)height][z] = plant;
+void chunk_generate_plants(Chunk *chunk, int sx, int sz, int seed) {
+    int x, y, z;
+    int i, n, amount;
+    Tile plant = T_ROSE;
+    int plant_max = 0;
+    Biome real_biome;
+    Biome_property *properties;
+    int pos_seed = seed;
+    int plant_rand;
+    real_biome = chunk_get_biome(sx, sz, 0, 0, seed);
+    properties = (Biome_property*)&biomes[real_biome];
+    plant_max = 0;
+    for(n=0;n<PLANTS;n++){
+        if(properties->plants[n] > T_VOID &&
+           properties->plants[n] < T_AMOUNT){
+            plant_max += properties->plant_probability[n];
+        }
+    }
+    amount = plant_max/2+chunk_rand(sx, sz, 0, 0, seed, plant_max/2);
+    xorshift(&pos_seed);
+    for(i=0;i<amount;i++){
+        x = chunk_rand(sx, sz, 0, 0, xorshift(&pos_seed), CHUNK_WIDTH);
+        z = chunk_rand(sx, sz, 0, 0, xorshift(&pos_seed), CHUNK_DEPTH);
+        real_biome = chunk_get_biome(sx, sz, x, z, seed);
+        properties = (Biome_property*)&biomes[real_biome];
+        y = chunk_get_height(sx, sz, x, z, properties->amplitude, seed);
+        if(y >= CHUNK_HEIGHT/2){
+            properties = (Biome_property*)&biomes[real_biome];
+            plant_max = 0;
+            for(n=0;n<PLANTS;n++){
+                if(properties->plants[n] > T_VOID &&
+                   properties->plants[n] < T_AMOUNT){
+                    plant_max += properties->plant_probability[n];
+                }
+            }
+            plant_rand = chunk_rand(sx, sz, 0, 0, xorshift(&pos_seed),
+                               plant_max);
+            plant = properties->plants[0];
+            for(n=0;n<PLANTS;n++){
+                if(properties->plants[n] > T_VOID &&
+                   properties->plants[n] < T_AMOUNT){
+                    plant_rand -= properties->plant_probability[n];
+                    if(plant_rand < properties->plant_probability[n]){
+                        plant = properties->plants[n];
+                        break;
+                    }
+                }
+            }
+            if(chunk_get_tile(chunk, x, y, z, 0, 0, 0) == T_VOID){
+                chunk_set_tile(chunk, plant, x, y, z);
             }
         }
     }
@@ -543,15 +600,6 @@ void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
                     chunk->chunk_data[x][y][z] = T_BEDROCK;
                 }
             }
-            for(i=0;i<PLANTS;i++){
-                if(properties->plants[i] > T_VOID &&
-                   properties->plants[i] < T_AMOUNT){
-                    chunk_generate_plants(chunk, sx, sz, x, z, height,
-                                          properties->plants[i],
-                                          properties->plant_probability[i],
-                                          seed);
-                }
-            }
         }
     }
     chunk->x = sx;
@@ -576,6 +624,7 @@ void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
                              properties->tree_probability, seed, B_SAVANNA,
                              TREE_WIDTH/2, TREE_DEPTH/2);
     chunk_generate_snow(chunk, sx, sz, properties->amplitude, seed);
+    chunk_generate_plants(chunk, sx, sz, seed);
 }
 
 void chunk_generate_texture_coords(Chunk *chunk, int tex_x, int tex_y) {
@@ -634,10 +683,10 @@ void chunk_add_face_to_model(Chunk *chunk, const float *face_vertices, float rx,
     }
     memcpy(chunk->indices_ptr, chunk->indices, SZ_INDICES*sizeof(int));
     chunk->indices_ptr += SZ_INDICES;
-    
+
     memcpy(chunk->tex_ptr, chunk->texture_coords, SZ_TEX_COORDS*sizeof(float));
     chunk->tex_ptr += SZ_TEX_COORDS;
-    
+
     chunk->triangles += 2;
 }
 

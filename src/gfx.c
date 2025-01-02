@@ -274,6 +274,7 @@ void gfx_init(int *argc, char **argv, char *title, int use_arrays,
     glClearColor (0.0, 0.0, 0.0, 0.0);
     glShadeModel(GL_FLAT);
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
     glEnable(GL_ALPHA_TEST);
     glAlphaFunc(GL_GREATER, 0.5);
@@ -287,7 +288,7 @@ void _3d_projection_matrix(float w, float h) {
     glLoadIdentity();
 }
 
-_motion_blur_step = 0;
+int _motion_blur_step = 0;
 
 void _display(void) {
     int i, frame_time;
@@ -453,7 +454,7 @@ void gfx_draw_string(float sx, float sy, char *string, unsigned int font,
                      int char_w, int char_h, float scale) {
     int i;
     int org_sx = sx;
-    for(i=0;i<strlen(string);i++){
+    for(i=0;i<(int)strlen(string);i++){
         if(string[i] == '\n'){
             sy += char_h*scale;
             sx = org_sx;

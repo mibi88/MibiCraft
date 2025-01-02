@@ -37,6 +37,9 @@ typedef struct {
     int triangles;
 } GFXModel;
 
+void gfx_create_modelview_matrix(float x, float y, float z, float rx, float ry,
+                                 float rz);
+
 int gfx_get_time(void);
 
 void gfx_set_pointer_pos(int x, int y);

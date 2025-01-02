@@ -44,7 +44,6 @@ void raycast(World *world, Entity *player, float len,
     int px = (int)floor(x);
     int py = (int)floor(y);
     int pz = (int)floor(z);
-    float raystep_x, raystep_y, raystep_z;
     float start_x, start_y, start_z;
     float steplen_x, steplen_y, steplen_z;
     float rays_x, rays_y, rays_z;

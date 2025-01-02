@@ -1,4 +1,6 @@
 *.syscap
+*.data
+*.old
 /build/
 .cproject
 .project

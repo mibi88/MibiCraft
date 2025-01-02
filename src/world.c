@@ -23,7 +23,6 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <tchar.h>
-#include <strsafe.h>
 #else
 #include <pthread.h>
 #endif
@@ -293,8 +292,10 @@ Tile world_get_tile(World *world, float x, float y, float z) {
 }
 
 void world_set_tile(World *world, Tile tile, int x, int y, int z) {
-    int i;
+    int i, n;
     Chunk *tile_chunk;
+    Chunk *neighbor_chunk;
+    puts("Set tile");
     for(i=0;i<world->width*world->height;i++){
         tile_chunk = &world->chunks[i];
         if(x >= tile_chunk->x && x < tile_chunk->x+CHUNK_WIDTH &&
@@ -302,7 +303,66 @@ void world_set_tile(World *world, Tile tile, int x, int y, int z) {
             chunk_set_tile(tile_chunk, tile, x-tile_chunk->x, y,
                            z-tile_chunk->z);
             chunk_generate_model(tile_chunk, world->texture, GET_TILE, world);
-            return;
+            break;
+        }
+        /* Check if we need to update a neighboring chunk */
+        if(x == tile_chunk->x){
+            puts("Update neighboring chunk < x");
+            for(n=0;n<world->width*world->height;n++){
+                neighbor_chunk = &world->chunks[n];
+                if(tile_chunk->x-1 >= neighbor_chunk->x &&
+                   tile_chunk->x-1 < neighbor_chunk->x+CHUNK_WIDTH &&
+                   neighbor_chunk->z == tile_chunk->z){
+                    chunk_generate_model(neighbor_chunk, world->texture,
+                                         GET_TILE, world);
+                    printf("Chunk at %d, %d updated!\n", neighbor_chunk->x,
+                           neighbor_chunk->z);
+                    break;
+                }
+            }
+        }else if(x == tile_chunk->x+CHUNK_WIDTH-1){
+            puts("Update neighboring chunk > x");
+            for(n=0;n<world->width*world->height;n++){
+                neighbor_chunk = &world->chunks[n];
+                if(tile_chunk->x+CHUNK_WIDTH >= neighbor_chunk->x &&
+                   tile_chunk->x+CHUNK_WIDTH < neighbor_chunk->x+CHUNK_WIDTH &&
+                   neighbor_chunk->z == tile_chunk->z){
+                    chunk_generate_model(neighbor_chunk, world->texture,
+                                         GET_TILE, world);
+                    printf("Chunk at %d, %d updated!\n", neighbor_chunk->x,
+                           neighbor_chunk->z);
+                    break;
+                }
+            }
+        }
+        if(z == tile_chunk->z){
+            puts("Update neighboring chunk < z");
+            for(n=0;n<world->width*world->height;n++){
+                neighbor_chunk = &world->chunks[n];
+                if(tile_chunk->z-1 >= neighbor_chunk->z &&
+                   tile_chunk->z-1 < neighbor_chunk->z+CHUNK_DEPTH &&
+                   neighbor_chunk->x == tile_chunk->x){
+                    chunk_generate_model(neighbor_chunk, world->texture,
+                                         GET_TILE, world);
+                    printf("Chunk at %d, %d updated!\n", neighbor_chunk->x,
+                           neighbor_chunk->z);
+                    break;
+                }
+            }
+        }else if(z == tile_chunk->z+CHUNK_DEPTH-1){
+            puts("Update neighboring chunk > z");
+            for(n=0;n<world->width*world->height;n++){
+                neighbor_chunk = &world->chunks[n];
+                if(tile_chunk->z+CHUNK_DEPTH >= neighbor_chunk->z &&
+                   tile_chunk->z+CHUNK_DEPTH < neighbor_chunk->z+CHUNK_DEPTH &&
+                   neighbor_chunk->x == tile_chunk->x){
+                    chunk_generate_model(neighbor_chunk, world->texture,
+                                         GET_TILE, world);
+                    printf("Chunk at %d, %d updated!\n", neighbor_chunk->x,
+                           neighbor_chunk->z);
+                    break;
+                }
+            }
         }
     }
 }
