@@ -41,9 +41,9 @@ void raycast(World *world, Entity *player, float len,
     float x = player->x+0.5;
     float y = player->y+CHUNK_HEIGHT/2+0.5;
     float z = player->z+0.5;
-    int px = (int)x;
-    int py = (int)y;
-    int pz = (int)z;
+    int px = (int)floor(x);
+    int py = (int)floor(y);
+    int pz = (int)floor(z);
     float raystep_x, raystep_y, raystep_z;
     float start_x, start_y, start_z;
     float steplen_x, steplen_y, steplen_z;
@@ -52,26 +52,26 @@ void raycast(World *world, Entity *player, float len,
     steplen_x = (xinc > 0 ? 1 : (xinc != 0 ? -1 : 0))/(xinc*len);
     steplen_y = (yinc > 0 ? 1 : (yinc != 0 ? -1 : 0))/(yinc*len);
     steplen_z = (zinc > 0 ? 1 : (zinc != 0 ? -1 : 0))/(zinc*len);
-    if(xinc*len > 0){
+    if(xinc >= 0){
         if(x > 0) start_x = 1-(x-floor(x));
-        else start_x = 1-(x-ceil(x));
+        else start_x = 1-(-floor(x)+x);
     }else{
         if(x > 0) start_x = x-floor(x);
-        else start_x = x-ceil(x);
+        else start_x = -floor(x)+x;
     }
-    if(yinc*len > 0){
+    if(yinc >= 0){
         if(y > 0) start_y = 1-(y-floor(y));
-        else start_y = 1-(y-ceil(y));
+        else start_y = 1-(-floor(y)+y);
     }else{
         if(y > 0) start_y = y-floor(y);
-        else start_y = y-ceil(y);
+        else start_y = -floor(y)+y;
     }
-    if(zinc*len > 0){
+    if(zinc >= 0){
         if(z > 0) start_z = 1-(z-floor(z));
-        else start_z = 1-(z-ceil(z));
+        else start_z = 1-(-floor(z)+z);
     }else{
         if(z > 0) start_z = z-floor(z);
-        else start_z = z-ceil(z);
+        else start_z = -floor(z)+z;
     }
     rays_x = steplen_x*start_x;
     rays_y = steplen_y*start_y;

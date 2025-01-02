@@ -32,7 +32,7 @@
 
 #define SZ_PLAYER_HITBOX 5
 
-#define RENDER_DISTANCE  1
+#define RENDER_DISTANCE  4
 
 #define RAYCAST_DISTANCE 20
 
