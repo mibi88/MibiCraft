@@ -1,13 +1,13 @@
 mibicraft_sources += [
-  'gfx.c',
-  'main.c',
-  'chunk.c',
-  'world.c',
-  'entity.c',
-  'raycast.c',
+  'client/gfx.c',
+  'client/main.c',
+  'shared/chunk.c',
+  'shared/world.c',
+  'shared/entity.c',
+  'shared/raycast.c',
 ]
 
-mibicraft_incdirs = include_directories('.')
+mibicraft_incdirs = include_directories('client', 'shared')
 
 mibicraft_deps = [
   dependency('GL', native: true),
