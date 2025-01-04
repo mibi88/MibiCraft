@@ -22,11 +22,12 @@ void game_init(Game *game, int seed) {
     Entity player = {
             CHUNK_WIDTH, CHUNK_HEIGHT/2, CHUNK_DEPTH,
             0, 0, 0,
-            0, 0, 0
-    };
-    float player_hitbox[SZ_PLAYER_HITBOX*2] = {
-        -0.8, -0.1,
-        0.8, 1.5
+            0, 0,
+            0.1, 0.05, 0.3,
+            {
+                -0.8, -0.1, -0.8,
+                0.8, 1.7, 0.8
+            }
     };
     game->player = player;
     game->gui_scale = 1;
@@ -43,13 +44,10 @@ void game_init(Game *game, int seed) {
 
     game->max_speed = 0.0625;
     game->x_v_change = 0;
-    game->acceleration = 0.1;
     game->gravity = 0.025;
     game->jump_force = 0.25;
 
     game->fog_enabled = 1;
-
-    memcpy(player_hitbox, game->player_hitbox, SZ_PLAYER_HITBOX*2);
 
     game->screen = D_INGAME;
 
@@ -59,6 +57,7 @@ void game_init(Game *game, int seed) {
                                  (unsigned char*)crosshair_data);
     game->font = gfx_load_texture(font_width, font_height,
                             (unsigned char*)font_data);
+    game->mode = M_CREATIVE;
     game_respawn(game);
     world_init(&game->world, RENDER_DISTANCE*2+1, RENDER_DISTANCE*2+1,
                game->seed, game->texture);
@@ -103,20 +102,37 @@ void game_input(Game *game, int v1, int v2, int type) {
             cos_rx = cos((game->player.rx)/180*PI);
             switch(v1) {
                 case 'z':
-                    game->player.x += cos((game->player.ry-90)/180*PI)*cos_rx*
-                                      game->mov_speed;
-                    game->player.y += -sin(game->player.rx/180*PI)*
-                                      game->mov_speed;
-                    game->player.z += sin((game->player.ry-90)/180*PI)*cos_rx*
-                                      game->mov_speed;
+                    if(game->mode == M_SPECTATOR){
+                        game->player.x += cos((game->player.ry-90)/180*PI)*
+                                          cos_rx*game->mov_speed;
+                        game->player.y += -sin(game->player.rx/180*PI)*
+                                          game->mov_speed;
+                        game->player.z += sin((game->player.ry-90)/180*PI)*
+                                          cos_rx*game->mov_speed;
+                    }else{
+                        /* Survival or creative mode. */
+                        game->player.velocity += game->player.acceleration;
+                        game->moved = 1;
+                    }
                     break;
                 case 's':
-                    game->player.x -= cos((game->player.ry-90)/180*PI)*cos_rx*
-                                      game->mov_speed;
-                    game->player.y -= -sin(game->player.rx/180*PI)*
-                                      game->mov_speed;
-                    game->player.z -= sin((game->player.ry-90)/180*PI)*cos_rx*
-                                      game->mov_speed;
+                    if(game->mode == M_SPECTATOR){
+                        game->player.x -= cos((game->player.ry-90)/180*PI)*
+                                          cos_rx*game->mov_speed;
+                        game->player.y -= -sin(game->player.rx/180*PI)*
+                                          game->mov_speed;
+                        game->player.z -= sin((game->player.ry-90)/180*PI)*
+                                          cos_rx*game->mov_speed;
+                    }else{
+                        /* Survival or creative mode. */
+                        game->player.velocity -= game->player.acceleration;
+                        game->moved = 1;
+                    }
+                    break;
+                case ' ':
+                    if(entity_on_floor(&game->player, &game->world)){
+                        game->player.y_velocity = 8;
+                    }
                     break;
             }
             break;
@@ -178,7 +194,7 @@ void game_respawn(Game *game) {
     game->world.y = -(RENDER_DISTANCE*CHUNK_DEPTH+CHUNK_DEPTH/2);
     game->player.ry = 0;
     game->player.rx = 0;
-    game->player.x_velocity = 0;
+    game->player.velocity = 0;
     game->player.y_velocity = 0;
 }
 
@@ -203,6 +219,13 @@ void game_logic(Game *game, float delta) {
                 game->mx = cx;
                 game->my = cy;
             }
+            /* Update the player */
+            if(game->moved) game->player.deceleration = 0.05;
+            else game->player.deceleration = 0.2;
+            if(game->player.velocity > 1) game->player.velocity = 1;
+            if(game->player.velocity < -1) game->player.velocity = -1;
+            game->moved = 0;
+            entity_update(&game->player, &game->world, delta);
             /* Update the world */
             world_update(&game->world, game->player.x, game->player.z);
             break;

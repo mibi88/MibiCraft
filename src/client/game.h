@@ -34,16 +34,25 @@
 #define RENDER_DISTANCE  10
 #define RAYCAST_DISTANCE 20
 
+/* Screen */
 enum {
     D_INGAME
 };
 
+/* Input type */
 enum {
     I_KEYPRESS,
     I_KEYRELEASE,
     I_MOUSE,
     I_LEFTCLICK,
     I_RIGHTCLICK
+};
+
+/* Game mode */
+enum {
+    M_SPECTATOR,
+    M_CREATIVE,
+    M_SURVIVAL
 };
 
 typedef struct {
@@ -55,7 +64,6 @@ typedef struct {
     int seed;
     int focus;
     float max_speed, x_v_change;
-    float acceleration;
     float gravity;
     float jump_force;
     int jump;
@@ -64,11 +72,12 @@ typedef struct {
     int fog_enabled;
     char fps_str[20];
     char pos_str[100];
-    float player_hitbox[SZ_PLAYER_HITBOX*2];
     unsigned char screen;
+    unsigned char mode;
     int old_x;
     int old_y;
     int old_z;
+    unsigned char moved;
 } Game;
 
 void game_init(Game *game, int seed);

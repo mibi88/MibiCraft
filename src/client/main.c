@@ -21,6 +21,8 @@
 
 #include <game.h>
 
+#include <time.h>
+
 Game game;
 
 void draw(int delta) {
