@@ -7,33 +7,8 @@
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
-void raycast(World *world, Entity *player, float len,
-             int voxel(int x, int y, int z, void *data)) {
-    /*double cos_rx = cos((player->rx)/180*PI);
-    double xinc = cos((player->ry-90)/180*PI)*cos_rx;
-    double yinc = -sin(player->rx/180*PI);
-    double zinc = sin((player->ry-90)/180*PI)*cos_rx;
-    double x = player->x;
-    double y = player->y+CHUNK_HEIGHT/2;
-    double z = player->z;
-    double old_x = floor(x);
-    double old_y = floor(y);
-    double old_z = floor(z);
-    double l = 0;
-    while(l < len){
-        x += xinc*STEP;
-        y += yinc*STEP;
-        z += zinc*STEP;
-        l += STEP;
-        if(floor(x) != old_x || floor(y) != old_y || floor(z) != old_z){
-            if(voxel(floor(x+0.5), floor(y+0.5), floor(z+0.5), world)){
-                break;
-            }
-            old_x = floor(x);
-            old_y = floor(y);
-            old_z = floor(z);
-        }
-    }*/
+void raycast(Entity *player, float len,
+             int voxel(int x, int y, int z, void *data), void *data) {
     float cos_rx = cos((player->rx)/180*PI);
     float xinc = cos((player->ry-90)/180*PI)*cos_rx;
     float yinc = -sin(player->rx/180*PI);
@@ -98,7 +73,7 @@ void raycast(World *world, Entity *player, float len,
                 rays_z += steplen_z;
             }
         }
-        if(voxel(px, py, pz, world)){
+        if(voxel(px, py, pz, data)){
             break;
         }
         if(rays_x < rays_z){
