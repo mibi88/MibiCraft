@@ -20,13 +20,22 @@
 
 #include <math.h>
 
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+
 int entity_on_floor(Entity *entity, World *world) {
     float x, z;
-    for(z=entity->hitbox[2];z<entity->hitbox[5];z++){
-        for(x=entity->hitbox[1];x<entity->hitbox[4];x++){
-            if(world_get_tile(world, entity->x+0.5+x,
-                              entity->y+0.5-entity->hitbox[4]+CHUNK_HEIGHT/2,
-                              entity->z+0.5+z) != T_VOID){
+    float xmin, xmax;
+    float zmin, zmax;
+    xmin = MIN(entity->hitbox[0], entity->hitbox[3]);
+    xmax = MAX(entity->hitbox[0], entity->hitbox[3]);
+    zmin = MIN(entity->hitbox[2], entity->hitbox[5]);
+    zmax = MAX(entity->hitbox[2], entity->hitbox[5]);
+    for(z=entity->z+zmin;z<entity->z+zmax;z++){
+        for(x=entity->x+xmin;x<entity->x+xmax;x++){
+            if(world_get_tile(world, floor(0.5+x), floor(entity->y+0.5+
+                              MIN(entity->hitbox[1], entity->hitbox[4])+
+                              CHUNK_HEIGHT/2-0.1), floor(0.5+z)) != T_VOID){
                 return 1;
             }
         }
@@ -34,27 +43,68 @@ int entity_on_floor(Entity *entity, World *world) {
     return 0;
 }
 
-int entity_can_move(Entity *entity, World *world, float *hitbox,
-                    int hitbox_size, float x, float z) {
-    int i;
-    for(i=0;i<hitbox_size;i++){
-        if(world_get_tile(world, x+hitbox[i*2], entity->y-1.5,
-                          z+hitbox[i*2+1]) != T_VOID){
-            return 0;
-        }
-        if(world_get_tile(world, x+hitbox[i*2], entity->y-0.5,
-                          z+hitbox[i*2+1]) != T_VOID){
-            return 0;
+int entity_on_ceiling(Entity *entity, World *world) {
+    float x, z;
+    float xmin, xmax;
+    float zmin, zmax;
+    xmin = MIN(entity->hitbox[0], entity->hitbox[3]);
+    xmax = MAX(entity->hitbox[0], entity->hitbox[3]);
+    zmin = MIN(entity->hitbox[2], entity->hitbox[5]);
+    zmax = MAX(entity->hitbox[2], entity->hitbox[5]);
+    for(z=entity->z+zmin;z<entity->z+zmax;z++){
+        for(x=entity->x+xmin;x<entity->x+xmax;x++){
+            if(world_get_tile(world, floor(0.5+x), floor(entity->y+0.5-
+                              MAX(entity->hitbox[1], entity->hitbox[4])+
+                              CHUNK_HEIGHT/2+0.1), floor(0.5+z)) != T_VOID){
+                return 1;
+            }
         }
     }
-    return 1;
+    return 0;
+}
+
+int entity_colliding(Entity *entity, World *world) {
+    float x, y, z;
+    float xmin, xmax;
+    float ymin, ymax;
+    float zmin, zmax;
+    xmin = MIN(entity->hitbox[0], entity->hitbox[3]);
+    xmax = MAX(entity->hitbox[0], entity->hitbox[3]);
+    ymin = MIN(entity->hitbox[1], entity->hitbox[4]);
+    ymax = MAX(entity->hitbox[1], entity->hitbox[4]);
+    zmin = MIN(entity->hitbox[2], entity->hitbox[5]);
+    zmax = MAX(entity->hitbox[2], entity->hitbox[5]);
+    for(z=entity->z+zmin;z<entity->z+zmax;z++){
+        for(y=entity->y+ymin;y<entity->y+ymax;y++){
+            for(x=entity->x+xmin;x<entity->x+xmax;x++){
+                if(world_get_tile(world, floor(0.5+x),
+                                  floor(0.5+y+CHUNK_HEIGHT/2),
+                                  floor(0.5+z)) != T_VOID){
+                    return 1;
+                }
+            }
+        }
+    }
+    return 0;
 }
 
 void entity_update(Entity *entity, World *world, float delta) {
-    entity->x += cos((entity->ry-90)/180*PI)*entity->velocity*
-            entity->acceleration;
-    entity->z += sin((entity->ry-90)/180*PI)*entity->velocity*
-            entity->acceleration;
+    float xmov, zmov;
+    xmov = cos((entity->ry-90)/180*PI)*entity->velocity*entity->acceleration;
+    zmov = sin((entity->ry-90)/180*PI)*entity->velocity*entity->acceleration;
+    if(entity_colliding(entity, world)){
+        entity->x -= xmov;
+        entity->z -= zmov;
+        entity->velocity = 0;
+    }
+    entity->x += xmov;
+    if(entity_colliding(entity, world)){
+        entity->x -= xmov;
+    }
+    entity->z += zmov;
+    if(entity_colliding(entity, world)){
+        entity->z -= zmov;
+    }
     entity->y += entity->y_velocity*delta;
     if(entity->velocity > 0){
         entity->velocity -= entity->deceleration;
@@ -70,7 +120,9 @@ void entity_update(Entity *entity, World *world, float delta) {
     entity->y_velocity -= entity->gravity;
     if(entity_on_floor(entity, world) && entity->y_velocity < 0){
         entity->y_velocity = 0;
-        /* entity->y = floor(entity->y); */
+    }
+    if(entity_on_ceiling(entity, world) && entity->y_velocity > 0){
+        entity->y_velocity = -entity->y_velocity;
     }
 }
 
