@@ -21,11 +21,15 @@
 #include <math.h>
 
 int entity_on_floor(Entity *entity, World *world) {
-    int i;
-    /* TODO: Use the hitbox */
-    if(world_get_tile(world, entity->x+0.5, entity->y+0.5-1.7+CHUNK_HEIGHT/2,
-       entity->z+0.5) != T_VOID){
-        return 1;
+    float x, z;
+    for(z=entity->hitbox[2];z<entity->hitbox[5];z++){
+        for(x=entity->hitbox[1];x<entity->hitbox[4];x++){
+            if(world_get_tile(world, entity->x+0.5+x,
+                              entity->y+0.5-entity->hitbox[4]+CHUNK_HEIGHT/2,
+                              entity->z+0.5+z) != T_VOID){
+                return 1;
+            }
+        }
     }
     return 0;
 }
@@ -64,8 +68,9 @@ void entity_update(Entity *entity, World *world, float delta) {
         }
     }
     entity->y_velocity -= entity->gravity;
-    if(entity_on_floor(entity, world)){
+    if(entity_on_floor(entity, world) && entity->y_velocity < 0){
         entity->y_velocity = 0;
+        /* entity->y = floor(entity->y); */
     }
 }
 

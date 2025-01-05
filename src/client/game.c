@@ -187,8 +187,13 @@ void game_input(Game *game, int v1, int v2, int type) {
 }
 
 void game_respawn(Game *game) {
+    /* TODO: Determine the spawn position correctly */
     game->player.x = 0;
-    game->player.y = 0;
+    if(game->mode == M_SPECTATOR){
+        game->player.y = 0;
+    }else{
+        game->player.y = CHUNK_HEIGHT/2;
+    }
     game->player.z = 0;
     game->world.x = -(RENDER_DISTANCE*CHUNK_WIDTH+CHUNK_WIDTH/2);
     game->world.y = -(RENDER_DISTANCE*CHUNK_DEPTH+CHUNK_DEPTH/2);
