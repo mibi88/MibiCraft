@@ -18,6 +18,8 @@
 
 #include <game.h>
 
+extern const Block_property blocks[T_AMOUNT];
+
 void game_init(Game *game, int seed) {
     Entity player = {
             CHUNK_WIDTH, CHUNK_HEIGHT/2, CHUNK_DEPTH,
@@ -73,7 +75,7 @@ void game_init(Game *game, int seed) {
 
 int _game_break_block(int x, int y, int z, void *vgame) {
     Game *game = vgame;
-    if(world_get_tile(&game->world, x, y, z)){
+    if(!blocks[world_get_tile(&game->world, x, y, z)].replaceable){
         printf("Break block at %d, %d, %d\n", x, y, z);
         world_set_tile(&game->world, T_VOID, x, y, z);
         return 1;
@@ -83,9 +85,12 @@ int _game_break_block(int x, int y, int z, void *vgame) {
 
 int _game_place_block(int x, int y, int z, void *vgame) {
     Game *game = vgame;
-    if(world_get_tile(&game->world, x, y, z)){
-        world_set_tile(&game->world, T_GLASS, game->old_x, game->old_y,
-                       game->old_z);
+    if(!blocks[world_get_tile(&game->world, x, y, z)].replaceable){
+        if(!entity_is_block_inside(&game->player, &game->world, game->old_x,
+                                   game->old_y, game->old_z)){
+            world_set_tile(&game->world, T_GLASS, game->old_x, game->old_y,
+                           game->old_z);
+        }
         return 1;
     }
     printf("Place block at %d, %d, %d\n", x, y, z);
@@ -201,6 +206,9 @@ void game_respawn(Game *game) {
     game->player.rx = 0;
     game->player.velocity = 0;
     game->player.y_velocity = 0;
+    /* TODO: Refactor chunk loading to avoid having to reload the world to
+     * avoid issues */
+    world_generate_data(&game->world);
 }
 
 void game_logic(Game *game, float delta) {
@@ -233,6 +241,9 @@ void game_logic(Game *game, float delta) {
             entity_update(&game->player, &game->world, delta);
             /* Update the world */
             world_update(&game->world, game->player.x, game->player.z);
+            if(game->mode != M_SPECTATOR && game->player.y < -CHUNK_HEIGHT){
+                game_respawn(game);
+            }
             break;
         default:
             game->screen = D_INGAME;
@@ -240,7 +251,7 @@ void game_logic(Game *game, float delta) {
 }
 
 int _game_selection_draw(int x, int y, int z, void *data) {
-    if(world_get_tile(data, x, y, z)){
+    if(!blocks[world_get_tile(data, x, y, z)].replaceable){
         gfx_render_wire_cube(x, y-CHUNK_HEIGHT/2, z, 1.01);
         return 1;
     }

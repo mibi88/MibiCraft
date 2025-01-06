@@ -37,42 +37,42 @@ const Biome_property biomes[B_AMOUNT] = {
 
 /* Blocks */
 const Block_property blocks[T_AMOUNT] = {
-    {S_CUBE, 1},
-    {S_CUBE, 0},
-    {S_CUBE, 0},
-    {S_CUBE, 0},
-    {S_CUBE, 0},
-    {S_CUBE, 0},
-    {S_CUBE, 0},
-    {S_CUBE, 0},
-    {S_CUBE, 0},
-    {S_CUBE, 0},
-    {S_CUBE, 0},
-    {S_CUBE, 0},
-    {S_CUBE, 0},
-    {S_CUBE, 0},
-    {S_CUBE, 0},
-    {S_CUBE, 0},
-    {S_CUBE, 0},
-    {S_CUBE, 0},
-    {S_CUBE, 0},
-    {S_CUBE, 0},
-    {S_CUBE, 0},
-    {S_CUBE, 0},
-    {S_CUBE, 0},
-    {S_CUBE, 0},
-    {S_CUBE, 0},
-    {S_CUBE, 0},
-    {S_CROSS, 1},
-    {S_CROSS, 1},
-    {S_CROSS, 1},
-    {S_CROSS, 1},
-    {S_CROSS, 1},
-    {S_CUBE, 0},
-    {S_CUBE, 1},
-    {S_CROSS, 1},
-    {S_CROSS, 1},
-    {S_CROSS, 1}
+    {S_CUBE, 1, 0, 1},  /* T_VOID */
+    {S_CUBE, 0, 1, 0},  /* T_GRASS */
+    {S_CUBE, 0, 1, 0},  /* T_DIRT */
+    {S_CUBE, 0, 1, 0},  /* T_STONE */
+    {S_CUBE, 0, 1, 0},  /* T_COAL */
+    {S_CUBE, 0, 1, 0},  /* T_IRON */
+    {S_CUBE, 0, 1, 0},  /* T_GOLD */
+    {S_CUBE, 0, 1, 0},  /* T_REDSTONE */
+    {S_CUBE, 0, 1, 0},  /* T_LAPIS */
+    {S_CUBE, 0, 1, 0},  /* T_DIAMOND */
+    {S_CUBE, 0, 1, 0},  /* T_BEDROCK */
+    {S_CUBE, 1, 0, 1},  /* T_WATER */
+    {S_CUBE, 0, 1, 0},  /* T_SAND */
+    {S_CUBE, 0, 1, 0},  /* T_OAK_LOG */
+    {S_CUBE, 0, 1, 0},  /* T_OAK_LEAVES */
+    {S_CUBE, 0, 1, 0},  /* T_PODZOL */
+    {S_CUBE, 0, 1, 0},  /* T_SPRUCE_LOG */
+    {S_CUBE, 0, 1, 0},  /* T_SPRUCE_LEAVES */
+    {S_CUBE, 0, 1, 0},  /* T_SNOW */
+    {S_CUBE, 0, 1, 0},  /* T_DRIED_GRASS */
+    {S_CUBE, 0, 1, 0},  /* T_ACACIA_LOG */
+    {S_CUBE, 0, 1, 0},  /* T_ACACIA_LEAVES */
+    {S_CUBE, 0, 1, 0},  /* T_SAND_STONE */
+    {S_CUBE, 0, 1, 0},  /* T_PALM_LOG */
+    {S_CUBE, 0, 1, 0},  /* T_PALM_LEAVES */
+    {S_CUBE, 0, 1, 0},  /* T_CACTUS */
+    {S_CROSS, 1, 0, 0}, /* T_ROSE */
+    {S_CROSS, 1, 0, 0}, /* T_GRASS_PLANT */
+    {S_CROSS, 1, 0, 0}, /* T_DEAD_BUSH */
+    {S_CROSS, 1, 0, 0}, /* T_BROWN_MUSHROOM */
+    {S_CROSS, 1, 0, 0}, /* T_RED_MUSHROOM */
+    {S_CUBE, 0, 1, 0},  /* T_SPRUCE_PLANKS */
+    {S_CUBE, 1, 1, 0},  /* T_GLASS */
+    {S_CROSS, 1, 0, 0}, /* T_DANDELION */
+    {S_CROSS, 1, 0, 0}, /* T_BERRY_BUSH */
+    {S_CROSS, 1, 0, 0}  /* T_FRUIT_BERRY_BUSH */
 };
 /**********/
 
@@ -745,33 +745,33 @@ void chunk_generate_model(Chunk *chunk, unsigned int texture,
                     chunk->tex_y = real_tile/TILE_AWIDTH;
                     side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
                                          0, 0, 1, extra);
-                    if(!blocks[side_tile].transparent || side_tile == T_VOID){
+                    if(side_tile != tile || side_tile == T_VOID){
                         chunk_add_face_to_model(chunk, front_vertices, 0, 0, 0);
                     }
                     side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
                                          0, 0, -1, extra);
-                    if(!blocks[side_tile].transparent || side_tile == T_VOID){
+                    if(side_tile != tile || side_tile == T_VOID){
                         chunk_add_face_to_model(chunk, front_vertices, 0, 0,
                                                 -1);
                     }
                     side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
                                          0, 1, 0, extra);
-                    if(!blocks[side_tile].transparent || side_tile == T_VOID){
+                    if(side_tile != tile || side_tile == T_VOID){
                         chunk_add_face_to_model(chunk, top_vertices, 0, 0, 0);
                     }
                     side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
                                          0, -1, 0, extra);
-                    if(!blocks[side_tile].transparent || side_tile == T_VOID){
+                    if(side_tile != tile || side_tile == T_VOID){
                         chunk_add_face_to_model(chunk, top_vertices, 0, -1, 0);
                     }
                     side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
                                          1, 0, 0, extra);
-                    if(!blocks[side_tile].transparent || side_tile == T_VOID){
+                    if(side_tile != tile || side_tile == T_VOID){
                         chunk_add_face_to_model(chunk, left_vertices, 0, 0, 0);
                     }
                     side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
                                          -1, 0, 0, extra);
-                    if(!blocks[side_tile].transparent || side_tile == T_VOID){
+                    if(side_tile != tile || side_tile == T_VOID){
                         chunk_add_face_to_model(chunk, left_vertices, -1, 0, 0);
                     }
                 }else if(blocks[tile].shape == S_CROSS && tile != T_VOID){

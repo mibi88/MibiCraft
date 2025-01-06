@@ -132,6 +132,8 @@ typedef enum {
 typedef struct {
     Block_shape shape;
     int transparent;
+    int solid;
+    int replaceable;
 } Block_property;
 
 typedef struct {

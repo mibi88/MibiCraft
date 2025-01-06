@@ -33,8 +33,7 @@ typedef struct {
 
 int entity_on_floor(Entity *entity, World *world);
 
-int entity_can_move(Entity *entity, World *world, float *hitbox,
-                    int hitbox_size, float x, float z);
+int entity_is_inside(Entity *entity, World *world, float x, float y, float z);
 
 void entity_update(Entity *entity, World *world, float delta);
 
