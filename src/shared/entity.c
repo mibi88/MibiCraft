@@ -31,8 +31,8 @@ int entity_on_floor(Entity *entity, World *world) {
     xmax = MAX(entity->hitbox[0], entity->hitbox[3]);
     zmin = MIN(entity->hitbox[2], entity->hitbox[5]);
     zmax = MAX(entity->hitbox[2], entity->hitbox[5]);
-    for(z=entity->z+zmin;z<entity->z+zmax;z++){
-        for(x=entity->x+xmin;x<entity->x+xmax;x++){
+    for(z=entity->z+zmin;z<entity->z+zmax;z+=0.5){
+        for(x=entity->x+xmin;x<entity->x+xmax;x+=0.5){
             if(world_get_tile(world, floor(0.5+x), floor(entity->y+0.5+
                               MIN(entity->hitbox[1], entity->hitbox[4])+
                               CHUNK_HEIGHT/2-0.1), floor(0.5+z)) != T_VOID){
@@ -51,9 +51,9 @@ int entity_on_ceiling(Entity *entity, World *world) {
     xmax = MAX(entity->hitbox[0], entity->hitbox[3]);
     zmin = MIN(entity->hitbox[2], entity->hitbox[5]);
     zmax = MAX(entity->hitbox[2], entity->hitbox[5]);
-    for(z=entity->z+zmin;z<entity->z+zmax;z++){
-        for(x=entity->x+xmin;x<entity->x+xmax;x++){
-            if(world_get_tile(world, floor(0.5+x), floor(entity->y+0.5-
+    for(z=entity->z+zmin;z<entity->z+zmax;z+=0.5){
+        for(x=entity->x+xmin;x<entity->x+xmax;x+=0.5){
+            if(world_get_tile(world, floor(0.5+x), floor(entity->y+0.5+
                               MAX(entity->hitbox[1], entity->hitbox[4])+
                               CHUNK_HEIGHT/2+0.1), floor(0.5+z)) != T_VOID){
                 return 1;
@@ -74,9 +74,9 @@ int entity_colliding(Entity *entity, World *world) {
     ymax = MAX(entity->hitbox[1], entity->hitbox[4]);
     zmin = MIN(entity->hitbox[2], entity->hitbox[5]);
     zmax = MAX(entity->hitbox[2], entity->hitbox[5]);
-    for(z=entity->z+zmin;z<entity->z+zmax;z++){
-        for(y=entity->y+ymin;y<entity->y+ymax;y++){
-            for(x=entity->x+xmin;x<entity->x+xmax;x++){
+    for(z=entity->z+zmin;z<entity->z+zmax;z+=0.5){
+        for(y=entity->y+ymin;y<entity->y+ymax;y+=0.5){
+            for(x=entity->x+xmin;x<entity->x+xmax;x+=0.5){
                 if(world_get_tile(world, floor(0.5+x),
                                   floor(0.5+y+CHUNK_HEIGHT/2),
                                   floor(0.5+z)) != T_VOID){
@@ -120,9 +120,15 @@ void entity_update(Entity *entity, World *world, float delta) {
     entity->y_velocity -= entity->gravity;
     if(entity_on_floor(entity, world) && entity->y_velocity < 0){
         entity->y_velocity = 0;
+        if(entity_colliding(entity, world)){
+            entity->y = floor(entity->y)-fmod(MIN(entity->hitbox[1], entity->hitbox[4]), 1)-0.5;
+        }
     }
     if(entity_on_ceiling(entity, world) && entity->y_velocity > 0){
         entity->y_velocity = -entity->y_velocity;
+        if(entity_colliding(entity, world)){
+            entity->y = floor(entity->y)-1-fmod(MAX(entity->hitbox[1], entity->hitbox[4]), 1)+0.01;
+        }
     }
 }
 

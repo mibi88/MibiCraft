@@ -26,7 +26,7 @@ void game_init(Game *game, int seed) {
             0.1, 0.05, 0.3,
             {
                 -0.4, -1.7, -0.4,
-                0.4, 0.1, 0.4
+                0.4, 0.2, 0.4
             }
     };
     game->player = player;

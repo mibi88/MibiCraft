@@ -284,6 +284,12 @@ Tile world_get_tile(World *world, float x, float y, float z) {
         tile_chunk = &world->chunks[i];
         if(x >= tile_chunk->x && x < tile_chunk->x+CHUNK_WIDTH &&
            z >= tile_chunk->z && z < tile_chunk->z+CHUNK_DEPTH){
+#if DEBUG_WORLD
+            if(chunk_get_tile(tile_chunk,  x-tile_chunk->x, y,
+                                  z-tile_chunk->z, 0, 0, 0) != T_VOID){
+                gfx_render_wire_cube(x, y-CHUNK_HEIGHT/2, z, 1.01);
+            }
+#endif
             return chunk_get_tile(tile_chunk,  x-tile_chunk->x, y,
                                   z-tile_chunk->z, 0, 0, 0);
         }
