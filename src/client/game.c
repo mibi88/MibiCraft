@@ -60,6 +60,7 @@ void game_init(Game *game, int seed) {
     game->font = gfx_load_texture(font_width, font_height,
                             (unsigned char*)font_data);
     game->mode = M_CREATIVE;
+    game->current_block = T_SPRUCE_PLANKS;
     game_respawn(game);
     world_init(&game->world, RENDER_DISTANCE*2+1, RENDER_DISTANCE*2+1,
                game->seed, game->texture);
@@ -88,8 +89,8 @@ int _game_place_block(int x, int y, int z, void *vgame) {
     if(!blocks[world_get_tile(&game->world, x, y, z)].replaceable){
         if(!entity_is_block_inside(&game->player, &game->world, game->old_x,
                                    game->old_y, game->old_z)){
-            world_set_tile(&game->world, T_GLASS, game->old_x, game->old_y,
-                           game->old_z);
+            world_set_tile(&game->world, game->current_block, game->old_x,
+                           game->old_y, game->old_z);
         }
         return 1;
     }
@@ -174,6 +175,19 @@ void game_input(Game *game, int v1, int v2, int type) {
                     }else{
                         gfx_set_motion_blur(128);
                     }
+                    break;
+                case 'i':
+                    game->current_block--;
+                    if(game->current_block <= T_VOID){
+                        game->current_block = T_AMOUNT-1;
+                    }
+                    break;
+                case 'o':
+                    game->current_block++;
+                    if(game->current_block >= T_AMOUNT){
+                        game->current_block = T_VOID+1;
+                    }
+                    break;
             }
             break;
         case I_MOUSE:
@@ -292,6 +306,10 @@ void game_draw(Game *game, float delta) {
                             game->gui_scale+1);
             gfx_draw_string(0, 8+8*game->gui_scale, game->pos_str, game->font,
                             8, 8, game->gui_scale+1);
+            gfx_draw_image_from_atlas(gfx_get_width()-32*game->gui_scale, 0,
+                                      game->texture, 32, 32, game->gui_scale,
+                                      16, 16, 256/16, 256/16,
+                                      game->current_block-1);
             gfx_end_2d();
             break;
         default:
