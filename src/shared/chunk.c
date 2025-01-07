@@ -817,5 +817,6 @@ void chunk_generate_model(Chunk *chunk, unsigned int texture,
     gfx_init_model(&chunk->chunk_model, chunk->chunk_vertices,
                    chunk->chunk_indices, chunk->chunk_texture_coords, texture,
                    1, 1, chunk->triangles);
+    chunk->remesh = 0;
 }
 

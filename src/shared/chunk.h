@@ -121,6 +121,8 @@ typedef struct {
     float texture_coords[SZ_TEX_COORDS];
 
     int ready;
+
+    int remesh;
 } Chunk;
 
 typedef enum {
