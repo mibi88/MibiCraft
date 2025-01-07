@@ -20,12 +20,7 @@
 
 #if THREADING
 
-#ifdef _WIN32
-#include <windows.h>
-#include <tchar.h>
-#else
 #include <pthread.h>
-#endif
 
 #endif
 
@@ -117,13 +112,7 @@ void world_init(World *world, int width, int height, int seed,
     world_generate_data(world);
 }
 #if THREADING
-
-#ifdef _WIN32
-DWORD WINAPI _world_update(LPVOID vworld) {
-#else
 void *_world_update(void *vworld) {
-#endif
-
 #else
 void *_world_update(void *vworld) {
 #endif
@@ -134,17 +123,11 @@ void *_world_update(void *vworld) {
     int center_x = world->width/2, center_y = world->height/2;
     int old_x, old_y;
     Chunk *chunk;
+
 #if THREADING
-
     if(!world->finished){
-#ifdef _WIN32
-        ExitThread(0);
-        return 0;
-#else
         pthread_exit(NULL);
-#endif
     }
-
 #endif
     world->finished = 0;
     while(chunk_x != center_x || chunk_y != center_y){
@@ -226,41 +209,17 @@ void *_world_update(void *vworld) {
     }
     world->finished = 1;
 #if THREADING
-
-#ifdef _WIN32
-    ExitThread(0);
-    return 0;
-#else
     pthread_exit(NULL);
-#endif
-
-#else
-    return NULL;
 #endif
 }
 
 void world_update(World *world, float sx, float sz) {
 #if THREADING
-
-#ifdef _WIN32
-    DWORD dw_thread_id;
-    HANDLE h_thread;
-    world->new_x = sx;
-    world->new_z = sz;
-    h_thread = CreateThread(NULL, 0, _world_update, world, 0, &dw_thread_id);
-    if(!h_thread){
-        puts("Failed to create thread!");
-        _world_update((void*)world);
-        return;
-    }
-#else
     pthread_t id;
     world->new_x = sx;
     world->new_z = sz;
     pthread_create(&id, NULL, _world_update, (void*)world);
     pthread_detach(id);
-#endif
-
 #else
     world->new_x = sx;
     world->new_z = sz;
