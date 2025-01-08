@@ -35,6 +35,9 @@ int entity_on_floor(Entity *entity, World *world);
 
 int entity_is_inside(Entity *entity, World *world, float x, float y, float z);
 
+int entity_is_block_inside(Entity *entity, World *world, int sx, int sy,
+                           int sz);
+
 void entity_update(Entity *entity, World *world, float delta);
 
 #endif
