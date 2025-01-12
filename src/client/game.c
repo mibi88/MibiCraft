@@ -59,7 +59,7 @@ void game_init(Game *game, int seed) {
                                  (unsigned char*)crosshair_data);
     game->font = gfx_load_texture(font_width, font_height,
                             (unsigned char*)font_data);
-    game->mode = M_CREATIVE;
+    game->mode = M_SPECTATOR;
     game->current_block = T_SPRUCE_PLANKS;
     game_respawn(game);
     world_init(&game->world, RENDER_DISTANCE*2+1, RENDER_DISTANCE*2+1,
@@ -247,16 +247,20 @@ void game_logic(Game *game, float delta) {
                 game->my = cy;
             }
             /* Update the player */
-            if(game->moved) game->player.deceleration = 0.05;
-            else game->player.deceleration = 0.2;
-            if(game->player.velocity > 1) game->player.velocity = 1;
-            if(game->player.velocity < -1) game->player.velocity = -1;
-            game->moved = 0;
-            entity_update(&game->player, &game->world, delta);
+            if(game->mode != M_SPECTATOR){
+                if(game->moved) game->player.deceleration = 0.05;
+                else game->player.deceleration = 0.2;
+                if(game->player.velocity > 1) game->player.velocity = 1;
+                if(game->player.velocity < -1) game->player.velocity = -1;
+                game->moved = 0;
+                entity_update(&game->player, &game->world, delta);
+            }
             /* Update the world */
             world_update(&game->world, game->player.x, game->player.z);
-            if(game->mode != M_SPECTATOR && game->player.y < -CHUNK_HEIGHT){
-                game_respawn(game);
+            if(game->mode != M_SPECTATOR){
+                if(game->mode != M_SPECTATOR && game->player.y < -CHUNK_HEIGHT){
+                    game_respawn(game);
+                }
             }
             break;
         default:

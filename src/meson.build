@@ -6,6 +6,7 @@ mibicraft_sources += [
   'shared/world.c',
   'shared/entity.c',
   'shared/raycast.c',
+  'shared/noise.c',
 ]
 
 mibicraft_incdirs = include_directories('client', 'shared')

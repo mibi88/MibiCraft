@@ -18,8 +18,7 @@
 
 #include <chunk.h>
 
-#define STB_PERLIN_IMPLEMENTATION
-#include <stb/stb_perlin.h>
+#include <noise.h>
 
 /* Biomes */
 const Biome_property biomes[B_AMOUNT] = {
@@ -216,88 +215,88 @@ const Tile acacia_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
     T_VOID, T_VOID, T_VOID, T_VOID, T_VOID
 };
 const Tile fallen_oak_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_BROWN_MUSHROOM, T_BROWN_MUSHROOM, T_RED_MUSHROOM, T_VOID,
-        T_OAK_LOG, T_OAK_LOG, T_OAK_LOG, T_OAK_LOG, T_OAK_LOG
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_BROWN_MUSHROOM, T_BROWN_MUSHROOM, T_RED_MUSHROOM, T_VOID,
+    T_OAK_LOG, T_OAK_LOG, T_OAK_LOG, T_OAK_LOG, T_OAK_LOG
 };
 const Tile fallen_spruce_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
-        T_VOID, T_BROWN_MUSHROOM, T_BROWN_MUSHROOM, T_VOID, T_BROWN_MUSHROOM,
-        T_SPRUCE_LOG, T_SPRUCE_LOG, T_SPRUCE_LOG, T_SPRUCE_LOG, T_SPRUCE_LOG
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_VOID, T_VOID, T_VOID, T_VOID,
+    T_VOID, T_BROWN_MUSHROOM, T_BROWN_MUSHROOM, T_VOID, T_BROWN_MUSHROOM,
+    T_SPRUCE_LOG, T_SPRUCE_LOG, T_SPRUCE_LOG, T_SPRUCE_LOG, T_SPRUCE_LOG
 };
 /*********/
 
@@ -348,9 +347,7 @@ Biome chunk_get_biome(int sx, int sz, int x, int z, int seed) {
     int i;
     float biome_height;
     float biome_step = 0.5/B_AMOUNT;
-    biome_height = stb_perlin_noise3_seed((float)(x+sx)/512,
-                                          (float)(z+sz)/512, 0, 0, 0,
-                                          0, seed);
+    biome_height = noise_2d((float)(x+sx)/512, (float)(z+sz)/512, seed);
     for(i=0;i<B_AMOUNT;i++){
         if(biome_height < (i+1)*biome_step){
             return i;
@@ -363,8 +360,8 @@ Biome chunk_get_biome(int sx, int sz, int x, int z, int seed) {
 
 float chunk_get_height(int sx, int sz, int x, int z, float amplitude,
                        int seed) {
-    return stb_perlin_noise3_seed((float)(x+sx)/256, (float)(z+sz)/256, 0, 0, 0,
-                                  0, seed)*amplitude+(CHUNK_HEIGHT/2);
+    return noise_2d((float)(x+sx)/256, (float)(z+sz)/256, seed)*amplitude+
+           (CHUNK_HEIGHT/2);
 }
 
 int xorshift(int *seed) {
@@ -433,8 +430,8 @@ void chunk_generate_ores(Chunk *chunk, int sx, int sz, int x, int y, int z,
                          float amplitude, float probability, int depth,
                          int seed) {
     if(chunk->chunk_data[x][y][z] == material){
-        if(stb_perlin_noise3_seed((float)(x+sx)/amplitude, (float)y/amplitude,
-                                  (float)(z+sz)/amplitude, 0, 0, 0,
+        if(noise_3d((float)(x+sx)/amplitude, (float)y/amplitude,
+                                  (float)(z+sz)/amplitude,
                                   seed) > probability && y < (int)height/depth){
             chunk->chunk_data[x][y][z] = ore;
         }
@@ -445,8 +442,8 @@ void chunk_generate_layer(Chunk *chunk, int sx, int sz, int x, int y, int z,
                           float height, float min, float step, float amplitude,
                           Tile top, Tile material, int seed) {
     float layer;
-    layer = stb_perlin_noise3_seed((float)(x+sx)/step, (float)(z+sz)/step, 0, 0,
-                                   0, 0, seed)*amplitude+min;
+    layer = noise_2d((float)(x+sx)/step, (float)(z+sz)/step, seed)*
+            amplitude+min;
     if(y<(int)height && y>=(int)(height-layer)){
         chunk->chunk_data[x][y][z] = (int)height-y == 1 ? top : material;
     }
@@ -456,8 +453,8 @@ void chunk_generate_beaches(Chunk *chunk, int sx, int sz, int x, int y, int z,
                             float height, float min, float step,
                             float amplitude, Tile material, int seed) {
     float layer;
-    layer = stb_perlin_noise3_seed((float)(x+sx)/step, (float)(z+sz)/step, 0, 0,
-                                   0, 0, seed)*amplitude+min;
+    layer = noise_2d((float)(x+sx)/step, (float)(z+sz)/step, seed)*amplitude+
+            min;
     if(y>(CHUNK_HEIGHT/2)-layer && y<(CHUNK_HEIGHT/2)+layer &&
        (int)height+layer > CHUNK_HEIGHT/2){
         chunk->chunk_data[x][y][z] = material;
@@ -546,8 +543,8 @@ void chunk_generate_caves(Chunk *chunk, int sx, int sz, int x, int y, int z,
                           float step, float probability, Tile material,
                           int seed) {
     if(chunk->chunk_data[x][y][z] == material &&
-       stb_perlin_noise3_seed((float)(x+sx)/step, (float)y/step,
-               (float)(z+sz)/step, 0, 0, 0, seed) > probability){
+       noise_3d((float)(x+sx)/step, (float)y/step,
+               (float)(z+sz)/step, seed) > probability){
         chunk->chunk_data[x][y][z] = T_VOID;
     }
 }

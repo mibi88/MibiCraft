@@ -114,7 +114,7 @@ void world_init(World *world, int width, int height, int seed,
 #if THREADING
 void *_world_update(void *vworld) {
 #else
-void *_world_update(void *vworld) {
+void _world_update(void *vworld) {
 #endif
     World *world = (World*)vworld;
     int x, y;
