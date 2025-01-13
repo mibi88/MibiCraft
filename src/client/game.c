@@ -20,6 +20,26 @@
 
 extern const Block_property blocks[T_AMOUNT];
 
+void _game_sky(Game *game){
+    gfx_set_clear_color(0.7, 0.9, 1.0);
+    if(game->fog_enabled){
+        gfx_enable_fog(0.7, 0.9, 1.0, 0.01, CHUNK_DEPTH-1,
+                       CHUNK_DEPTH);
+    }else{
+        gfx_disable_fog();
+    }
+}
+
+void _game_water(Game *game){
+    gfx_set_clear_color(0.0, 0.1, 1.0);
+    if(game->fog_enabled){
+        gfx_enable_fog(0.0, 0.1, 1.0, 0.01, CHUNK_DEPTH-1,
+                       CHUNK_DEPTH);
+    }else{
+        gfx_disable_fog();
+    }
+}
+
 void game_init(Game *game, int seed) {
     Entity player = {
             CHUNK_WIDTH, CHUNK_HEIGHT/2, CHUNK_DEPTH,
@@ -64,9 +84,7 @@ void game_init(Game *game, int seed) {
     game_respawn(game);
     world_init(&game->world, RENDER_DISTANCE*2+1, RENDER_DISTANCE*2+1,
                game->seed, game->texture);
-    gfx_set_clear_color(0.7, 0.9, 1.0);
-    gfx_enable_fog(0.7, 0.9, 1.0, 0.01, CHUNK_DEPTH-1,
-                   CHUNK_DEPTH);
+    _game_sky(game);
     if(game->focus){
         gfx_cursor_hide();
     }else{
@@ -153,13 +171,12 @@ void game_input(Game *game, int v1, int v2, int type) {
                     }
                     break;
                 case 'f':
-                    if(game->fog_enabled){
-                        gfx_disable_fog();
-                    }else{
-                        gfx_enable_fog(0.7, 0.9, 1.0, 0.01, CHUNK_DEPTH-1,
-                                       CHUNK_DEPTH);
-                    }
                     game->fog_enabled = !game->fog_enabled;
+                    if(entity_in_water(&game->player, &game->world)){
+                        _game_water(game);
+                    }else{
+                        _game_sky(game);
+                    }
                     break;
                 case 'w':
                     game->gui_scale += 0.5;
@@ -254,6 +271,11 @@ void game_logic(Game *game, float delta) {
                 if(game->player.velocity < -1) game->player.velocity = -1;
                 game->moved = 0;
                 entity_update(&game->player, &game->world, delta);
+            }
+            if(entity_in_water(&game->player, &game->world)){
+                _game_water(game);
+            }else{
+                _game_sky(game);
             }
             /* Update the world */
             world_update(&game->world, game->player.x, game->player.z);

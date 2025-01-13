@@ -180,3 +180,9 @@ void entity_update(Entity *entity, World *world, float delta) {
     }
 }
 
+int entity_in_water(Entity *entity, World *world) {
+    return world_get_tile(world, floor(entity->x+0.5),
+                          floor(entity->y+0.5+CHUNK_HEIGHT/2),
+                          floor(entity->z+0.5)) == T_WATER;
+}
+

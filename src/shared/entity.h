@@ -40,4 +40,6 @@ int entity_is_block_inside(Entity *entity, World *world, int sx, int sy,
 
 void entity_update(Entity *entity, World *world, float delta);
 
+int entity_in_water(Entity *entity, World *world);
+
 #endif

@@ -47,7 +47,7 @@ const Block_property blocks[T_AMOUNT] = {
     {S_CUBE, 0, 1, 0},  /* T_LAPIS */
     {S_CUBE, 0, 1, 0},  /* T_DIAMOND */
     {S_CUBE, 0, 1, 0},  /* T_BEDROCK */
-    {S_CUBE, 1, 0, 1},  /* T_WATER */
+    {S_CUBE, 0, 0, 1},  /* T_WATER */
     {S_CUBE, 0, 1, 0},  /* T_SAND */
     {S_CUBE, 0, 1, 0},  /* T_OAK_LOG */
     {S_CUBE, 0, 1, 0},  /* T_OAK_LEAVES */
@@ -727,33 +727,39 @@ void chunk_generate_model(Chunk *chunk, unsigned int texture,
                     chunk->tex_y = real_tile/TILE_AWIDTH;
                     side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
                                          0, 0, 1, extra);
-                    if(blocks[side_tile].transparent){
+                    if(blocks[side_tile].transparent ||
+                       (blocks[side_tile].replaceable && side_tile != tile)){
                         chunk_add_face_to_model(chunk, front_vertices, 0, 0, 0);
                     }
                     side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
                                          0, 0, -1, extra);
-                    if(blocks[side_tile].transparent){
+                    if(blocks[side_tile].transparent ||
+                       (blocks[side_tile].replaceable && side_tile != tile)){
                         chunk_add_face_to_model(chunk, front_vertices, 0, 0,
                                                 -1);
                     }
                     side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
                                          0, 1, 0, extra);
-                    if(blocks[side_tile].transparent){
+                    if(blocks[side_tile].transparent ||
+                       (blocks[side_tile].replaceable && side_tile != tile)){
                         chunk_add_face_to_model(chunk, top_vertices, 0, 0, 0);
                     }
                     side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
                                          0, -1, 0, extra);
-                    if(blocks[side_tile].transparent){
+                    if(blocks[side_tile].transparent ||
+                       (blocks[side_tile].replaceable && side_tile != tile)){
                         chunk_add_face_to_model(chunk, top_vertices, 0, -1, 0);
                     }
                     side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
                                          1, 0, 0, extra);
-                    if(blocks[side_tile].transparent){
+                    if(blocks[side_tile].transparent ||
+                       (blocks[side_tile].replaceable && side_tile != tile)){
                         chunk_add_face_to_model(chunk, left_vertices, 0, 0, 0);
                     }
                     side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
                                          -1, 0, 0, extra);
-                    if(blocks[side_tile].transparent){
+                    if(blocks[side_tile].transparent ||
+                       (blocks[side_tile].replaceable && side_tile != tile)){
                         chunk_add_face_to_model(chunk, left_vertices, -1, 0, 0);
                     }
                 }else if(blocks[tile].shape == S_CUBE && tile != T_VOID){
@@ -762,7 +768,7 @@ void chunk_generate_model(Chunk *chunk, unsigned int texture,
                     chunk->tex_y = real_tile/TILE_AWIDTH;
                     side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
                                          0, 0, 1, extra);
-                    if(side_tile != tile || side_tile == T_VOID){
+                    if((side_tile != tile || side_tile == T_VOID)){
                         chunk_add_face_to_model(chunk, front_vertices, 0, 0, 0);
                     }
                     side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
