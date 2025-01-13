@@ -18,6 +18,8 @@
 
 #include <noise.h>
 
+#include <math.h>
+
 int _noise_xorshift(int seed) {
     /* Algorithm "xor" from p. 4 of Marsaglia, "Xorshift RNGs" */
     seed ^= seed << 13;
@@ -106,7 +108,8 @@ float noise_3d(float sx, float sy, float sz, int seed) {
     /* Calculate the dot product between the offset vectors and the gradient
      * vectors. */
     for(i=0;i<8;i++){
-        p[i] = (sx-x)*2*vx[i]+(sy-y)*2*vy[i]+(sz-z)*2*vz[i];
+        p[i] = (sx-x-corners[i*3])*2*vx[i]+(sy-y-corners[i*3+1])*2*vy[i]+
+                (sz-z-corners[i*3+2])*2*vz[i];
         /*printf("p: %f\n", p[i]);*/
     }
     /*p1 = (sx-x)*2*x1+(sy-y)*2*y1;
