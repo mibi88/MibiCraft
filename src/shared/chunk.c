@@ -364,7 +364,7 @@ float chunk_get_height(int sx, int sz, int x, int z, float amplitude,
            (CHUNK_HEIGHT/2);
 }
 
-int xorshift(int *seed) {
+unsigned int xorshift(int *seed) {
     /* Algorithm "xor" from p. 4 of Marsaglia, "Xorshift RNGs" */
     *seed ^= *seed << 13;
     *seed ^= *seed >> 17;
@@ -425,15 +425,35 @@ void chunk_generate_structure(Chunk *chunk, int sx, int sz,
     }
 }
 
-void chunk_generate_ores(Chunk *chunk, int sx, int sz, int x, int y, int z,
-                         float height, Tile material, Tile ore,
-                         float amplitude, float probability, int depth,
-                         int seed) {
-    if(chunk->chunk_data[x][y][z] == material){
-        if(noise_3d((float)(x+sx)/amplitude, (float)y/amplitude,
-                                  (float)(z+sz)/amplitude,
-                                  seed) > probability && y < (int)height/depth){
+#define ABS(x) (x < 0 ? -x : x)
+
+void chunk_generate_ores(Chunk *chunk, int sx, int sz, int height,
+                         Tile material, Tile ore, int probability, int area,
+                         int num, int seed) {
+    int i, p;
+    int n, s;
+    int x, y, z;
+    int dx, dy, dz;
+    n = (probability/2)+xorshift(&seed)%(probability/2);
+    for(i=0;i<n;i++){
+        x = xorshift(&seed)%CHUNK_WIDTH;
+        y = xorshift(&seed)%height;
+        z = xorshift(&seed)%CHUNK_DEPTH;
+        if(chunk->chunk_data[x][y][z] == material){
             chunk->chunk_data[x][y][z] = ore;
+        }
+        s = xorshift(&seed)%num;
+        for(p=0;p<s;p++){
+            dx = xorshift(&seed)%(area*2)-area;
+            dy = xorshift(&seed)%(area*2)-area;
+            dz = xorshift(&seed)%(area*2)-area;
+            if(x+dx >= 0 && x+dx < CHUNK_WIDTH &&
+               y+dy >= 0 && y+dy < CHUNK_HEIGHT &&
+               z+dz >= 0 && z+dz < CHUNK_DEPTH){
+                if(chunk->chunk_data[x+dx][y+dy][z+dz] == material){
+                    chunk->chunk_data[x+dx][y+dy][z+dz] = ore;
+                }
+            }
         }
     }
 }
@@ -550,7 +570,7 @@ void chunk_generate_caves(Chunk *chunk, int sx, int sz, int x, int y, int z,
 }
 
 void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
-    int i, x, y, z;
+    int x, y, z;
     float height;
     Biome biome = B_PLAINS;
     Biome_property *properties;
@@ -581,24 +601,24 @@ void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
                                      seed);
                 chunk_generate_caves(chunk, sx, sz, x, y, z, 32, 0.75, T_STONE,
                                      seed);
-                chunk_generate_ores(chunk, sx, sz, x, y, z, height, T_STONE,
-                                    T_DIAMOND, 2, 0.7, 6, seed);
-                chunk_generate_ores(chunk, sx, sz, x, y, z, height, T_STONE,
-                                    T_LAPIS, 3, 0.6, 5, seed);
-                chunk_generate_ores(chunk, sx, sz, x, y, z, height, T_STONE,
-                                    T_REDSTONE, 4, 0.5, 4, seed);
-                chunk_generate_ores(chunk, sx, sz, x, y, z, height, T_STONE,
-                                    T_GOLD, 5, 0.4, 3, seed);
-                chunk_generate_ores(chunk, sx, sz, x, y, z, height, T_STONE,
-                                    T_IRON, 5, 0.3, 2, seed);
-                chunk_generate_ores(chunk, sx, sz, x, y, z, height, T_STONE,
-                                    T_COAL, 6, 0.2, 1, seed);
                 if(y == 0){
                     chunk->chunk_data[x][y][z] = T_BEDROCK;
                 }
             }
         }
     }
+    chunk_generate_ores(chunk, sx, sz, 8, T_STONE,
+                        T_DIAMOND, 10, 3, 3, seed);
+    chunk_generate_ores(chunk, sx, sz, 12, T_STONE,
+                        T_LAPIS, 20, 8, 8, seed);
+    chunk_generate_ores(chunk, sx, sz, 12, T_STONE,
+                        T_REDSTONE, 30, 4, 3, seed);
+    chunk_generate_ores(chunk, sx, sz, 16, T_STONE,
+                        T_GOLD, 30, 5, 5, seed);
+    chunk_generate_ores(chunk, sx, sz, 32, T_STONE,
+                        T_IRON, 50, 5, 5, seed);
+    chunk_generate_ores(chunk, sx, sz, 64, T_STONE,
+                        T_COAL, 60, 10, 25, seed);
     chunk->x = sx;
     chunk->z = sz;
     chunk_generate_structure(chunk, sx, sz, fallen_oak_tree, TREE_WIDTH,
