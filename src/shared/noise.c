@@ -79,17 +79,6 @@ float noise_3d(float sx, float sy, float sz, int seed) {
     float p[8];
     float v, v1, v2, v3, v4, v5, v6;
     int tmp;
-    /* TODO: Use the bits of i instead of this */
-    int corners[8*3] = {
-        0, 0, 0,
-        1, 0, 0,
-        0, 1, 0,
-        1, 1, 0,
-        0, 0, 1,
-        1, 0, 1,
-        0, 1, 1,
-        1, 1, 1,
-    };
     x = floor(sx);
     y = floor(sy);
     z = floor(sz);
@@ -97,25 +86,20 @@ float noise_3d(float sx, float sy, float sz, int seed) {
     tmp = _noise_xorshift(seed*x*y);
     /* Calculate the gradient vectors */
     for(i=0;i<8;i++){
-        tmp = _noise_xorshift(seed*(x+corners[i*3])*(y+corners[i*3+1])*
-                              (z+corners[i*3+2]));
+        tmp = _noise_xorshift(seed*(x+(i&1))*(y+((i>>1)&1))*
+                              (z+((i>>2)&1)));
         vx[i] = ((tmp&MASK)/(float)(1<<PRECISION))*2-1;
         tmp = _noise_xorshift(tmp);
         vy[i] = ((tmp&MASK)/(float)(1<<PRECISION))*2-1;
         vz[i] = ((_noise_xorshift(tmp)&MASK)/(float)(1<<PRECISION))*2-1;
-        /*printf("g: %f, %f, %f\n", vx[i], vy[i], vz[i]);*/
     }
     /* Calculate the dot product between the offset vectors and the gradient
      * vectors. */
     for(i=0;i<8;i++){
-        p[i] = (sx-x-corners[i*3])*2*vx[i]+(sy-y-corners[i*3+1])*2*vy[i]+
-                (sz-z-corners[i*3+2])*2*vz[i];
-        /*printf("p: %f\n", p[i]);*/
+        p[i] = (sx-x-(i&1))*2*vx[i]+(sy-y-((i>>1)&1))*2*vy[i]+
+                (sz-z-((i>>2)&1))*2*vz[i];
     }
-    /*p1 = (sx-x)*2*x1+(sy-y)*2*y1;
-    p2 = (sx-x-1)*2*x2+(sy-y)*2*y2;
-    p3 = (sx-x)*2*x3+(sy-y-1)*2*y3;
-    p4 = (sx-x-1)*2*x4+(sy-y-1)*2*y4;*/
+    /* Using smoothstep for interpolation */
     v1 = (p[0]+(p[1]-p[0])*SMOOTHSTEP(sx-x));
     v2 = (p[2]+(p[3]-p[2])*SMOOTHSTEP(sx-x));
     v3 = v1+(v2-v1)*SMOOTHSTEP(sy-y);
@@ -123,6 +107,5 @@ float noise_3d(float sx, float sy, float sz, int seed) {
     v5 = (p[6]+(p[7]-p[6])*SMOOTHSTEP(sx-x));
     v6 = v4+(v5-v4)*SMOOTHSTEP(sy-y);
     v = v3+(v6-v3)*SMOOTHSTEP(sz-z);
-    /*printf("v: %f\n", v);*/
     return (v > -1 ? (v < 1 ? v : 1) : -1);
 }
