@@ -79,7 +79,7 @@ void game_init(Game *game, int seed) {
                                  (unsigned char*)crosshair_data);
     game->font = gfx_load_texture(font_width, font_height,
                             (unsigned char*)font_data);
-    game->mode = M_SPECTATOR;
+    game->mode = M_CREATIVE;
     game->current_block = T_SPRUCE_PLANKS;
     game_respawn(game);
     world_init(&game->world, RENDER_DISTANCE*2+1, RENDER_DISTANCE*2+1,
