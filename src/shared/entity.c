@@ -249,7 +249,7 @@ void entity_update(Entity *entity, World *world, float delta) {
         dist = entity_space(entity, world, 0, 1, 0, ceil(fabs(ymov)));
         if(dist < ymov){
             ymov = dist;
-            entity->y_velocity = -entity->y_velocity;
+            entity->y_velocity = 0;
         }
     }
     entity->y += ymov;
