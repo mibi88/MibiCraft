@@ -79,6 +79,7 @@ typedef struct {
     int old_z;
     unsigned char moved;
     int current_block;
+    float delta;
 } Game;
 
 void game_init(Game *game, int seed);

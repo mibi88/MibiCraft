@@ -45,7 +45,7 @@ void game_init(Game *game, int seed) {
             CHUNK_WIDTH, CHUNK_HEIGHT/2, CHUNK_DEPTH,
             0, 0, 0,
             0, 0,
-            0.1, 0.05, 0.3,
+            2.5, 0.5, 12.0,
             {
                 -0.4, -1.5, -0.4,
                 0.4, 0.2, 0.4
@@ -135,7 +135,8 @@ void game_input(Game *game, int v1, int v2, int type) {
                                           cos_rx*game->mov_speed;
                     }else{
                         /* Survival or creative mode. */
-                        game->player.velocity += game->player.acceleration;
+                        game->player.velocity += game->player.acceleration*
+                                                 game->delta;
                         game->moved = 1;
                     }
                     break;
@@ -149,13 +150,14 @@ void game_input(Game *game, int v1, int v2, int type) {
                                           cos_rx*game->mov_speed;
                     }else{
                         /* Survival or creative mode. */
-                        game->player.velocity -= game->player.acceleration;
+                        game->player.velocity -= game->player.acceleration*
+                                                 game->delta;
                         game->moved = 1;
                     }
                     break;
                 case ' ':
                     if(entity_on_floor(&game->player, &game->world)){
-                        game->player.y_velocity = 8;
+                        game->player.y_velocity = 6;
                     }
                     break;
             }
@@ -247,6 +249,7 @@ void game_logic(Game *game, float delta) {
     int cx = gfx_get_width()/2;
     int cy = gfx_get_height()/2;
     int mov_x, mov_y;
+    game->delta = delta;
     switch(game->screen) {
         case D_INGAME:
             game->mov_speed = 10*delta;
@@ -265,10 +268,14 @@ void game_logic(Game *game, float delta) {
             }
             /* Update the player */
             if(game->mode != M_SPECTATOR){
-                if(game->moved) game->player.deceleration = 0.05;
-                else game->player.deceleration = 0.2;
-                if(game->player.velocity > 1) game->player.velocity = 1;
-                if(game->player.velocity < -1) game->player.velocity = -1;
+                if(game->moved) game->player.deceleration = 0.5;
+                else game->player.deceleration = 1;
+                if(game->player.velocity > 6*delta){
+                    game->player.velocity = 6*delta;
+                }
+                if(game->player.velocity < -6*delta){
+                    game->player.velocity = -6*delta;
+                }
                 game->moved = 0;
                 entity_update(&game->player, &game->world, delta);
             }

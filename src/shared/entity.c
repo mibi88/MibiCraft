@@ -198,11 +198,8 @@ int entity_is_block_inside(Entity *entity, World *world, int sx, int sy,
 void entity_update(Entity *entity, World *world, float delta) {
     float xmov, ymov, zmov;
     float dist;
-    xmov = cos((entity->ry-90)/180*PI)*entity->velocity*entity->acceleration;
-    zmov = sin((entity->ry-90)/180*PI)*entity->velocity*entity->acceleration;
-    printf("%f, %f, %f\n", entity_space(entity, world, 1, 0, 0, 20),
-                           entity_space(entity, world, 0, 1, 0, 20),
-                           entity_space(entity, world, 0, 0, 1, 20));
+    xmov = cos((entity->ry-90)/180*PI)*entity->velocity;
+    zmov = sin((entity->ry-90)/180*PI)*entity->velocity;
     if(xmov < 0){
         dist = entity_space(entity, world, -1, 0, 0, ceil(fabs(xmov)));
         if(dist < -xmov){
@@ -228,12 +225,12 @@ void entity_update(Entity *entity, World *world, float delta) {
     }
     entity->z += zmov;
     if(entity->velocity > 0){
-        entity->velocity -= entity->deceleration;
+        entity->velocity -= entity->deceleration*delta;
         if(entity->velocity < 0){
             entity->velocity = 0;
         }
     }else if(entity->velocity < 0){
-        entity->velocity += entity->deceleration;
+        entity->velocity += entity->deceleration*delta;
         if(entity->velocity > 0){
             entity->velocity = 0;
         }
@@ -253,7 +250,7 @@ void entity_update(Entity *entity, World *world, float delta) {
         }
     }
     entity->y += ymov;
-    entity->y_velocity -= entity->gravity;
+    entity->y_velocity -= entity->gravity*delta;
 }
 
 int entity_in_water(Entity *entity, World *world) {
