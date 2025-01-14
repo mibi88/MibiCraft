@@ -23,9 +23,9 @@ void raycast(Entity *player, float len,
     float steplen_x, steplen_y, steplen_z;
     float rays_x, rays_y, rays_z;
     float end_len;
-    steplen_x = (xinc > 0 ? 1 : (xinc != 0 ? -1 : 0))/(xinc*len);
-    steplen_y = (yinc > 0 ? 1 : (yinc != 0 ? -1 : 0))/(yinc*len);
-    steplen_z = (zinc > 0 ? 1 : (zinc != 0 ? -1 : 0))/(zinc*len);
+    steplen_x = (xinc > 0 ? 1 : -1)/(xinc*len);
+    steplen_y = (yinc > 0 ? 1 : -1)/(yinc*len);
+    steplen_z = (zinc > 0 ? 1 : -1)/(zinc*len);
     if(xinc >= 0){
         if(x > 0) start_x = 1-(x-floor(x));
         else start_x = 1-(-floor(x)+x);

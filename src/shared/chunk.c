@@ -435,6 +435,7 @@ void chunk_generate_ores(Chunk *chunk, int sx, int sz, int height,
     int x, y, z;
     int dx, dy, dz;
     n = (probability/2)+xorshift(&seed)%(probability/2);
+    seed += sx*sz;
     for(i=0;i<n;i++){
         x = xorshift(&seed)%CHUNK_WIDTH;
         y = xorshift(&seed)%height;
