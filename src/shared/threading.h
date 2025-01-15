@@ -23,6 +23,21 @@
 
 #if THREADING
 
+#ifdef _WIN32
+
+#include <windows.h>
+#include <tchar.h>
+
+#define THREAD_ID(id) DWORD id;
+
+#define THREAD_CALL(name, data) DWORD WINAPI name(LPVOID data)
+
+#define THREAD_CREATE(id, call, data) CreateThread(NULL, 0, call, data, 0, &id)
+
+#define THREAD_EXIT() ExitThread(0)
+
+#else
+
 #include <pthread.h>
 
 #define THREAD_ID(id) pthread_t id
@@ -34,6 +49,8 @@
 #define THREAD_CREATE(id, call, data) pthread_create(&id, NULL, call, \
                                                      (void*)data); \
                                       pthread_detach(id)
+
+#endif
 
 #else
 
