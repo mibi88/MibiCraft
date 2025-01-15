@@ -19,8 +19,7 @@
 #ifndef WORLD_H
 #define WORLD_H
 
-#define THREADING   1
-#define DEBUG_WORLD 0
+#include <config.h>
 
 #include <chunk.h>
 

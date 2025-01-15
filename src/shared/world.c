@@ -18,11 +18,7 @@
 
 #include <world.h>
 
-#if THREADING
-
-#include <pthread.h>
-
-#endif
+#include <threading.h>
 
 int _cx, _cy;
 int _ncx, _ncy;
@@ -111,11 +107,8 @@ void world_init(World *world, int width, int height, int seed,
     world->texture = texture;
     world_generate_data(world);
 }
-#if THREADING
-void *_world_update(void *vworld) {
-#else
-void _world_update(void *vworld) {
-#endif
+
+THREAD_CALL(_world_update, vworld) {
     World *world = (World*)vworld;
     int x, y;
     int chunk_x = (world->new_x-world->x)/CHUNK_WIDTH;
@@ -124,11 +117,9 @@ void _world_update(void *vworld) {
     int old_x, old_y;
     Chunk *chunk;
 
-#if THREADING
     if(!world->finished){
-        pthread_exit(NULL);
+        THREAD_EXIT();
     }
-#endif
     world->finished = 0;
     while(chunk_x != center_x || chunk_y != center_y){
         old_x = world->x;
@@ -154,43 +145,35 @@ void _world_update(void *vworld) {
                     chunk_generate_data(chunk, old_x+world->width*CHUNK_WIDTH,
                                         chunk->z, world->seed);
                     chunk->remesh = 1;
-                    chunk->ready = 1;
                 }else if(chunk->x >= world->x+world->width*CHUNK_WIDTH){
                     chunk->ready = 0;
                     chunk_generate_data(chunk, world->x, chunk->z, world->seed);
                     chunk->remesh = 1;
-                    chunk->ready = 1;
                 }
                 if(chunk->z < world->y){
                     chunk->ready = 0;
                     chunk_generate_data(chunk, chunk->x,
                                 old_y+world->height*CHUNK_DEPTH, world->seed);
                     chunk->remesh = 1;
-                    chunk->ready = 1;
                 }else if(chunk->z >= world->y+world->height*CHUNK_DEPTH){
                     chunk->ready = 0;
                     chunk_generate_data(chunk, chunk->x, world->y, world->seed);
                     chunk->remesh = 1;
-                    chunk->ready = 1;
                 }
                 /* Update old chunks */
                 if(chunk->x == world->x+CHUNK_WIDTH){
                     chunk->ready = 0;
                     chunk->remesh = 1;
-                    chunk->ready = 1;
                 }else if(chunk->x == world->x+(world->width-2)*CHUNK_WIDTH){
                     chunk->ready = 0;
                     chunk->remesh = 1;
-                    chunk->ready = 1;
                 }
                 if(chunk->z == world->y+CHUNK_DEPTH){
                     chunk->ready = 0;
                     chunk->remesh = 1;
-                    chunk->ready = 1;
                 }else if(chunk->z == world->y+(world->height-2)*CHUNK_DEPTH){
                     chunk->ready = 0;
                     chunk->remesh = 1;
-                    chunk->ready = 1;
                 }
             }
         }
@@ -204,27 +187,21 @@ void _world_update(void *vworld) {
             if(chunk->remesh){
                 chunk_generate_model(chunk, world->texture,
                                      _modelgen_get_tile, world);
+                chunk->ready = 1;
             }
         }
     }
     world->finished = 1;
-#if THREADING
-    pthread_exit(NULL);
-#endif
+    THREAD_EXIT();
 }
 
 void world_update(World *world, float sx, float sz) {
-#if THREADING
-    pthread_t id;
+    THREAD_ID(id);
     world->new_x = sx;
     world->new_z = sz;
-    pthread_create(&id, NULL, _world_update, (void*)world);
-    pthread_detach(id);
-#else
-    world->new_x = sx;
-    world->new_z = sz;
-    _world_update((void*)world);
-#endif
+    if(world->finished){
+        THREAD_CREATE(id, _world_update, world);
+    }
 }
 
 void world_render(World *world) {

@@ -30,9 +30,7 @@
 
 #include <entity.h>
 
-#define SZ_PLAYER_HITBOX 2
-#define RENDER_DISTANCE  10
-#define RAYCAST_DISTANCE 20
+#include <config.h>
 
 /* Screen */
 enum {
