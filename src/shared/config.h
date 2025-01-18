@@ -19,7 +19,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define RENDER_DISTANCE  10
+#define RENDER_DISTANCE  16
 #define RAYCAST_DISTANCE 20
 #define THREADING        1
 #define DEBUG_WORLD      0

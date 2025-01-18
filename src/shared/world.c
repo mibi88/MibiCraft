@@ -94,8 +94,37 @@ void world_generate_data(World *world) {
     world->finished = 1;
 }
 
+void world_init_data(World *world) {
+    int x, y, pos, start;
+    world->finished = 0;
+    y = world->height/2;
+    x = world->width/2;
+    pos = y*world->width+x;
+    chunk_generate_data(world->chunks+pos, world->x+x*CHUNK_WIDTH,
+                        world->y+y*CHUNK_DEPTH, world->seed);
+    chunk_generate_model(world->chunks+pos, world->texture, GET_TILE, world);
+    world->chunks[pos].regenerate = 0;
+    world->chunks[pos].remesh = 1;
+    world->chunks[pos].ready = 1;
+    start = pos;
+    for(y=0;y<world->height;y++) {
+        for(x=0;x<world->width;x++) {
+            _cx = x;
+            _cy = y;
+            pos = y*world->width+x;
+            if(pos != start){
+                world->chunks[pos].x = world->x+x*CHUNK_WIDTH;
+                world->chunks[pos].z = world->y+y*CHUNK_DEPTH;
+                world->chunks[pos].regenerate = 1;
+            }
+        }
+    }
+    world->finished = 1;
+}
+
 void world_init(World *world, int width, int height, int seed,
                 unsigned int texture) {
+    int i;
     world->width = width;
     world->height = height;
     world->chunks = malloc(width*height*sizeof(Chunk));
@@ -105,7 +134,7 @@ void world_init(World *world, int width, int height, int seed,
     }
     world->seed = seed;
     world->texture = texture;
-    world_generate_data(world);
+    world_init_data(world);
 }
 
 THREAD_CALL(_world_update, vworld) {
@@ -142,23 +171,21 @@ THREAD_CALL(_world_update, vworld) {
                 /* Generate new chunks */
                 if(chunk->x < world->x){
                     chunk->ready = 0;
-                    chunk_generate_data(chunk, old_x+world->width*CHUNK_WIDTH,
-                                        chunk->z, world->seed);
-                    chunk->remesh = 1;
+                    chunk->x = old_x+world->width*CHUNK_WIDTH;
+                    chunk->regenerate = 1;
                 }else if(chunk->x >= world->x+world->width*CHUNK_WIDTH){
                     chunk->ready = 0;
-                    chunk_generate_data(chunk, world->x, chunk->z, world->seed);
-                    chunk->remesh = 1;
+                    chunk->x = world->x;
+                    chunk->regenerate = 1;
                 }
                 if(chunk->z < world->y){
                     chunk->ready = 0;
-                    chunk_generate_data(chunk, chunk->x,
-                                old_y+world->height*CHUNK_DEPTH, world->seed);
-                    chunk->remesh = 1;
+                    chunk->z = old_y+world->height*CHUNK_DEPTH;
+                    chunk->regenerate = 1;
                 }else if(chunk->z >= world->y+world->height*CHUNK_DEPTH){
                     chunk->ready = 0;
-                    chunk_generate_data(chunk, chunk->x, world->y, world->seed);
-                    chunk->remesh = 1;
+                    chunk->z = world->y;
+                    chunk->regenerate = 1;
                 }
                 /* Update old chunks */
                 if(chunk->x == world->x+CHUNK_WIDTH){
@@ -181,14 +208,21 @@ THREAD_CALL(_world_update, vworld) {
         chunk_y = (world->new_z-world->y)/CHUNK_DEPTH;
         center_x = world->width/2, center_y = world->height/2;
     }
-    for(y=0;y<world->height;y++){
-        for(x=0;x<world->width;x++){
-            chunk = &world->chunks[y*world->width+x];
-            if(chunk->remesh){
-                chunk_generate_model(chunk, world->texture,
-                                     _modelgen_get_tile, world);
-                chunk->ready = 1;
-            }
+    for(y=0;y<world->width*world->height;y++){
+        chunk = &world->chunks[y];
+        if(chunk->regenerate){
+            chunk->ready = 0;
+            chunk_generate_data(chunk, chunk->x, chunk->z, world->seed);
+            chunk->remesh = 1;
+            chunk->regenerate = 0;
+        }
+    }
+    for(y=0;y<world->width*world->height;y++){
+        chunk = &world->chunks[y];
+        if(chunk->remesh){
+            chunk_generate_model(chunk, world->texture,
+                                 _modelgen_get_tile, world);
+            chunk->ready = 1;
         }
     }
     world->finished = 1;

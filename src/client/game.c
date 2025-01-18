@@ -33,7 +33,7 @@ void _game_sky(Game *game){
 void _game_water(Game *game){
     gfx_set_clear_color(0.0, 0.1, 1.0);
     if(game->fog_enabled){
-        gfx_enable_fog(0.0, 0.1, 1.0, 0.01, CHUNK_DEPTH-1,
+        gfx_enable_fog(0.0, 0.1, 1.0, 0.1, CHUNK_DEPTH-1,
                        CHUNK_DEPTH);
     }else{
         gfx_disable_fog();
@@ -81,9 +81,9 @@ void game_init(Game *game, int seed) {
                             (unsigned char*)font_data);
     game->mode = M_CREATIVE;
     game->current_block = T_SPRUCE_PLANKS;
-    game_respawn(game);
     world_init(&game->world, RENDER_DISTANCE*2+1, RENDER_DISTANCE*2+1,
                game->seed, game->texture);
+    game_respawn(game);
     _game_sky(game);
     if(game->focus){
         gfx_cursor_hide();
@@ -241,7 +241,7 @@ void game_respawn(Game *game) {
     game->player.y_velocity = 0;
     /* TODO: Refactor chunk loading to avoid having to reload the world to
      * avoid issues */
-    world_generate_data(&game->world);
+    world_init_data(&game->world);
 }
 
 void game_logic(Game *game, float delta) {

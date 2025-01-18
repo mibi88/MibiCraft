@@ -123,6 +123,8 @@ typedef struct {
     int ready;
 
     int remesh;
+
+    int regenerate;
 } Chunk;
 
 typedef enum {
