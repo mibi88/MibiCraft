@@ -5,3 +5,14 @@
 .cproject
 .project
 .pydevproject
+/win32/openwatcom/*.c
+/win32/openwatcom/*.h
+*.dll
+*.exe
+*.lk1
+*.mk
+*.mk1
+*.sym
+*.map
+*.err
+*.obj
