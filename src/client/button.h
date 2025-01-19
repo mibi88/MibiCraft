@@ -16,12 +16,27 @@
  * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef BUTTON_H
+#define BUTTON_H
 
-#define RENDER_DISTANCE  5
-#define RAYCAST_DISTANCE 20
-#define THREADING        1
-#define DEBUG_WORLD      0
+#define DEFAULT_R 0.5
+#define DEFAULT_G 0.5
+#define DEFAULT_B 0.5
+
+#define DEFAULT_HOVER_R 0.7
+#define DEFAULT_HOVER_G 0.7
+#define DEFAULT_HOVER_B 0.7
+
+typedef struct {
+    int x, y;
+    int w, h;
+    float r, g, b;
+    float hover_r, hover_g, hover_b;
+    char *text;
+} Button;
+
+void button_init(Button *button, int x, int y, int w, int h, char *text);
+void button_draw(Button *button, int mx, int my, float scale, int font);
+int button_mouse_inside(Button *button, int mx, int my);
 
 #endif

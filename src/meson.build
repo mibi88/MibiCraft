@@ -2,6 +2,7 @@ mibicraft_sources += [
   'client/gfx.c',
   'client/main.c',
   'client/game.c',
+  'client/button.c',
   'shared/chunk.c',
   'shared/world.c',
   'shared/entity.c',

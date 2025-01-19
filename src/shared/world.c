@@ -122,19 +122,20 @@ void world_init_data(World *world) {
     world->finished = 1;
 }
 
-void world_init(World *world, int width, int height, int seed,
-                unsigned int texture) {
+int world_init(World *world, int width, int height, int seed,
+               unsigned int texture) {
     int i;
     world->width = width;
     world->height = height;
     world->chunks = malloc(width*height*sizeof(Chunk));
     if(!world->chunks){
         puts("World init failed");
-        exit(1);
+        return 1;
     }
     world->seed = seed;
     world->texture = texture;
     world_init_data(world);
+    return 0;
 }
 
 THREAD_CALL(_world_update, vworld) {

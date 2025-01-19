@@ -34,9 +34,16 @@
 
 #include <player.h>
 
+#include <button.h>
+
+#define COPYRIGHT "(C) 2023 Mibi88"
+
 /* Screen */
 enum {
-    D_INGAME
+    D_TITLE,
+    D_INGAME,
+    D_PAUSE,
+    D_AMOUNT
 };
 
 /* Input type */
@@ -62,13 +69,11 @@ typedef struct {
     char fps_str[20];
     char pos_str[100];
     unsigned char screen;
-    unsigned char mode;
-    int old_x;
-    int old_y;
-    int old_z;
-    unsigned char moved;
-    int current_block;
     float delta;
+    Button button_singleplayer;
+    Button button_resume;
+    Button button_title;
+    int close_asked;
 } Game;
 
 void game_init(Game *game, int seed);

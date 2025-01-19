@@ -85,6 +85,13 @@ void gfx_end_2d(void);
 void gfx_draw_image(int sx, int sy, unsigned int texture, int width,
                     int height, float scale);
 
+void gfx_draw_quad(int x, int y, int width, int height, float r, float g,
+                   float b);
+
+void gfx_disable_closing();
+
+void gfx_enable_closing();
+
 void gfx_draw_image_from_atlas(int sx, int sy, unsigned int texture, int width,
                                int height, float scale, int cell_w, int cell_h,
                                int atlas_w, int atlas_h, int num);

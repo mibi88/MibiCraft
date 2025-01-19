@@ -39,8 +39,8 @@ void world_generate_data(World *world);
 void world_init_data(World *world);
 void world_generate_models(World *world);
 
-void world_init(World *world, int width, int height, int seed,
-                unsigned int texture);
+int world_init(World *world, int width, int height, int seed,
+               unsigned int texture);
 
 void world_update(World *world, float x, float z);
 

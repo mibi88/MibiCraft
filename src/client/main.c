@@ -23,6 +23,8 @@
 
 #include <time.h>
 
+#include <buildconfig.h>
+
 Game game;
 
 void draw(int delta) {
@@ -51,7 +53,7 @@ void mouse(int x, int y) {
 }
 
 int main(int argc, char **argv) {
-    puts("MibiCraft launched!");
+    printf("%s %s launched!\n", NAME, VERSION);
     gfx_init(&argc, argv, "MibiCraft", 1, 0);
     game_init(&game, 1024);
     gfx_run(draw, keypress, keyrelease, mouse, left_click, right_click);

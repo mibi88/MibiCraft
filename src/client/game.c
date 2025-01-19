@@ -18,6 +18,8 @@
 
 #include <game.h>
 
+#include <buildconfig.h>
+
 extern const Block_property blocks[T_AMOUNT];
 
 void _game_sky(Game *game){
@@ -42,7 +44,8 @@ void _game_water(Game *game){
 
 void game_init(Game *game, int seed) {
     player_init(&game->player);
-    game->gui_scale = 1;
+    game->gui_scale = 2;
+    game->close_asked = 0;
 
     game->texture = 0;
     game->crosshair = 0;
@@ -56,7 +59,7 @@ void game_init(Game *game, int seed) {
 
     game->fog_enabled = 1;
 
-    game->screen = D_INGAME;
+    game->screen = D_TITLE;
 
     game->texture = gfx_load_texture(blocks_width, blocks_height,
                                (unsigned char*)blocks_data);
@@ -64,121 +67,145 @@ void game_init(Game *game, int seed) {
                                  (unsigned char*)crosshair_data);
     game->font = gfx_load_texture(font_width, font_height,
                             (unsigned char*)font_data);
-    game->mode = M_CREATIVE;
-    game->current_block = T_SPRUCE_PLANKS;
-    world_init(&game->world, RENDER_DISTANCE*2+1, RENDER_DISTANCE*2+1,
-               game->seed, game->texture);
-    game_respawn(game);
+    button_init(&game->button_singleplayer, 0, 0, 64*(game->gui_scale+1),
+                32*(game->gui_scale+1), "Singleplayer");
+    button_init(&game->button_resume, 0, 0, 64*(game->gui_scale+1),
+                32*(game->gui_scale+1), "Resume");
+    button_init(&game->button_title, 0, 0, 64*(game->gui_scale+1),
+                32*(game->gui_scale+1), "Title screen");
     _game_sky(game);
-    if(game->focus){
-        gfx_cursor_hide();
-    }else{
-        gfx_cursor_show();
-    }
-}
 
-int _game_break_block(int x, int y, int z, void *vgame) {
-    Game *game = vgame;
-    if(!blocks[world_get_tile(&game->world, x, y, z)].replaceable){
-        printf("Break block at %d, %d, %d\n", x, y, z);
-        world_set_tile(&game->world, T_VOID, x, y, z);
-        return 1;
-    }
-    return 0;
-}
-
-int _game_place_block(int x, int y, int z, void *vgame) {
-    Game *game = vgame;
-    if(!blocks[world_get_tile(&game->world, x, y, z)].replaceable){
-        if(!entity_is_block_inside(&game->player.entity, &game->world,
-                                   game->old_x, game->old_y, game->old_z)){
-            world_set_tile(&game->world, game->current_block, game->old_x,
-                           game->old_y, game->old_z);
-        }
-        return 1;
-    }
-    printf("Place block at %d, %d, %d\n", x, y, z);
-    game->old_x = x;
-    game->old_y = y;
-    game->old_z = z;
-    return 0;
+    gfx_enable_closing();
 }
 
 void game_input(Game *game, int v1, int v2, int type) {
-    switch(type){
-        case I_KEYPRESS:
-            switch(v1) {
-                case 'z':
-                    player_move(&game->player, game->delta, 1);
+    switch(game->screen) {
+        case D_TITLE:
+            switch(type){
+                case I_LEFTCLICK:
+                    if(button_mouse_inside(&game->button_singleplayer, game->mx,
+                                           game->my)){
+                        if(!world_init(&game->world, RENDER_DISTANCE*2+1,
+                                       RENDER_DISTANCE*2+1, game->seed,
+                                       game->texture)){
+                            game->screen = D_INGAME;
+                            gfx_cursor_hide();
+                            game_respawn(game);
+                            _game_sky(game);
+                            if(game->focus){
+                                gfx_cursor_hide();
+                            }else{
+                                gfx_cursor_show();
+                            }
+                            gfx_disable_closing();
+                        }
+                    }
                     break;
-                case 's':
-                    player_move(&game->player, game->delta, -1);
+                case I_RIGHTCLICK:
                     break;
-                case ' ':
-                    player_jump(&game->player, &game->world);
+                case I_MOUSE:
+                    game->mx = v1;
+                    game->my = v2;
                     break;
-                case 'a':
-                    player_sneak(&game->player);
             }
             break;
-        case I_KEYRELEASE:
-            switch(v1) {
-                case 'p':
-                    game->focus = !game->focus;
-                    if(game->focus){
+        case D_PAUSE:
+            switch(type){
+                case I_LEFTCLICK:
+                    if(button_mouse_inside(&game->button_resume, game->mx,
+                                           game->my) && !game->close_asked){
+                        game->screen = D_INGAME;
                         gfx_cursor_hide();
-                    }else{
-                        gfx_cursor_show();
+                    }
+                    if(button_mouse_inside(&game->button_title, game->mx,
+                                           game->my)){
+                        game->close_asked = 1;
                     }
                     break;
-                case 'f':
-                    game->fog_enabled = !game->fog_enabled;
-                    if(entity_in_water(&game->player.entity, &game->world)){
-                        _game_water(game);
-                    }else{
-                        _game_sky(game);
-                    }
+                case I_RIGHTCLICK:
                     break;
-                case 'w':
-                    game->gui_scale += 0.5;
-                    break;
-                case 'x':
-                    if(game->gui_scale > 0.5){
-                        game->gui_scale -= 0.5;
-                    }
-                    break;
-                case 'm':
-                    if(gfx_get_motion_blur()){
-                        gfx_set_motion_blur(0);
-                    }else{
-                        gfx_set_motion_blur(128);
-                    }
-                    break;
-                case 'i':
-                    game->current_block--;
-                    if(game->current_block <= T_VOID){
-                        game->current_block = T_AMOUNT-1;
-                    }
-                    break;
-                case 'o':
-                    game->current_block++;
-                    if(game->current_block >= T_AMOUNT){
-                        game->current_block = T_VOID+1;
-                    }
+                case I_MOUSE:
+                    game->mx = v1;
+                    game->my = v2;
                     break;
             }
             break;
-        case I_MOUSE:
-            game->mx = v1;
-            game->my = v2;
-            break;
-        case I_LEFTCLICK:
-            player_break_block(&game->player, &game->world);
-            break;
-        case I_RIGHTCLICK:
-            player_place_block(&game->player, &game->world);
-            break;
-        default:
+        case D_INGAME:
+            switch(type){
+                case I_KEYPRESS:
+                    switch(v1) {
+                        case 'w':
+                            /* FALLTHRU */
+                        case 'z':
+                            player_move(&game->player, game->delta, 1);
+                            break;
+                        case 's':
+                            player_move(&game->player, game->delta, -1);
+                            break;
+                        case ' ':
+                            player_jump(&game->player, &game->world);
+                            break;
+                        case 'a':
+                            player_sneak(&game->player);
+                    }
+                    break;
+                case I_KEYRELEASE:
+                    switch(v1) {
+                        case 'p':
+                            game->screen = D_PAUSE;
+                            gfx_cursor_show();
+                            break;
+                        case 'f':
+                            game->fog_enabled = !game->fog_enabled;
+                            if(entity_in_water(&game->player.entity,
+                                               &game->world)){
+                                _game_water(game);
+                            }else{
+                                _game_sky(game);
+                            }
+                            break;
+                        case 'x':
+                            game->gui_scale += 0.5;
+                            break;
+                        case 'c':
+                            if(game->gui_scale > 0.5){
+                                game->gui_scale -= 0.5;
+                            }
+                            break;
+                        case 'm':
+                            if(gfx_get_motion_blur()){
+                                gfx_set_motion_blur(0);
+                            }else{
+                                gfx_set_motion_blur(128);
+                            }
+                            break;
+                        case 'i':
+                            game->player.current_block--;
+                            if(game->player.current_block <= T_VOID){
+                                game->player.current_block = T_AMOUNT-1;
+                            }
+                            break;
+                        case 'o':
+                            game->player.current_block++;
+                            if(game->player.current_block >= T_AMOUNT){
+                                game->player.current_block = T_VOID+1;
+                            }
+                            break;
+                    }
+                    break;
+                case I_MOUSE:
+                    game->mx = v1;
+                    game->my = v2;
+                    break;
+                case I_LEFTCLICK:
+                    player_break_block(&game->player, &game->world);
+                    break;
+                case I_RIGHTCLICK:
+                    player_place_block(&game->player, &game->world);
+                    break;
+                default:
+                    break;
+            }
             break;
     }
 }
@@ -197,6 +224,26 @@ void game_logic(Game *game, float delta) {
     int mov_x, mov_y;
     game->delta = delta;
     switch(game->screen) {
+        case D_TITLE:
+            game->button_singleplayer.x =
+                    (gfx_get_width()-game->button_singleplayer.w)/2;
+            game->button_singleplayer.y =
+                    (gfx_get_height()-game->button_singleplayer.h)/2;
+            break;
+        case D_PAUSE:
+            game->button_resume.x = (gfx_get_width()-game->button_resume.w)/2;
+            game->button_resume.y = (gfx_get_height()-game->button_resume.h)/2;
+            game->button_title.x = (gfx_get_width()-game->button_title.w)/2;
+            game->button_title.y = (gfx_get_height()+game->button_resume.h)/2+8*
+                    game->gui_scale;
+            if(game->close_asked && game->world.finished){
+                game->screen = D_TITLE;
+                world_free(&game->world);
+                _game_sky(game);
+                gfx_enable_closing();
+                game->close_asked = 0;
+            }
+            break;
         case D_INGAME:
             /* Update the player rotation depending on the mouse position */
             if(game->focus){
@@ -220,8 +267,8 @@ void game_logic(Game *game, float delta) {
             }else{
                 _game_sky(game);
             }
-            if(game->mode != M_SPECTATOR){
-                if(game->mode != M_SPECTATOR &&
+            if(game->player.mode != M_SPECTATOR){
+                if(game->player.mode != M_SPECTATOR &&
                    game->player.entity.y < -CHUNK_HEIGHT){
                     game_respawn(game);
                 }
@@ -248,11 +295,36 @@ void game_draw(Game *game, float delta) {
     int crosshair_x, crosshair_y;
     int fps;
     switch(game->screen) {
+        case D_TITLE:
+            gfx_cursor_show();
+            gfx_start_2d();
+            gfx_draw_string((gfx_get_width()-sizeof(NAME)*8*
+                            game->gui_scale)/2, 32,
+                            NAME, game->font, 8, 8, game->gui_scale);
+            gfx_draw_string((gfx_get_width()-sizeof(COPYRIGHT)*8*
+                            game->gui_scale)/2, 32+8*
+                            game->gui_scale, COPYRIGHT, game->font, 8, 8,
+                            game->gui_scale);
+            gfx_draw_string(8, gfx_get_height()-16-8*game->gui_scale,
+                            VERSION, game->font, 8, 8, game->gui_scale);
+            button_draw(&game->button_singleplayer, game->mx, game->my,
+                        game->gui_scale, game->font);
+            gfx_end_2d();
+            break;
+        case D_PAUSE:
+            world_render(&game->world);
+            gfx_start_2d();
+            button_draw(&game->button_resume, game->mx, game->my,
+                        game->gui_scale, game->font);
+            button_draw(&game->button_title, game->mx, game->my,
+                        game->gui_scale, game->font);
+            gfx_end_2d();
+            break;
         case D_INGAME:
             crosshair_x = (int)((float)gfx_get_width()/2-
-                                    (crosshair_width*game->gui_scale)/2);
+                                    (crosshair_width*game->gui_scale/2)/2);
             crosshair_y = (int)((float)gfx_get_height()/2-
-                                    (crosshair_height*game->gui_scale)/2);
+                                    (crosshair_height*game->gui_scale/2)/2);
             fps = 0;
             if(delta) fps = 1/delta;
 
@@ -274,15 +346,16 @@ void game_draw(Game *game, float delta) {
 
             gfx_start_2d();
             gfx_draw_image(crosshair_x, crosshair_y, game->crosshair,
-                           crosshair_width, crosshair_height, game->gui_scale);
+                           crosshair_width, crosshair_height,
+                           game->gui_scale/2);
             gfx_draw_string(0, 0, game->fps_str, game->font, 8, 8,
-                            game->gui_scale+1);
+                            game->gui_scale);
             gfx_draw_string(0, 8+8*game->gui_scale, game->pos_str, game->font,
-                            8, 8, game->gui_scale+1);
+                            8, 8, game->gui_scale);
             gfx_draw_image_from_atlas(gfx_get_width()-32*game->gui_scale, 0,
                                       game->texture, 32, 32, game->gui_scale,
                                       16, 16, 256/16, 256/16,
-                                      game->current_block-1);
+                                      game->player.current_block-1);
             gfx_end_2d();
             break;
         default:

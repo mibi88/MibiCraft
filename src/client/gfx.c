@@ -375,6 +375,7 @@ void gfx_run(void draw(int), void keypress(int), void keyrelease(int),
     glutPassiveMotionFunc(mouse);
     glutMotionFunc(mouse);
     glutMouseFunc(_click);
+    gfx_enable_closing();
     glutMainLoop();
 }
 
@@ -414,6 +415,39 @@ void gfx_draw_image(int sx, int sy, unsigned int texture, int width,
     glVertex2f(0, y2);
 
     glEnd();
+}
+
+void gfx_draw_quad(int x, int y, int width, int height, float r, float g,
+                   float b) {
+
+    glDisable(GL_TEXTURE_2D);
+
+    glLoadIdentity();
+    glTranslatef(x, y, 0);
+
+    glColor3f(r, g, b);
+
+    glBegin(GL_QUADS);
+
+    glVertex2i(0, 0);
+    glVertex2i(width, 0);
+    glVertex2i(width, height);
+    glVertex2i(0, height);
+
+    glEnd();
+
+    glEnable(GL_TEXTURE_2D);
+}
+
+void gfx_disable_closing() {
+    /* TODO */
+    puts("Disable closing!");
+}
+
+void gfx_enable_closing() {
+    glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE,
+            GLUT_ACTION_GLUTMAINLOOP_RETURNS);
+    puts("Enable closing!");
 }
 
 void gfx_draw_image_from_atlas(int sx, int sy, unsigned int texture, int width,

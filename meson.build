@@ -7,9 +7,12 @@ project('MibiCraft', 'c',
 )
 
 config_h = configuration_data()
-config_h.set_quoted('VERSION', meson.project_version())
+r = run_command('git', 'rev-parse', 'HEAD', check: true)
+commit = r.stdout().strip()
+config_h.set_quoted('VERSION', meson.project_version()+'-git'+commit)
+config_h.set_quoted('NAME', meson.project_name())
 configure_file(
-  output: 'config.h',
+  output: 'buildconfig.h',
   configuration: config_h,
 )
 add_project_arguments([
