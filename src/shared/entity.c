@@ -193,6 +193,32 @@ int entity_is_block_inside(Entity *entity, World *world, int sx, int sy,
     return 0;
 }
 
+int entity_contains_block(Entity *entity, World *world, Tile block,
+                          float hitbox[HITBOX_SZ*3]) {
+    float x, y, z;
+    float xmin, xmax;
+    float ymin, ymax;
+    float zmin, zmax;
+    xmin = MIN(hitbox[0], hitbox[3]);
+    xmax = MAX(hitbox[0], hitbox[3]);
+    ymin = MIN(hitbox[1], hitbox[4]);
+    ymax = MAX(hitbox[1], hitbox[4]);
+    zmin = MIN(hitbox[2], hitbox[5]);
+    zmax = MAX(hitbox[2], hitbox[5]);
+    for(z=entity->z+zmin;z<entity->z+zmax;z+=0.5){
+        for(y=entity->y+ymin;y<entity->y+ymax;y+=0.5){
+            for(x=entity->x+xmin;x<entity->x+xmax;x+=0.5){
+                if(world_get_tile(world, floor(0.5+x),
+                                  floor(0.5+y+CHUNK_HEIGHT/2),
+                                  floor(0.5+z)) == block){
+                    return 1;
+                }
+            }
+        }
+    }
+    return 0;
+}
+
 void entity_update(Entity *entity, World *world, float delta) {
     float xmov, ymov, zmov;
     float dist;

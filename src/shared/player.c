@@ -27,22 +27,32 @@ void player_init(Player *player) {
             CHUNK_WIDTH, CHUNK_HEIGHT/2, CHUNK_DEPTH,
             0, 0, 0,
             0, 0,
-            2.5, 0.5, 12.0,
+            2.5, 0.5, PLAYER_GRAVITY,
             {
                 -0.4, -1.5, -0.4,
                 0.4, 0.2, 0.4
             }
     };
+    float swimming_hitbox[HITBOX_SZ*3] = {
+        -0.4, -0.4, -0.4,
+        0.4, 0.4, 0.4
+    };
     player->entity = entity;
     player->speed = PLAYER_WALKING_SPEED;
     player->jump_force = PLAYER_JUMP_FORCE;
     player->friction = PLAYER_DEFAULT_FRICTION;
+    player->water_force = PLAYER_WATER_FORCE;
     player->deceleration = PLAYER_DEFAULT_DECELERATION;
     player->current_block = T_SPRUCE_PLANKS;
     player->mode = M_CREATIVE;
+    player->sneak = 0;
+    player->gravity = PLAYER_GRAVITY;
+    player->swimming_down_speed = PLAYER_SWIMMING_DOWN_SPEED;
+    memcpy(player->swimming_hitbox, swimming_hitbox, HITBOX_SZ*3*sizeof(float));
 }
 
 void player_move(Player *player, float delta, float direction) {
+    /* TODO: Add sneaking */
     float cos_rx;
     cos_rx = cos((player->entity.rx)/180*PI);
     if(player->mode == M_SPECTATOR){
@@ -61,9 +71,16 @@ void player_move(Player *player, float delta, float direction) {
 }
 
 void player_jump(Player *player, World *world) {
-    if(entity_on_floor(&player->entity, world)){
-        player->entity.y_velocity = 6;
+    if(entity_contains_block(&player->entity, world, T_WATER,
+                             player->swimming_hitbox)){
+        player->entity.y_velocity = player->jump_force;
+    }else if(entity_on_floor(&player->entity, world)){
+        player->entity.y_velocity = player->jump_force;
     }
+}
+
+void player_sneak(Player *player) {
+    player->sneak = 1;
 }
 
 typedef struct {
@@ -132,8 +149,44 @@ void player_update(Player *player, World *world, float delta) {
             player->entity.velocity = -player->speed*delta;
         }
         player->moved = 0;
+        if(entity_contains_block(&player->entity, world, T_WATER,
+                                 player->swimming_hitbox)){
+            if(player->sneak){
+                player->entity.gravity = player->swimming_down_speed;
+                if(player->entity.y_velocity <
+                        -player->swimming_down_speed){
+                    player->entity.y_velocity =
+                            -player->swimming_down_speed;
+                }
+            }else{
+                player->entity.gravity = player->water_force;
+                if(player->entity.y_velocity < -player->water_force){
+                    player->entity.y_velocity = -player->water_force;
+                }
+            }
+        }else{
+            player->entity.gravity = player->gravity;
+        }
+        player->sneak = 0;
         entity_update(&player->entity, world, delta);
     }else{
         player->velocity = 10*delta;
     }
+}
+
+void player_respawn(Player *player, World *world) {
+    /* TODO: Determine the spawn position correctly */
+    player->entity.x = 0;
+    if(player->mode == M_SPECTATOR){
+        player->entity.y = 0;
+    }else{
+        player->entity.y = CHUNK_HEIGHT/2;
+    }
+    player->entity.z = 0;
+    world->x = -(RENDER_DISTANCE*CHUNK_WIDTH+CHUNK_WIDTH/2);
+    world->y = -(RENDER_DISTANCE*CHUNK_DEPTH+CHUNK_DEPTH/2);
+    player->entity.ry = 0;
+    player->entity.rx = 0;
+    player->entity.velocity = 0;
+    player->entity.y_velocity = 0;
 }

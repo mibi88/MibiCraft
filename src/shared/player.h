@@ -29,6 +29,9 @@
 #define PLAYER_DEFAULT_FRICTION 0.5
 #define PLAYER_DEFAULT_DECELERATION 1
 #define PLAYER_JUMP_FORCE 6
+#define PLAYER_WATER_FORCE 4
+#define PLAYER_GRAVITY 12
+#define PLAYER_SWIMMING_DOWN_SPEED (PLAYER_WATER_FORCE*4)
 
 /* Game mode */
 enum {
@@ -39,12 +42,17 @@ enum {
 
 typedef struct {
     Entity entity;
+    float swimming_hitbox[HITBOX_SZ*3];
     float speed;
     float friction;
     float deceleration;
+    float water_force;
     float velocity;
     float jump_force;
+    float gravity;
+    float swimming_down_speed;
     char moved;
+    char sneak;
     unsigned char mode;
     int current_block;
 } Player;
@@ -52,8 +60,10 @@ typedef struct {
 void player_init(Player *player);
 void player_move(Player *player, float delta, float direction);
 void player_jump(Player *player, World *world);
+void player_sneak(Player *player);
 void player_break_block(Player *player, World *world);
 void player_place_block(Player *player, World *world);
 void player_update(Player *player, World *world, float delta);
+void player_respawn(Player *player, World *world);
 
 #endif

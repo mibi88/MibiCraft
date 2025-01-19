@@ -38,6 +38,9 @@ int entity_is_inside(Entity *entity, World *world, float x, float y, float z);
 int entity_is_block_inside(Entity *entity, World *world, int sx, int sy,
                            int sz);
 
+int entity_contains_block(Entity *entity, World *world, Tile block,
+                          float hitbox[HITBOX_SZ*3]);
+
 void entity_update(Entity *entity, World *world, float delta);
 
 int entity_in_water(Entity *entity, World *world);

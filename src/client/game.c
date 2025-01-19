@@ -117,6 +117,8 @@ void game_input(Game *game, int v1, int v2, int type) {
                 case ' ':
                     player_jump(&game->player, &game->world);
                     break;
+                case 'a':
+                    player_sneak(&game->player);
             }
             break;
         case I_KEYRELEASE:
@@ -182,20 +184,7 @@ void game_input(Game *game, int v1, int v2, int type) {
 }
 
 void game_respawn(Game *game) {
-    /* TODO: Determine the spawn position correctly */
-    game->player.entity.x = 0;
-    if(game->mode == M_SPECTATOR){
-        game->player.entity.y = 0;
-    }else{
-        game->player.entity.y = CHUNK_HEIGHT/2;
-    }
-    game->player.entity.z = 0;
-    game->world.x = -(RENDER_DISTANCE*CHUNK_WIDTH+CHUNK_WIDTH/2);
-    game->world.y = -(RENDER_DISTANCE*CHUNK_DEPTH+CHUNK_DEPTH/2);
-    game->player.entity.ry = 0;
-    game->player.entity.rx = 0;
-    game->player.entity.velocity = 0;
-    game->player.entity.y_velocity = 0;
+    player_respawn(&game->player, &game->world);
     /* TODO: Refactor chunk loading to avoid having to reload the world to
      * avoid issues */
     world_init_data(&game->world);
