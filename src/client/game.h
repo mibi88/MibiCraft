@@ -32,6 +32,8 @@
 
 #include <config.h>
 
+#include <player.h>
+
 /* Screen */
 enum {
     D_INGAME
@@ -46,25 +48,14 @@ enum {
     I_RIGHTCLICK
 };
 
-/* Game mode */
-enum {
-    M_SPECTATOR,
-    M_CREATIVE,
-    M_SURVIVAL
-};
-
 typedef struct {
-    Entity player;
+    Player player;
     int mx, my;
     float gui_scale;
     unsigned int texture, crosshair, font;
     float rot_speed;
     int seed;
     int focus;
-    float max_speed, x_v_change;
-    float gravity;
-    float jump_force;
-    int jump;
     World world;
     float mov_speed;
     int fog_enabled;

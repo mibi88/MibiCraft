@@ -149,6 +149,8 @@ typedef struct {
     int plant_probability[PLANTS];
 } Biome_property;
 
+extern const Block_property blocks[T_AMOUNT];
+
 void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed);
 void chunk_generate_texture_coords(Chunk *chunk, int tex_x, int tex_y);
 Tile chunk_get_tile(Chunk *chunk, int x, int y, int z, int rx, int ry, int rz);

@@ -41,17 +41,7 @@ void _game_water(Game *game){
 }
 
 void game_init(Game *game, int seed) {
-    Entity player = {
-            CHUNK_WIDTH, CHUNK_HEIGHT/2, CHUNK_DEPTH,
-            0, 0, 0,
-            0, 0,
-            2.5, 0.5, 12.0,
-            {
-                -0.4, -1.5, -0.4,
-                0.4, 0.2, 0.4
-            }
-    };
-    game->player = player;
+    player_init(&game->player);
     game->gui_scale = 1;
 
     game->texture = 0;
@@ -63,11 +53,6 @@ void game_init(Game *game, int seed) {
     game->seed = seed;
 
     game->focus = 1;
-
-    game->max_speed = 0.0625;
-    game->x_v_change = 0;
-    game->gravity = 0.025;
-    game->jump_force = 0.25;
 
     game->fog_enabled = 1;
 
@@ -105,8 +90,8 @@ int _game_break_block(int x, int y, int z, void *vgame) {
 int _game_place_block(int x, int y, int z, void *vgame) {
     Game *game = vgame;
     if(!blocks[world_get_tile(&game->world, x, y, z)].replaceable){
-        if(!entity_is_block_inside(&game->player, &game->world, game->old_x,
-                                   game->old_y, game->old_z)){
+        if(!entity_is_block_inside(&game->player.entity, &game->world,
+                                   game->old_x, game->old_y, game->old_z)){
             world_set_tile(&game->world, game->current_block, game->old_x,
                            game->old_y, game->old_z);
         }
@@ -120,45 +105,17 @@ int _game_place_block(int x, int y, int z, void *vgame) {
 }
 
 void game_input(Game *game, int v1, int v2, int type) {
-    float cos_rx;
     switch(type){
         case I_KEYPRESS:
-            cos_rx = cos((game->player.rx)/180*PI);
             switch(v1) {
                 case 'z':
-                    if(game->mode == M_SPECTATOR){
-                        game->player.x += cos((game->player.ry-90)/180*PI)*
-                                          cos_rx*game->mov_speed;
-                        game->player.y += -sin(game->player.rx/180*PI)*
-                                          game->mov_speed;
-                        game->player.z += sin((game->player.ry-90)/180*PI)*
-                                          cos_rx*game->mov_speed;
-                    }else{
-                        /* Survival or creative mode. */
-                        game->player.velocity += game->player.acceleration*
-                                                 game->delta;
-                        game->moved = 1;
-                    }
+                    player_move(&game->player, game->delta, 1);
                     break;
                 case 's':
-                    if(game->mode == M_SPECTATOR){
-                        game->player.x -= cos((game->player.ry-90)/180*PI)*
-                                          cos_rx*game->mov_speed;
-                        game->player.y -= -sin(game->player.rx/180*PI)*
-                                          game->mov_speed;
-                        game->player.z -= sin((game->player.ry-90)/180*PI)*
-                                          cos_rx*game->mov_speed;
-                    }else{
-                        /* Survival or creative mode. */
-                        game->player.velocity -= game->player.acceleration*
-                                                 game->delta;
-                        game->moved = 1;
-                    }
+                    player_move(&game->player, game->delta, -1);
                     break;
                 case ' ':
-                    if(entity_on_floor(&game->player, &game->world)){
-                        game->player.y_velocity = 6;
-                    }
+                    player_jump(&game->player, &game->world);
                     break;
             }
             break;
@@ -174,7 +131,7 @@ void game_input(Game *game, int v1, int v2, int type) {
                     break;
                 case 'f':
                     game->fog_enabled = !game->fog_enabled;
-                    if(entity_in_water(&game->player, &game->world)){
+                    if(entity_in_water(&game->player.entity, &game->world)){
                         _game_water(game);
                     }else{
                         _game_sky(game);
@@ -214,10 +171,10 @@ void game_input(Game *game, int v1, int v2, int type) {
             game->my = v2;
             break;
         case I_LEFTCLICK:
-            raycast(&game->player, RAYCAST_DISTANCE, _game_break_block, game);
+            player_break_block(&game->player, &game->world);
             break;
         case I_RIGHTCLICK:
-            raycast(&game->player, RAYCAST_DISTANCE, _game_place_block, game);
+            player_place_block(&game->player, &game->world);
             break;
         default:
             break;
@@ -226,19 +183,19 @@ void game_input(Game *game, int v1, int v2, int type) {
 
 void game_respawn(Game *game) {
     /* TODO: Determine the spawn position correctly */
-    game->player.x = 0;
+    game->player.entity.x = 0;
     if(game->mode == M_SPECTATOR){
-        game->player.y = 0;
+        game->player.entity.y = 0;
     }else{
-        game->player.y = CHUNK_HEIGHT/2;
+        game->player.entity.y = CHUNK_HEIGHT/2;
     }
-    game->player.z = 0;
+    game->player.entity.z = 0;
     game->world.x = -(RENDER_DISTANCE*CHUNK_WIDTH+CHUNK_WIDTH/2);
     game->world.y = -(RENDER_DISTANCE*CHUNK_DEPTH+CHUNK_DEPTH/2);
-    game->player.ry = 0;
-    game->player.rx = 0;
-    game->player.velocity = 0;
-    game->player.y_velocity = 0;
+    game->player.entity.ry = 0;
+    game->player.entity.rx = 0;
+    game->player.entity.velocity = 0;
+    game->player.entity.y_velocity = 0;
     /* TODO: Refactor chunk loading to avoid having to reload the world to
      * avoid issues */
     world_init_data(&game->world);
@@ -252,45 +209,37 @@ void game_logic(Game *game, float delta) {
     game->delta = delta;
     switch(game->screen) {
         case D_INGAME:
-            game->mov_speed = 10*delta;
             /* Update the player rotation depending on the mouse position */
-            if(!game->mov_speed) return;
             if(game->focus){
                 mov_x = game->mx-cx;
                 mov_y = game->my-cy;
-                game->player.ry += (float)mov_x/game->rot_speed;
-                game->player.rx += (float)mov_y/game->rot_speed;
-                if(game->player.rx > 90) game->player.rx = 90;
-                else if(game->player.rx < -90) game->player.rx = -90;
+                game->player.entity.ry += (float)mov_x/game->rot_speed;
+                game->player.entity.rx += (float)mov_y/game->rot_speed;
+                if(game->player.entity.rx > 90){
+                    game->player.entity.rx = 90;
+                }else if(game->player.entity.rx < -90){
+                    game->player.entity.rx = -90;
+                }
                 gfx_set_pointer_pos(cx, cy);
                 game->mx = cx;
                 game->my = cy;
             }
             /* Update the player */
-            if(game->mode != M_SPECTATOR){
-                if(game->moved) game->player.deceleration = 0.5;
-                else game->player.deceleration = 1;
-                if(game->player.velocity > 6*delta){
-                    game->player.velocity = 6*delta;
-                }
-                if(game->player.velocity < -6*delta){
-                    game->player.velocity = -6*delta;
-                }
-                game->moved = 0;
-                entity_update(&game->player, &game->world, delta);
-            }
-            if(entity_in_water(&game->player, &game->world)){
+            player_update(&game->player, &game->world, delta);
+            if(entity_in_water(&game->player.entity, &game->world)){
                 _game_water(game);
             }else{
                 _game_sky(game);
             }
-            /* Update the world */
-            world_update(&game->world, game->player.x, game->player.z);
             if(game->mode != M_SPECTATOR){
-                if(game->mode != M_SPECTATOR && game->player.y < -CHUNK_HEIGHT){
+                if(game->mode != M_SPECTATOR &&
+                   game->player.entity.y < -CHUNK_HEIGHT){
                     game_respawn(game);
                 }
             }
+            /* Update the world */
+            world_update(&game->world, game->player.entity.x,
+                         game->player.entity.z);
             break;
         default:
             game->screen = D_INGAME;
@@ -318,16 +267,18 @@ void game_draw(Game *game, float delta) {
             fps = 0;
             if(delta) fps = 1/delta;
 
-            gfx_set_camera(game->player.x, game->player.y, game->player.z,
-                           game->player.rx, game->player.ry, 0);
+            gfx_set_camera(game->player.entity.x, game->player.entity.y,
+                           game->player.entity.z, game->player.entity.rx,
+                           game->player.entity.ry, 0);
 
             sprintf(game->fps_str, "FPS: %d", fps);
-            sprintf(game->pos_str, "X: %.02f Y: %.02f Z: %.02f", game->player.x,
-                    game->player.y, game->player.z);
+            sprintf(game->pos_str, "X: %.02f Y: %.02f Z: %.02f",
+                    game->player.entity.x, game->player.entity.y,
+                    game->player.entity.z);
             world_render(&game->world);
             /* Display the selected block */
-            raycast(&game->player, RAYCAST_DISTANCE, _game_selection_draw,
-                    &game->world);
+            raycast(&game->player.entity, RAYCAST_DISTANCE,
+                    _game_selection_draw, &game->world);
             /* gfx_render_wire_cube((int)player.x, (int)player.y, (int)player.z,
              *                      1); */
             /* gfx_render_wire_cube(player.x, player.y, player.z, 1); */

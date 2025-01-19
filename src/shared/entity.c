@@ -23,8 +23,6 @@
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
-extern const Block_property blocks[T_AMOUNT];
-
 int entity_on_floor(Entity *entity, World *world) {
     float x, z;
     float xmin, xmax;
