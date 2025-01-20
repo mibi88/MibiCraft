@@ -1,0 +1,23 @@
+                                    MIBICRAFT
+                                    by Mibi88
+
+A small game in a world of cubes
+
+    COMPILING ON LINUX
+
+MibiCraft is straightforward to compile on linux: in the project folder run
+
+$ meson setup build
+
+and run
+
+$ meson compile -C build
+
+to compile it. You may need to run it multiple times before it succeeds.
+
+    COMPILING ON WINDOWS
+
+I can't test it on modern windows versions. I'm only testing it on Windows XP
+
+See the instructions in building_on_win32.txt to compile it on Windows XP.
+

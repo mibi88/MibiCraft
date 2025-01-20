@@ -40,23 +40,6 @@ enum {
     M_SURVIVAL
 };
 
-typedef struct {
-    Entity entity;
-    float swimming_hitbox[HITBOX_SZ*3];
-    float speed;
-    float friction;
-    float deceleration;
-    float water_force;
-    float velocity;
-    float jump_force;
-    float gravity;
-    float swimming_down_speed;
-    char moved;
-    char sneak;
-    unsigned char mode;
-    int current_block;
-} Player;
-
 void player_init(Player *player);
 void player_move(Player *player, float delta, float direction);
 void player_jump(Player *player, World *world);

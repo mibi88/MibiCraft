@@ -56,7 +56,7 @@ enum {
 };
 
 typedef struct {
-    Player player;
+    Player *player;
     int mx, my;
     float gui_scale;
     unsigned int texture, crosshair, font;

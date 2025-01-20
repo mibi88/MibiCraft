@@ -19,17 +19,7 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 
-#define HITBOX_SZ 2
-
 #include <world.h>
-
-typedef struct {
-    float x, y, z;
-    float rx, ry, rz;
-    float velocity, y_velocity;
-    float acceleration, deceleration, gravity;
-    float hitbox[HITBOX_SZ*3];
-} Entity;
 
 int entity_on_floor(Entity *entity, World *world);
 

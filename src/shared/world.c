@@ -18,6 +18,8 @@
 
 #include <world.h>
 
+#include <player.h>
+
 #include <threading.h>
 
 int _cx, _cy;
@@ -120,20 +122,32 @@ void world_init_data(World *world) {
         }
     }
     world->finished = 1;
+    world->update_required = 1;
 }
 
 int world_init(World *world, int width, int height, int seed,
-               unsigned int texture) {
+               unsigned int texture, int player_num) {
     int i;
     world->width = width;
     world->height = height;
+    world->players = malloc(sizeof(Player)*player_num);
+    world->player_num = player_num;
+    if(!world->players){
+        puts("Player init failed");
+        return 1;
+    }
     world->chunks = malloc(width*height*sizeof(Chunk));
     if(!world->chunks){
         puts("World init failed");
+        free(world->players);
+        world->players = NULL;
         return 1;
     }
     world->seed = seed;
     world->texture = texture;
+    for(i=0;i<player_num;i++){
+        player_init(world->players+i);
+    }
     world_init_data(world);
     return 0;
 }
@@ -230,12 +244,29 @@ THREAD_CALL(_world_update, vworld) {
     THREAD_EXIT();
 }
 
-void world_update(World *world, float sx, float sz) {
+void world_update(World *world) {
+    /* TODO: Support multiple players */
     THREAD_ID(id);
-    world->new_x = sx;
-    world->new_z = sz;
-    if(world->finished){
-        THREAD_CREATE(id, _world_update, world);
+    int i;
+    int update_required = 0;
+    if(!world->finished) return;
+    for(i=0;i<world->player_num;i++){
+        if(((int)world->players[i].entity.x-world->x)/CHUNK_WIDTH !=
+                world->width/2 ||
+           ((int)world->players[i].entity.z-world->y)/CHUNK_DEPTH !=
+                   world->height/2){
+            update_required = 1;
+            break;
+        }
+    }
+    if(world->update_required || update_required){
+        puts("update required");
+        world->new_x = world->players[0].entity.x;
+        world->new_z = world->players[0].entity.z;
+        if(world->finished){
+            THREAD_CREATE(id, _world_update, world);
+        }
+        world->update_required = 0;
     }
 }
 
@@ -281,6 +312,7 @@ void world_set_tile(World *world, Tile tile, int x, int y, int z) {
             chunk_set_tile(tile_chunk, tile, x-tile_chunk->x, y,
                            z-tile_chunk->z);
             tile_chunk->remesh = 1;
+            world->update_required = 1;
             break;
         }
         /* Check if we need to update a neighboring chunk */
@@ -352,6 +384,9 @@ void world_update_chunk_model_at(World *world, float sx, float sz) {
 }
 
 void world_free(World *world) {
+    free(world->players);
+    world->players = NULL;
     free(world->chunks);
+    world->chunks = NULL;
 }
 

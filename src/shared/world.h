@@ -23,30 +23,20 @@
 
 #include <chunk.h>
 
-typedef struct {
-    Chunk *chunks;
-    int width, height;
-    int x, y;
-    int seed;
-    unsigned int texture;
-    /* World update */
-    int new_x, new_z;
-    int finished;
-    /****************/
-} World;
+#include <structs.h>
 
 void world_generate_data(World *world);
 void world_init_data(World *world);
 void world_generate_models(World *world);
 
 int world_init(World *world, int width, int height, int seed,
-               unsigned int texture);
+               unsigned int texture, int player_num);
 
-void world_update(World *world, float x, float z);
+void world_update(World *world);
 
 void world_render(World *world);
 
-void world_update(World *world, float x, float z);
+void world_update(World *world);
 
 Tile world_get_tile(World *world, float x, float y, float z);
 void world_set_tile(World *world, Tile tile, int x, int y, int z);

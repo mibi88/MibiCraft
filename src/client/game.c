@@ -43,7 +43,6 @@ void _game_water(Game *game){
 }
 
 void game_init(Game *game, int seed) {
-    player_init(&game->player);
     game->gui_scale = 2;
     game->close_asked = 0;
 
@@ -87,7 +86,8 @@ void game_input(Game *game, int v1, int v2, int type) {
                                            game->my)){
                         if(!world_init(&game->world, RENDER_DISTANCE*2+1,
                                        RENDER_DISTANCE*2+1, game->seed,
-                                       game->texture)){
+                                       game->texture, 1)){
+                            game->player = game->world.players;
                             game->screen = D_INGAME;
                             gfx_cursor_hide();
                             game_respawn(game);
@@ -137,16 +137,16 @@ void game_input(Game *game, int v1, int v2, int type) {
                         case 'w':
                             /* FALLTHRU */
                         case 'z':
-                            player_move(&game->player, game->delta, 1);
+                            player_move(game->player, game->delta, 1);
                             break;
                         case 's':
-                            player_move(&game->player, game->delta, -1);
+                            player_move(game->player, game->delta, -1);
                             break;
                         case ' ':
-                            player_jump(&game->player, &game->world);
+                            player_jump(game->player, &game->world);
                             break;
                         case 'a':
-                            player_sneak(&game->player);
+                            player_sneak(game->player);
                     }
                     break;
                 case I_KEYRELEASE:
@@ -157,7 +157,7 @@ void game_input(Game *game, int v1, int v2, int type) {
                             break;
                         case 'f':
                             game->fog_enabled = !game->fog_enabled;
-                            if(entity_in_water(&game->player.entity,
+                            if(entity_in_water(&game->player->entity,
                                                &game->world)){
                                 _game_water(game);
                             }else{
@@ -180,15 +180,17 @@ void game_input(Game *game, int v1, int v2, int type) {
                             }
                             break;
                         case 'i':
-                            game->player.current_block--;
-                            if(game->player.current_block <= T_VOID){
-                                game->player.current_block = T_AMOUNT-1;
+                            /* Add proper support for an inventory */
+                            game->player->current_block--;
+                            if(game->player->current_block <= T_VOID){
+                                game->player->current_block = T_AMOUNT-1;
                             }
                             break;
                         case 'o':
-                            game->player.current_block++;
-                            if(game->player.current_block >= T_AMOUNT){
-                                game->player.current_block = T_VOID+1;
+                            /* Add proper support for an inventory */
+                            game->player->current_block++;
+                            if(game->player->current_block >= T_AMOUNT){
+                                game->player->current_block = T_VOID+1;
                             }
                             break;
                     }
@@ -198,10 +200,10 @@ void game_input(Game *game, int v1, int v2, int type) {
                     game->my = v2;
                     break;
                 case I_LEFTCLICK:
-                    player_break_block(&game->player, &game->world);
+                    player_break_block(game->player, &game->world);
                     break;
                 case I_RIGHTCLICK:
-                    player_place_block(&game->player, &game->world);
+                    player_place_block(game->player, &game->world);
                     break;
                 default:
                     break;
@@ -211,10 +213,7 @@ void game_input(Game *game, int v1, int v2, int type) {
 }
 
 void game_respawn(Game *game) {
-    player_respawn(&game->player, &game->world);
-    /* TODO: Refactor chunk loading to avoid having to reload the world to
-     * avoid issues */
-    world_init_data(&game->world);
+    player_respawn(game->player, &game->world);
 }
 
 void game_logic(Game *game, float delta) {
@@ -249,33 +248,32 @@ void game_logic(Game *game, float delta) {
             if(game->focus){
                 mov_x = game->mx-cx;
                 mov_y = game->my-cy;
-                game->player.entity.ry += (float)mov_x/game->rot_speed;
-                game->player.entity.rx += (float)mov_y/game->rot_speed;
-                if(game->player.entity.rx > 90){
-                    game->player.entity.rx = 90;
-                }else if(game->player.entity.rx < -90){
-                    game->player.entity.rx = -90;
+                game->player->entity.ry += (float)mov_x/game->rot_speed;
+                game->player->entity.rx += (float)mov_y/game->rot_speed;
+                if(game->player->entity.rx > 90){
+                    game->player->entity.rx = 90;
+                }else if(game->player->entity.rx < -90){
+                    game->player->entity.rx = -90;
                 }
                 gfx_set_pointer_pos(cx, cy);
                 game->mx = cx;
                 game->my = cy;
             }
             /* Update the player */
-            player_update(&game->player, &game->world, delta);
-            if(entity_in_water(&game->player.entity, &game->world)){
+            player_update(game->player, &game->world, delta);
+            if(entity_in_water(&game->player->entity, &game->world)){
                 _game_water(game);
             }else{
                 _game_sky(game);
             }
-            if(game->player.mode != M_SPECTATOR){
-                if(game->player.mode != M_SPECTATOR &&
-                   game->player.entity.y < -CHUNK_HEIGHT){
+            if(game->player->mode != M_SPECTATOR){
+                if(game->player->mode != M_SPECTATOR &&
+                   game->player->entity.y < -CHUNK_HEIGHT){
                     game_respawn(game);
                 }
             }
             /* Update the world */
-            world_update(&game->world, game->player.entity.x,
-                         game->player.entity.z);
+            world_update(&game->world);
             break;
         default:
             game->screen = D_INGAME;
@@ -328,17 +326,17 @@ void game_draw(Game *game, float delta) {
             fps = 0;
             if(delta) fps = 1/delta;
 
-            gfx_set_camera(game->player.entity.x, game->player.entity.y,
-                           game->player.entity.z, game->player.entity.rx,
-                           game->player.entity.ry, 0);
+            gfx_set_camera(game->player->entity.x, game->player->entity.y,
+                           game->player->entity.z, game->player->entity.rx,
+                           game->player->entity.ry, 0);
 
             sprintf(game->fps_str, "FPS: %d", fps);
             sprintf(game->pos_str, "X: %.02f Y: %.02f Z: %.02f",
-                    game->player.entity.x, game->player.entity.y,
-                    game->player.entity.z);
+                    game->player->entity.x, game->player->entity.y,
+                    game->player->entity.z);
             world_render(&game->world);
             /* Display the selected block */
-            raycast(&game->player.entity, RAYCAST_DISTANCE,
+            raycast(&game->player->entity, RAYCAST_DISTANCE,
                     _game_selection_draw, &game->world);
             /* gfx_render_wire_cube((int)player.x, (int)player.y, (int)player.z,
              *                      1); */
@@ -355,7 +353,7 @@ void game_draw(Game *game, float delta) {
             gfx_draw_image_from_atlas(gfx_get_width()-32*game->gui_scale, 0,
                                       game->texture, 32, 32, game->gui_scale,
                                       16, 16, 256/16, 256/16,
-                                      game->player.current_block-1);
+                                      game->player->current_block-1);
             gfx_end_2d();
             break;
         default:
