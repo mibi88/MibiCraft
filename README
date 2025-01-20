@@ -3,7 +3,9 @@
 
 A small game in a world of cubes
 
-    COMPILING ON LINUX
+-------------------------------------------------------------------------------
+
+                            COMPILING ON LINUX
 
 MibiCraft is straightforward to compile on linux: in the project folder run
 
@@ -15,9 +17,95 @@ $ meson compile -C build
 
 to compile it. You may need to run it multiple times before it succeeds.
 
-    COMPILING ON WINDOWS
+-------------------------------------------------------------------------------
+
+                            COMPILING ON WINDOWS
 
 I can't test it on modern windows versions. I'm only testing it on Windows XP
 
-See the instructions in building_on_win32.txt to compile it on Windows XP.
+-------------------------------------------------------------------------------
+
+                    COMPILING MIBICRAFT ON WINDOWS XP
+
+MibiCraft works correctly with zlib 1.3, libpng 1.6.40 and freeglut 1.8.1 (at
+the time I'm writing the document, the 17/01/2025, with the latest commit being
+commit 85ab576 "Add threading support for windows back" from the 15/01/2025)
+
+Compiling MibiCraft is quite difficult on Windows XP. I recommend you to
+compile it with OpenWatcom 1.6 (OpenWatcom 1.9 was quite buggy for me, so I
+downgraded to OpenWatcom 1.6 which worked slightly better). MibiCraft can also
+be built with gcc, but I wasn't able to compile my image conversion tool,
+imgconv, with it.
+
+First, you'll need to compile the imgconv tool.
+
+    COMPILING IMGCONV
+
+imgconv uses libpng to read the assets, which was quite challenging to build.
+
+    Compiling libpng on Windows XP
+
+libpng provides files to compile it with the OpenWatcom IDE, but they require a
+build of zlib which I wasn't able to build correcly.
+
+That's why I created a static library project. I Added the following source
+files to it :
+
+- lpng1640\png.c
+- lpng1640\pngerror.c
+- lpng1640\pngget.c
+- lpng1640\pngmem.c
+- lpng1640\pngpread.c
+- lpng1640\pngread.c
+- lpng1640\pngrio.c
+- lpng1640\pngrtran.c
+- lpng1640\pngrutil.c
+- lpng1640\pngset.c
+- lpng1640\pngtrans.c
+- lpng1640\pngwio.c
+- lpng1640\pngwrite.c
+- lpng1640\pngwtran.c
+- lpng1640\pngwutil.c
+- zlib-1.3\adler32.c
+- zlib-1.3\compress.c
+- zlib-1.3\crc32.c
+- zlib-1.3\deflate.c
+- zlib-1.3\gzclose.c
+- zlib-1.3\gzlib.c
+- zlib-1.3\gzread.c
+- zlib-1.3\gzwrite.c
+- zlib-1.3\infback.c
+- zlib-1.3\inffast.c
+- zlib-1.3\inflate.c
+- zlib-1.3\inftrees.c
+- zlib-1.3\trees.c
+- zlib-1.3\uncompr.c
+- zlib-1.3\zutil.c
+
+After building the library by pressing F5, copy the generated .lib file to
+C:\WATCOM\lib386\nt and the libpng and zlib (I don't know if they are required,
+but I also copied them) header files to C:\WATCOM\h\nt (if you installed the
+OpenWatcom C compiler at  C:\WATCOM).
+
+    Compiling the imgconv executable
+
+Now just build imgconv. The compilation should succeed. Check that you've
+followed the previous steps properly if it fails.
+
+    COMPILING MIBICRAFT
+
+    Compile freeglut
+
+Compiling freeglut is straightforward. Compile freeglut 2.8.1 (or later if you
+manage to). Copy the generated .lib file to C:\WATCOM\lib386\nt and the header
+files to C:\WATCOM\h\nt (if you installed the OpenWatcom C compiler at
+C:\WATCOM).
+
+    Compile MibiCraft
+
+Now you should be able to compile MibiCraft easily using the build files.
+
+Copy freeglut.dll in the same folder and you should be able to run MibiCraft.
+
+-------------------------------------------------------------------------------
 
