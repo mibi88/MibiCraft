@@ -1,0 +1,41 @@
+(c
+ c Textures properties
+ c)
+
+(textures
+    t_grass
+    t_dirt
+    t_stone
+    t_coal
+    t_iron
+    t_gold
+    t_redstone
+    t_lapis
+    t_diamond
+    t_bedrock
+    t_water
+    t_sand
+    t_oak_log
+    t_oak_leaves
+    t_podzol
+    t_spruce_log
+    t_spruce_leaves
+    t_snow
+    t_dried_grass
+    t_acacia_log
+    t_acacia_leaves
+    t_sand_stone
+    t_palm_log
+    t_cactus
+    t_rose
+    t_grass_plant
+    t_dead_bush
+    t_brown_mushroom
+    t_red_mushroom
+    t_spruce_planks
+    t_glass
+    t_dandelion
+    t_berry_bush
+    t_fruit_berry_bush
+)
+

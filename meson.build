@@ -22,5 +22,6 @@ add_project_arguments([
 
 subdir('tools')
 subdir('img')
+subdir('data')
 
 subdir('src')

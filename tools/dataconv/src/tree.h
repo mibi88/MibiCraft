@@ -16,16 +16,31 @@
  * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 
-#include <stdlib.h>
-#include <stdio.h>
+#ifndef TREE_H
+#define TREE_H
 
-#include <conv.h>
+#include <stddef.h>
 
-int main(int argc, char **argv) {
-    if(argc < 4){
-        fputs("Need more args!\n", stderr);
-        return EXIT_FAILURE;
-    }
+enum {
+    N_FUNCTION,
+    N_NAME,
+    N_INT,
+    N_BOOL,
+    N_FLOAT,
+    N_STR,
+    N_AMOUNT
+};
 
-    return conv(argv[1], argv[2], argv[3]);
-}
+typedef struct {
+    /* List of pointers to the child nodes */
+    void **childs;
+    size_t child_num;
+    void *data;
+    size_t size;
+    unsigned char type;
+} Node;
+
+void node_init(Node *node, void *value, size_t size, int type);
+void node_free(Node *node);
+
+#endif

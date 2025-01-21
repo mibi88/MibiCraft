@@ -16,16 +16,16 @@
  * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 
-#include <stdlib.h>
-#include <stdio.h>
+#ifndef PARSER_H
+#define PARSER_H
 
-#include <conv.h>
+#include <stddef.h>
 
-int main(int argc, char **argv) {
-    if(argc < 4){
-        fputs("Need more args!\n", stderr);
-        return EXIT_FAILURE;
-    }
+#include <tree.h>
 
-    return conv(argv[1], argv[2], argv[3]);
-}
+typedef struct {
+    Node *root_node;
+} Parser;
+
+#endif
+

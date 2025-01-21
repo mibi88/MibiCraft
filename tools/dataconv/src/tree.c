@@ -16,16 +16,17 @@
  * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 
-#include <stdlib.h>
-#include <stdio.h>
+#include <tree.h>
 
-#include <conv.h>
-
-int main(int argc, char **argv) {
-    if(argc < 4){
-        fputs("Need more args!\n", stderr);
-        return EXIT_FAILURE;
-    }
-
-    return conv(argv[1], argv[2], argv[3]);
+void node_init(Node *node, void *value, size_t size, int type) {
+    node->childs = NULL;
+    node->data = value;
+    node->size = size;
+    node->type = type;
 }
+
+void node_free(Node *node) {
+    free(node->childs);
+    free(node->data);
+}
+
