@@ -45,6 +45,7 @@ void _game_water(Game *game){
 void game_init(Game *game, int seed) {
     game->gui_scale = 2;
     game->close_asked = 0;
+    game->render_distance = RENDER_DISTANCE;
 
     game->texture = 0;
     game->crosshair = 0;
@@ -84,8 +85,8 @@ void game_input(Game *game, int v1, int v2, int type) {
                 case I_LEFTCLICK:
                     if(button_mouse_inside(&game->button_singleplayer, game->mx,
                                            game->my)){
-                        if(!world_init(&game->world, RENDER_DISTANCE*2+1,
-                                       RENDER_DISTANCE*2+1, game->seed,
+                        if(!world_init(&game->world, game->render_distance*2+1,
+                                       game->render_distance*2+1, game->seed,
                                        game->texture, 1)){
                             game->player = game->world.players;
                             game->screen = D_INGAME;
@@ -191,6 +192,24 @@ void game_input(Game *game, int v1, int v2, int type) {
                             game->player->current_block++;
                             if(game->player->current_block >= T_AMOUNT){
                                 game->player->current_block = T_VOID+1;
+                            }
+                            break;
+                        case 'y':
+                            if(game->render_distance > 1){
+                                game->render_distance--;
+                                if(world_change_size(&game->world,
+                                                 game->render_distance*2+1,
+                                                 game->render_distance*2+1)){
+                                    game->render_distance++;
+                                }
+                            }
+                            break;
+                        case 'u':
+                            game->render_distance++;
+                            if(world_change_size(&game->world,
+                                                 game->render_distance*2+1,
+                                                 game->render_distance*2+1)){
+                                game->render_distance--;
                             }
                             break;
                     }
@@ -334,6 +353,8 @@ void game_draw(Game *game, float delta) {
             sprintf(game->pos_str, "X: %.02f Y: %.02f Z: %.02f",
                     game->player->entity.x, game->player->entity.y,
                     game->player->entity.z);
+            sprintf(game->render_distance_str, "Render distance: %d",
+                    game->render_distance);
             world_render(&game->world);
             /* Display the selected block */
             raycast(&game->player->entity, RAYCAST_DISTANCE,
@@ -350,6 +371,9 @@ void game_draw(Game *game, float delta) {
                             game->gui_scale);
             gfx_draw_string(0, 8+8*game->gui_scale, game->pos_str, game->font,
                             8, 8, game->gui_scale);
+            gfx_draw_string(0, gfx_get_height()-8-8*game->gui_scale,
+                            game->render_distance_str, game->font, 8, 8,
+                            game->gui_scale);
             gfx_draw_image_from_atlas(gfx_get_width()-32*game->gui_scale, 0,
                                       game->texture, 32, 32, game->gui_scale,
                                       16, 16, 256/16, 256/16,

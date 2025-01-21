@@ -183,8 +183,8 @@ void player_respawn(Player *player, World *world) {
         player->entity.y = CHUNK_HEIGHT/2;
     }
     player->entity.z = 0;
-    world->x = -(RENDER_DISTANCE*CHUNK_WIDTH+CHUNK_WIDTH/2);
-    world->y = -(RENDER_DISTANCE*CHUNK_DEPTH+CHUNK_DEPTH/2);
+    world->x = -(world->width/2*CHUNK_WIDTH+CHUNK_WIDTH/2);
+    world->y = -(world->height/2*CHUNK_DEPTH+CHUNK_DEPTH/2);
     player->entity.ry = 0;
     player->entity.rx = 0;
     player->entity.velocity = 0;

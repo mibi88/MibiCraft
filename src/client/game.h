@@ -68,12 +68,14 @@ typedef struct {
     int fog_enabled;
     char fps_str[20];
     char pos_str[100];
+    char render_distance_str[100];
     unsigned char screen;
     float delta;
     Button button_singleplayer;
     Button button_resume;
     Button button_title;
     int close_asked;
+    int render_distance;
 } Game;
 
 void game_init(Game *game, int seed);

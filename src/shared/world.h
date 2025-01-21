@@ -42,6 +42,8 @@ Tile world_get_tile(World *world, float x, float y, float z);
 void world_set_tile(World *world, Tile tile, int x, int y, int z);
 void world_update_chunk_model_at(World *world, float sx, float sz);
 
+int world_change_size(World *world, int width, int height);
+
 void world_free(World *world);
 
 #endif

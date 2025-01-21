@@ -102,6 +102,7 @@ void world_init_data(World *world) {
     y = world->height/2;
     x = world->width/2;
     pos = y*world->width+x;
+    world->chunks[pos].ready = 0;
     chunk_generate_data(world->chunks+pos, world->x+x*CHUNK_WIDTH,
                         world->y+y*CHUNK_DEPTH, world->seed);
     chunk_generate_model(world->chunks+pos, world->texture, GET_TILE, world);
@@ -115,6 +116,7 @@ void world_init_data(World *world) {
             _cy = y;
             pos = y*world->width+x;
             if(pos != start){
+                world->chunks[pos].ready = 0;
                 world->chunks[pos].x = world->x+x*CHUNK_WIDTH;
                 world->chunks[pos].z = world->y+y*CHUNK_DEPTH;
                 world->chunks[pos].regenerate = 1;
@@ -148,6 +150,8 @@ int world_init(World *world, int width, int height, int seed,
     for(i=0;i<player_num;i++){
         player_init(world->players+i);
     }
+    world->x = world->players[0].entity.x;
+    world->y = world->players[0].entity.z;
     world_init_data(world);
     return 0;
 }
@@ -381,6 +385,29 @@ void world_update_chunk_model_at(World *world, float sx, float sz) {
         Chunk *chunk = &world->chunks[chunk_y*world->width+chunk_x];
         chunk->remesh = 1;
     }
+}
+
+int world_change_size(World *world, int width, int height) {
+    Chunk *chunks;
+    if(!world->finished) return 1;
+    world->finished = 0;
+    /* TODO: Add support for multiple players. */
+    world->x -= (width-world->width)/2*CHUNK_WIDTH;
+    world->y -= (height-world->height)/2*CHUNK_DEPTH;
+    world->width = width;
+    world->height = height;
+    /* TODO: Do not reload all the chunks: keep the chunks that are already
+     * loaded. */
+    chunks = realloc(world->chunks, world->width*world->height*sizeof(Chunk));
+    if(!chunks){
+        puts("Failed to change the world size!");
+        return 2;
+    }
+    world->chunks = chunks;
+    world_init_data(world);
+    world->finished = 1;
+    world->update_required =  1;
+    return 0;
 }
 
 void world_free(World *world) {
