@@ -26,8 +26,8 @@
 typedef struct {
     float x, y, z;
     float rx, ry, rz;
-    float velocity, y_velocity;
-    float acceleration, deceleration, gravity;
+    float x_velocity, y_velocity, z_velocity;
+    float gravity;
     float hitbox[HITBOX_SZ*3];
 } Entity;
 
@@ -39,6 +39,7 @@ typedef struct {
     float deceleration;
     float water_force;
     float velocity;
+    float acceleration;
     float jump_force;
     float gravity;
     float swimming_down_speed;
@@ -46,6 +47,7 @@ typedef struct {
     char sneak;
     unsigned char mode;
     int current_block;
+    float adherence;
 } Player;
 
 typedef struct {

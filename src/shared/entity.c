@@ -222,8 +222,8 @@ int entity_contains_block(Entity *entity, World *world, Tile block,
 void entity_update(Entity *entity, World *world, float delta) {
     float xmov, ymov, zmov;
     float dist;
-    xmov = cos((entity->ry-90)/180*PI)*entity->velocity;
-    zmov = sin((entity->ry-90)/180*PI)*entity->velocity;
+    xmov = entity->x_velocity;
+    zmov = entity->z_velocity;
     if(xmov < 0){
         dist = entity_space(entity, world, -1, 0, 0, ceil(fabs(xmov)));
         if(dist < -xmov){
@@ -248,17 +248,6 @@ void entity_update(Entity *entity, World *world, float delta) {
         }
     }
     entity->z += zmov;
-    if(entity->velocity > 0){
-        entity->velocity -= entity->deceleration*delta;
-        if(entity->velocity < 0){
-            entity->velocity = 0;
-        }
-    }else if(entity->velocity < 0){
-        entity->velocity += entity->deceleration*delta;
-        if(entity->velocity > 0){
-            entity->velocity = 0;
-        }
-    }
     ymov = entity->y_velocity*delta;
     if(ymov < 0){
         dist = entity_space(entity, world, 0, -1, 0, ceil(fabs(ymov)));

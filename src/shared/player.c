@@ -26,8 +26,8 @@ void player_init(Player *player) {
     Entity entity = {
             CHUNK_WIDTH, CHUNK_HEIGHT/2, CHUNK_DEPTH,
             0, 0, 0,
-            0, 0,
-            2.5, 0.5, PLAYER_GRAVITY,
+            0, 0, 0,
+            PLAYER_GRAVITY,
             {
                 -0.4, -1.5, -0.4,
                 0.4, 0.2, 0.4
@@ -48,6 +48,8 @@ void player_init(Player *player) {
     player->sneak = 0;
     player->gravity = PLAYER_GRAVITY;
     player->swimming_down_speed = PLAYER_SWIMMING_DOWN_SPEED;
+    player->acceleration = 2.5;
+    player->adherence = 1;
     memcpy(player->swimming_hitbox, swimming_hitbox, HITBOX_SZ*3*sizeof(float));
 }
 
@@ -64,8 +66,7 @@ void player_move(Player *player, float delta, float direction) {
                           cos_rx*player->velocity*direction;
     }else{
         /* Survival or creative mode. */
-        player->entity.velocity += player->entity.acceleration*
-                                 delta*direction;
+        player->velocity += player->acceleration*delta*direction;
         player->moved = 1;
     }
 }
@@ -139,14 +140,21 @@ void player_place_block(Player *player, World *world) {
 }
 
 void player_update(Player *player, World *world, float delta) {
+    float deceleration;
     if(player->mode != M_SPECTATOR){
-        if(player->moved) player->entity.deceleration = player->friction;
-        else player->entity.deceleration = player->deceleration;
-        if(player->entity.velocity > player->speed*delta){
-            player->entity.velocity = player->speed*delta;
+        player->entity.x_velocity = cos((player->entity.ry-90)/180*PI)*
+                player->velocity*player->adherence+player->entity.x_velocity*
+                (1-player->adherence);
+        player->entity.z_velocity = sin((player->entity.ry-90)/180*PI)*
+                player->velocity*player->adherence+player->entity.z_velocity*
+                (1-player->adherence);
+        if(player->moved) deceleration = player->friction;
+        else deceleration = player->deceleration;
+        if(player->velocity > player->speed*delta){
+            player->velocity = player->speed*delta;
         }
-        if(player->entity.velocity < -player->speed*delta){
-            player->entity.velocity = -player->speed*delta;
+        if(player->velocity < -player->speed*delta){
+            player->velocity = -player->speed*delta;
         }
         player->moved = 0;
         if(entity_contains_block(&player->entity, world, T_WATER,
@@ -169,6 +177,17 @@ void player_update(Player *player, World *world, float delta) {
         }
         player->sneak = 0;
         entity_update(&player->entity, world, delta);
+        if(player->velocity > 0){
+            player->velocity -= deceleration*delta;
+            if(player->velocity < 0){
+                player->velocity = 0;
+            }
+        }else if(player->velocity < 0){
+            player->velocity += deceleration*delta;
+            if(player->velocity > 0){
+                player->velocity = 0;
+            }
+        }
     }else{
         player->velocity = 10*delta;
     }
@@ -187,7 +206,7 @@ void player_respawn(Player *player, World *world) {
     world->y = -(world->height/2*CHUNK_DEPTH+CHUNK_DEPTH/2);
     player->entity.ry = 0;
     player->entity.rx = 0;
-    player->entity.velocity = 0;
+    player->velocity = 0;
     player->entity.y_velocity = 0;
     /* TODO: Refactor chunk loading to avoid having to reload the world to
      * avoid issues */
