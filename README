@@ -5,6 +5,20 @@ A small game in a world of cubes
 
 -------------------------------------------------------------------------------
 
+                                    TODO
+
+[ ] Use mutexes and/or barriers for safer threading
+[ ] Use config file to generate C code with tool/dataconv, to make block
+    definition easier and add other block shapes easily
+[ ] Add support for multiple textures per block
+[ ] Allow for block rotation
+[ ] Optimize the culled mesher
+[ ] Add lighting
+[ ] Add water movement
+[ ] Add world saving
+
+-------------------------------------------------------------------------------
+
                             COMPILING ON LINUX
 
 MibiCraft is straightforward to compile on linux: in the project folder run
