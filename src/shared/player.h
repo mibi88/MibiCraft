@@ -37,7 +37,8 @@
 enum {
     M_SPECTATOR,
     M_CREATIVE,
-    M_SURVIVAL
+    M_SURVIVAL,
+    M_AMOUNT
 };
 
 void player_init(Player *player);

@@ -212,6 +212,11 @@ void game_input(Game *game, int v1, int v2, int type) {
                                 game->render_distance--;
                             }
                             break;
+                        case 't':
+                            game->player->mode++;
+                            if(game->player->mode >= M_AMOUNT){
+                                game->player->mode = 0;
+                            }
                     }
                     break;
                 case I_MOUSE:
@@ -311,6 +316,11 @@ int _game_selection_draw(int x, int y, int z, void *data) {
 void game_draw(Game *game, float delta) {
     int crosshair_x, crosshair_y;
     int fps;
+    char *modes[M_AMOUNT] = {
+        "Spectator",
+        "Creative",
+        "Survival"
+    };
     switch(game->screen) {
         case D_TITLE:
             gfx_cursor_show();
@@ -374,6 +384,10 @@ void game_draw(Game *game, float delta) {
             gfx_draw_string(0, gfx_get_height()-8-8*game->gui_scale,
                             game->render_distance_str, game->font, 8, 8,
                             game->gui_scale);
+            gfx_draw_string(gfx_get_width()-strlen(modes[game->player->mode])*8
+                            *game->gui_scale, gfx_get_height()-8-8*
+                            game->gui_scale, modes[game->player->mode],
+                            game->font, 8, 8, game->gui_scale);
             gfx_draw_image_from_atlas(gfx_get_width()-32*game->gui_scale, 0,
                                       game->texture, 32, 32, game->gui_scale,
                                       16, 16, 256/16, 256/16,
