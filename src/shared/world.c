@@ -391,18 +391,18 @@ int world_change_size(World *world, int width, int height) {
     Chunk *chunks;
     if(!world->finished) return 1;
     world->finished = 0;
+    /* TODO: Do not reload all the chunks: keep the chunks that are already
+     * loaded. */
+    chunks = realloc(world->chunks, width*height*sizeof(Chunk));
+    if(!chunks){
+        puts("Failed to change the world size!");
+        return 2;
+    }
     /* TODO: Add support for multiple players. */
     world->x -= (width-world->width)/2*CHUNK_WIDTH;
     world->y -= (height-world->height)/2*CHUNK_DEPTH;
     world->width = width;
     world->height = height;
-    /* TODO: Do not reload all the chunks: keep the chunks that are already
-     * loaded. */
-    chunks = realloc(world->chunks, world->width*world->height*sizeof(Chunk));
-    if(!chunks){
-        puts("Failed to change the world size!");
-        return 2;
-    }
     world->chunks = chunks;
     world_init_data(world);
     world->finished = 1;
