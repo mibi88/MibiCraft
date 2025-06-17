@@ -24,7 +24,7 @@ mibicraft_incdirs = include_directories('client', 'shared')
 mibicraft_deps = [
   dependency('GL', native: true),
   dependency('glu', native: true),
-  dependency('X11', native: true),
+  meson.get_compiler('c').find_library('X11', required: true),
   meson.get_compiler('c').find_library('Xfixes', required: false),
   meson.get_compiler('c').find_library('m', required: true),
   meson.get_compiler('c').find_library('pthread', required: true),

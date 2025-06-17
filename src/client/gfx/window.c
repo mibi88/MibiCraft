@@ -255,7 +255,7 @@ unsigned int mw_get_key_code(MWWindow *window) {
 char mw_get_key_char(MWWindow *window) {
     char str[25];
     KeySym keysym;
-    len = XLookupString(&window->event.xkey, str, 25, &keysym, NULL);
+    XLookupString(&window->event.xkey, str, 25, &keysym, NULL);
     return str[0];
 }
 
