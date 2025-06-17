@@ -30,15 +30,12 @@ typedef struct {
     float *vertices;
     int *indices;
     float *uv_coords;
-    
+
     unsigned int texture;
-    
+
     int has_indices, has_texture;
     int triangles;
 } GFXModel;
-
-void gfx_create_modelview_matrix(float x, float y, float z, float rx, float ry,
-                                 float rz);
 
 int gfx_get_time(void);
 
@@ -61,13 +58,19 @@ void gfx_disable_fog(void);
 
 void gfx_set_clear_color(float r, float g, float b);
 
-void gfx_set_color(float r, float g, float b);
+void gfx_set_color(float r, float g, float b, float a);
+
+void gfx_enable_scissor_test(int x, int y, int width, int height);
+
+void gfx_disable_scissor_test(void);
 
 void gfx_set_motion_blur(int v);
 
 void gfx_set_camera(float x, float y, float z, float rx, float ry, float rz);
 
 void gfx_draw_point(float x, float y, float z, int size);
+
+void gfx_draw_rect(float x1, float y1, float x2, float y2);
 
 void gfx_init_model(GFXModel *model, float *vertices, int *indices,
                     float *uv_coords, int texture, int has_indices,
@@ -85,12 +88,12 @@ void gfx_end_2d(void);
 void gfx_draw_image(int sx, int sy, unsigned int texture, int width,
                     int height, float scale);
 
-void gfx_draw_quad(int x, int y, int width, int height, float r, float g,
-                   float b);
+void gfx_disable_closing(void);
 
-void gfx_disable_closing();
+void gfx_enable_closing(void);
 
-void gfx_enable_closing();
+void gfx_draw_image_and_modulate(int sx, int sy, unsigned int texture,
+                                 int width, int height, float scale);
 
 void gfx_draw_image_from_atlas(int sx, int sy, unsigned int texture, int width,
                                int height, float scale, int cell_w, int cell_h,
@@ -101,12 +104,13 @@ void gfx_draw_string(float sx, float sy, char *string, unsigned int font,
 
 void gfx_free(GFXModel *model);
 
-void gfx_init(int *argc, char **argv, char *title, int use_arrays,
-              int motion_blur);
+void gfx_init(char *title, int use_arrays, int motion_blur);
 
 void gfx_run(void draw(int), void keypress(int), void keyrelease(int),
-             void mouse(int, int), void left_click(void),
-             void right_click(void));
+             void mouse(int, int), void left_click(int),
+             void right_click(int), void middle_click(int),
+             void mouse_wheel(int), void on_exit(void),
+             void on_mainloop(void));
 
 unsigned int gfx_load_texture(int width, int height,
                               unsigned char *texture_data);

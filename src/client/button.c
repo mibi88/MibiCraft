@@ -38,16 +38,20 @@ void button_init(Button *button, int x, int y, int w, int h, char *text) {
 
 void button_draw(Button *button, int mx, int my, float scale, int font) {
     int text_x, text_y;
+
     if(mx >= button->x && my >= button->y && mx-button->x <= button->w &&
        my-button->y <= button->h){
-        gfx_draw_quad(button->x, button->y, button->w, button->h,
-                      button->hover_r, button->hover_g, button->hover_b);
+        gfx_set_color(button->hover_r, button->hover_g, button->hover_b, 1);
     }else{
-        gfx_draw_quad(button->x, button->y, button->w, button->h,
-                      button->r, button->g, button->b);
+        gfx_set_color(button->r, button->g, button->b, 1);
     }
+    gfx_draw_rect(button->x, button->y, button->x+button->w,
+                  button->y+button->h);
+
     text_x = (button->w-strlen(button->text)*8*scale)/2+button->x;
     text_y = (button->h-8*scale)/2+button->y;
+
+    gfx_set_color(1, 1, 1, 1);
     gfx_draw_string(text_x, text_y, button->text, font, 8, 8, scale);
 }
 

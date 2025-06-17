@@ -7,6 +7,8 @@ A small game in a world of cubes
 
                                     TODO
 
+[ ] Fix the sluggishness caused by warping the pointer.
+
 [ ] Use mutexes and/or barriers for safer threading
 [ ] Use config file to generate C code with tool/dataconv, to make block
     definition easier and add other block shapes easily
@@ -123,3 +125,10 @@ Copy freeglut.dll in the same folder and you should be able to run MibiCraft.
 
 -------------------------------------------------------------------------------
 
+                        A SMALL NOTE TO ME
+
+The command to open everything in GNU nano:
+
+$ nano $(find . -path ./.git -prune -o -path ./bin -prune -o -path ./img \
+    -prune -o -path ./win32 -prune -o -name COPYING -prune -o -type f \
+    -print | sort)

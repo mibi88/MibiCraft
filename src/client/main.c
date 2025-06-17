@@ -40,23 +40,39 @@ void keyrelease(int key) {
     game_input(&game, key, 0, I_KEYRELEASE);
 }
 
-void left_click(void) {
-    game_input(&game, 0, 0, I_LEFTCLICK);
+void left_click(int pressed) {
+    if(pressed) game_input(&game, 0, 0, I_LEFTCLICK);
 }
 
-void right_click(void) {
-    game_input(&game, 0, 0, I_RIGHTCLICK);
+void right_click(int pressed) {
+    if(pressed) game_input(&game, 0, 0, I_RIGHTCLICK);
+}
+
+void middle_click(int pressed) {
+    (void)pressed;
 }
 
 void mouse(int x, int y) {
     game_input(&game, x, y, I_MOUSE);
 }
 
-int main(int argc, char **argv) {
-    printf("%s %s launched!\n", NAME, VERSION);
-    gfx_init(&argc, argv, "MibiCraft", 1, 0);
-    game_init(&game, 1024);
-    gfx_run(draw, keypress, keyrelease, mouse, left_click, right_click);
-    return EXIT_SUCCESS;
+void mouse_wheel(int c) {
+    /**/
 }
 
+void on_exit(void) {
+    /**/
+}
+
+void on_mainloop(void) {
+    /**/
+}
+
+int main(int argc, char **argv) {
+    printf("%s %s launched!\n", NAME, VERSION);
+    gfx_init("MibiCraft", 1, 0);
+    game_init(&game, 1024);
+    gfx_run(draw, keypress, keyrelease, mouse, left_click, right_click,
+            middle_click, mouse_wheel, on_exit, on_mainloop);
+    return EXIT_SUCCESS;
+}

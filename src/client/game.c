@@ -306,6 +306,7 @@ void game_logic(Game *game, float delta) {
 
 int _game_selection_draw(int x, int y, int z, void *data) {
     if(!blocks[world_get_tile(data, x, y, z)].replaceable){
+        gfx_set_color(0, 0, 0, 1);
         gfx_render_wire_cube(x, y-CHUNK_HEIGHT/2, z, 1.01);
         return 1;
     }
@@ -325,6 +326,8 @@ void game_draw(Game *game, float delta) {
         case D_TITLE:
             gfx_cursor_show();
             gfx_start_2d();
+
+            gfx_set_color(1, 1, 1, 1);
             gfx_draw_string((gfx_get_width()-sizeof(NAME)*8*
                             game->gui_scale)/2, 32,
                             NAME, game->font, 8, 8, game->gui_scale);
@@ -377,6 +380,7 @@ void game_draw(Game *game, float delta) {
             gfx_draw_image(crosshair_x, crosshair_y, game->crosshair,
                            crosshair_width, crosshair_height,
                            game->gui_scale/2);
+            gfx_set_color(1, 1, 1, 1);
             gfx_draw_string(0, 0, game->fps_str, game->font, 8, 8,
                             game->gui_scale);
             gfx_draw_string(0, 8+8*game->gui_scale, game->pos_str, game->font,
@@ -388,6 +392,7 @@ void game_draw(Game *game, float delta) {
                             *game->gui_scale, gfx_get_height()-8-8*
                             game->gui_scale, modes[game->player->mode],
                             game->font, 8, 8, game->gui_scale);
+
             gfx_draw_image_from_atlas(gfx_get_width()-32*game->gui_scale, 0,
                                       game->texture, 32, 32, game->gui_scale,
                                       16, 16, 256/16, 256/16,
