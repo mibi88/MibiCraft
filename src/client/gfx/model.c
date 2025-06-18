@@ -31,9 +31,9 @@
 void gfx_create_modelview_matrix(float x, float y, float z, float rx, float ry,
                                  float rz);
 
-void gfx_init_model(GFXModel *model, float *vertices, int *indices,
-                    float *uv_coords, int texture, int has_indices,
-                    int has_texture, int triangles) {
+void gfx_init_model(GFXModel *model, void *vertices, void *indices,
+                    void *uv_coords, int texture, int has_indices,
+                    int has_texture, int triangles, int vertex_type) {
     model->vertices = vertices;
     model->indices = indices;
     model->uv_coords = uv_coords;
@@ -44,11 +44,23 @@ void gfx_init_model(GFXModel *model, float *vertices, int *indices,
     model->has_texture = has_texture;
 
     model->triangles = triangles;
+
+    model->vertex_type = vertex_type;
 }
 
 void gfx_draw_model(GFXModel *model, float x, float y, float z, float rx,
                     float ry, float rz) {
     int i;
+
+    const int gl_types[TYPE_AMOUNT] = {
+        GL_INT,
+        GL_UNSIGNED_INT,
+        GL_FLOAT,
+        GL_SHORT,
+        GL_UNSIGNED_SHORT,
+        GL_BYTE,
+        GL_UNSIGNED_BYTE
+    };
 
     glPushMatrix();
 
@@ -58,16 +70,17 @@ void gfx_draw_model(GFXModel *model, float x, float y, float z, float rx,
 
     gfx_create_modelview_matrix(x, y, z, rx, ry, rz);
 
-    if(_config.use_arrays){
+    if(_config.use_arrays || 1){
         glEnableClientState(GL_VERTEX_ARRAY);
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-        glVertexPointer(3, GL_FLOAT, 0, model->vertices);
+        glVertexPointer(3, gl_types[model->vertex_type], 0, model->vertices);
         glTexCoordPointer(2, GL_FLOAT, 0, model->uv_coords);
 
         glDrawElements(GL_TRIANGLES, model->triangles*3, GL_UNSIGNED_INT,
                        model->indices);
     }else{
+#if 0 /* TODO: Fix this */
         glBegin(GL_TRIANGLES);
         for(i=0;i<model->triangles;i++){
             float x1, y1, z1;
@@ -133,6 +146,7 @@ void gfx_draw_model(GFXModel *model, float x, float y, float z, float rx,
             glVertex3f(x3, y3, z3);
         }
         glEnd();
+#endif
     }
 
     glPopMatrix();

@@ -52,6 +52,10 @@
 #include <gfx.h>
 #include <string.h>
 
+/* It's unfortunate that OpenGL doesn't support storing vertices in chars */
+typedef short int vertex_t;
+#define TYPE_VERTEX TYPE_SHORT
+
 typedef enum {
     T_VOID,
     T_GRASS,
@@ -102,20 +106,20 @@ typedef enum {
 
 typedef struct {
     unsigned char chunk_data[CHUNK_WIDTH][CHUNK_HEIGHT][CHUNK_DEPTH];
-    float chunk_vertices[8*6*CHUNK_WIDTH*CHUNK_HEIGHT*CHUNK_DEPTH];
+    vertex_t chunk_vertices[8*6*CHUNK_WIDTH*CHUNK_HEIGHT*CHUNK_DEPTH];
     int chunk_indices[8*6*CHUNK_WIDTH*CHUNK_HEIGHT*CHUNK_DEPTH];
     float chunk_texture_coords[8*6*CHUNK_WIDTH*CHUNK_HEIGHT*CHUNK_DEPTH];
     GFXModel chunk_model;
     int x, z;
     /* For model generation */
-    float *vert_ptr;
+    vertex_t *vert_ptr;
     float *tex_ptr;
     int *indices_ptr;
     int triangles;
     int _x, _y, _z;
     int tex_x, tex_y;
 
-    float vertices[SZ_VERTICES*2];
+    vertex_t vertices[SZ_VERTICES*2];
     int indices[SZ_VERTICES*2];
 
     float texture_coords[SZ_TEX_COORDS];

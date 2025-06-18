@@ -301,23 +301,23 @@ const Tile fallen_spruce_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
 /*********/
 
 /* Front face */
-const float front_vertices[SZ_VERTICES] = {
-    -0.5, 0.5, 0.5,
-    -0.5, -0.5, 0.5,
-    0.5, -0.5, 0.5,
-    0.5, 0.5, 0.5
+const vertex_t front_vertices[SZ_VERTICES] = {
+    0, 1, 1,
+    0, 0, 1,
+    1, 0, 1,
+    1, 1, 1
 };
-const float top_vertices[SZ_VERTICES] = {
-    -0.5, 0.5, 0.5,
-    -0.5, 0.5, -0.5,
-    0.5, 0.5, -0.5,
-    0.5, 0.5, 0.5
+const vertex_t top_vertices[SZ_VERTICES] = {
+    0, 1, 1,
+    0, 1, 0,
+    1, 1, 0,
+    1, 1, 1
 };
-const float left_vertices[SZ_VERTICES] = {
-    0.5, -0.5, -0.5,
-    0.5, 0.5, -0.5,
-    0.5, 0.5, 0.5,
-    0.5, -0.5, 0.5
+const vertex_t left_vertices[SZ_VERTICES] = {
+    1, 0, 0,
+    1, 1, 0,
+    1, 1, 1,
+    1, 0, 1
 };
 
 const int base_indices[SZ_INDICES] = {
@@ -325,15 +325,15 @@ const int base_indices[SZ_INDICES] = {
     3, 1, 2
 };
 
-const float cross_vertices[SZ_VERTICES*2] = {
-    -0.5, 0.5, -0.5,
-    -0.5, -0.5, -0.5,
-    0.5, -0.5, 0.5,
-    0.5, 0.5, 0.5,
-    -0.5, 0.5, 0.5,
-    -0.5, -0.5, 0.5,
-    0.5, -0.5, -0.5,
-    0.5, 0.5, -0.5
+const vertex_t cross_vertices[SZ_VERTICES*2] = {
+    0, 1, 0,
+    0, 0, 0,
+    1, 0, 1,
+    1, 1, 1,
+    0, 1, 1,
+    0, 0, 1,
+    1, 0, 0,
+    1, 1, 0
 };
 const int cross_indices[SZ_INDICES*2] = {
     0, 1, 3,
@@ -680,19 +680,18 @@ void chunk_set_tile(Chunk *chunk, Tile tile, int x, int y, int z) {
    }
 }
 
-void chunk_add_face_to_model(Chunk *chunk, const float *face_vertices, float rx,
-                             float ry, float rz) {
+void chunk_add_face_to_model(Chunk *chunk, const vertex_t *face_vertices,
+                             float rx, float ry, float rz) {
     int i;
     chunk_generate_texture_coords(chunk, chunk->tex_x, chunk->tex_y);
     /* Front face */
-    memcpy(chunk->vertices, face_vertices,
-           SZ_VERTICES*sizeof(float));
+    memcpy(chunk->vertices, face_vertices, SZ_VERTICES*sizeof(vertex_t));
     for(i=0;i<VERTICES_AMOUNT;i++){
         chunk->vertices[i*3] += (float)chunk->_x+rx;
         chunk->vertices[i*3+1] += (float)chunk->_y+ry;
         chunk->vertices[i*3+2] += (float)chunk->_z+rz;
     }
-    memcpy(chunk->vert_ptr, chunk->vertices, SZ_VERTICES*sizeof(float));
+    memcpy(chunk->vert_ptr, chunk->vertices, SZ_VERTICES*sizeof(vertex_t));
     chunk->vert_ptr += SZ_VERTICES;
     memcpy(chunk->indices, base_indices, SZ_INDICES*sizeof(int));
     for(i=0;i<SZ_INDICES;i++){
@@ -806,11 +805,11 @@ void chunk_generate_model(Chunk *chunk, unsigned int texture,
                                                   chunk->tex_y);
                     /* Front face */
                     memcpy(chunk->vertices, cross_vertices,
-                           SZ_VERTICES*2*sizeof(float));
+                           SZ_VERTICES*2*sizeof(vertex_t));
                     for(i=0;i<VERTICES_AMOUNT*2;i++){
-                        chunk->vertices[i*3] += (float)chunk->_x;
-                        chunk->vertices[i*3+1] += (float)chunk->_y;
-                        chunk->vertices[i*3+2] += (float)chunk->_z;
+                        chunk->vertices[i*3] += chunk->_x;
+                        chunk->vertices[i*3+1] += chunk->_y;
+                        chunk->vertices[i*3+2] += chunk->_z;
                     }
                     memcpy(chunk->vert_ptr, chunk->vertices,
                            SZ_VERTICES*2*sizeof(float));
@@ -840,7 +839,7 @@ void chunk_generate_model(Chunk *chunk, unsigned int texture,
 
     gfx_init_model(&chunk->chunk_model, chunk->chunk_vertices,
                    chunk->chunk_indices, chunk->chunk_texture_coords, texture,
-                   1, 1, chunk->triangles);
+                   1, 1, chunk->triangles, TYPE_VERTEX);
     chunk->remesh = 0;
 }
 

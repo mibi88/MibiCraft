@@ -27,15 +27,28 @@
 #define LINE_MAX_SIZE 64
 
 typedef struct {
-    float *vertices;
-    int *indices;
-    float *uv_coords;
+    void *vertices;
+    void *indices;
+    void *uv_coords;
 
     unsigned int texture;
 
     int has_indices, has_texture;
     int triangles;
+
+    unsigned char vertex_type;
 } GFXModel;
+
+enum {
+    TYPE_INT,
+    TYPE_UINT,
+    TYPE_FLOAT,
+    TYPE_SHORT,
+    TYPE_USHORT,
+    TYPE_CHAR,
+    TYPE_UCHAR,
+    TYPE_AMOUNT
+};
 
 int gfx_get_time(void);
 
@@ -72,9 +85,9 @@ void gfx_draw_point(float x, float y, float z, int size);
 
 void gfx_draw_rect(float x1, float y1, float x2, float y2);
 
-void gfx_init_model(GFXModel *model, float *vertices, int *indices,
-                    float *uv_coords, int texture, int has_indices,
-                    int has_texture, int triangles);
+void gfx_init_model(GFXModel *model, void *vertices, void *indices,
+                    void *uv_coords, int texture, int has_indices,
+                    int has_texture, int triangles, int vertex_type);
 
 void gfx_draw_model(GFXModel *model, float x, float y, float z, float rx,
                     float ry, float rz);
