@@ -33,7 +33,8 @@ void gfx_create_modelview_matrix(float x, float y, float z, float rx, float ry,
 
 void gfx_init_model(GFXModel *model, void *vertices, void *indices,
                     void *uv_coords, int texture, int has_indices,
-                    int has_texture, int triangles, int vertex_type) {
+                    int has_texture, int triangles, int vertex_type,
+                    int index_type, int texture_type) {
     model->vertices = vertices;
     model->indices = indices;
     model->uv_coords = uv_coords;
@@ -46,6 +47,8 @@ void gfx_init_model(GFXModel *model, void *vertices, void *indices,
     model->triangles = triangles;
 
     model->vertex_type = vertex_type;
+    model->index_type = index_type;
+    model->texture_type = texture_type;
 }
 
 void gfx_draw_model(GFXModel *model, float x, float y, float z, float rx,
@@ -75,10 +78,11 @@ void gfx_draw_model(GFXModel *model, float x, float y, float z, float rx,
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
         glVertexPointer(3, gl_types[model->vertex_type], 0, model->vertices);
-        glTexCoordPointer(2, GL_FLOAT, 0, model->uv_coords);
+        glTexCoordPointer(2, gl_types[model->texture_type], 0,
+                          model->uv_coords);
 
-        glDrawElements(GL_TRIANGLES, model->triangles*3, GL_UNSIGNED_INT,
-                       model->indices);
+        glDrawElements(GL_TRIANGLES, model->triangles*3,
+                       gl_types[model->index_type], model->indices);
     }else{
 #if 0 /* TODO: Fix this */
         glBegin(GL_TRIANGLES);

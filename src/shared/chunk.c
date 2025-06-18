@@ -320,7 +320,7 @@ const vertex_t left_vertices[SZ_VERTICES] = {
     1, 0, 1
 };
 
-const int base_indices[SZ_INDICES] = {
+const index_t base_indices[SZ_INDICES] = {
     0, 1, 3,
     3, 1, 2
 };
@@ -335,7 +335,7 @@ const vertex_t cross_vertices[SZ_VERTICES*2] = {
     1, 0, 0,
     1, 1, 0
 };
-const int cross_indices[SZ_INDICES*2] = {
+const index_t cross_indices[SZ_INDICES*2] = {
     0, 1, 3,
     3, 1, 2,
     4, 5, 7,
@@ -575,6 +575,7 @@ void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
     float height;
     Biome biome = B_PLAINS;
     Biome_property *properties;
+
     for(x=0;x<CHUNK_WIDTH;x++){
         for(z=0;z<CHUNK_DEPTH;z++){
             biome = chunk_get_biome(sx, sz, x, z, seed);
@@ -646,20 +647,19 @@ void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
 }
 
 void chunk_generate_texture_coords(Chunk *chunk, int tex_x, int tex_y) {
-    float x = (float)tex_x, y = (float)tex_y;
     /* Position of the vertices for a square facing the player */
     /* Bottom left */
-    chunk->texture_coords[0] = x*TILE_FWIDTH;
-    chunk->texture_coords[1] = y*TILE_FHEIGHT;
+    chunk->texture_coords[0] = tex_x;
+    chunk->texture_coords[1] = tex_y;
     /* Top left */
-    chunk->texture_coords[2] = x*TILE_FWIDTH;
-    chunk->texture_coords[3] = (y+1)*TILE_FHEIGHT;
+    chunk->texture_coords[2] = tex_x;
+    chunk->texture_coords[3] = tex_y+1;
     /* Top right */
-    chunk->texture_coords[4] = (x+1)*TILE_FWIDTH;
-    chunk->texture_coords[5] = (y+1)*TILE_FHEIGHT;
+    chunk->texture_coords[4] = tex_x+1;
+    chunk->texture_coords[5] = tex_y+1;
     /* Bottom right */
-    chunk->texture_coords[6] = (x+1)*TILE_FWIDTH;
-    chunk->texture_coords[7] = y*TILE_FHEIGHT;
+    chunk->texture_coords[6] = tex_x+1;
+    chunk->texture_coords[7] = tex_y;
 }
 
 Tile chunk_get_tile(Chunk *chunk, int x, int y, int z, int rx, int ry, int rz) {
@@ -681,27 +681,28 @@ void chunk_set_tile(Chunk *chunk, Tile tile, int x, int y, int z) {
 }
 
 void chunk_add_face_to_model(Chunk *chunk, const vertex_t *face_vertices,
-                             float rx, float ry, float rz) {
+                             int rx, int ry, int rz) {
     int i;
     chunk_generate_texture_coords(chunk, chunk->tex_x, chunk->tex_y);
     /* Front face */
     memcpy(chunk->vertices, face_vertices, SZ_VERTICES*sizeof(vertex_t));
     for(i=0;i<VERTICES_AMOUNT;i++){
-        chunk->vertices[i*3] += (float)chunk->_x+rx;
-        chunk->vertices[i*3+1] += (float)chunk->_y+ry;
-        chunk->vertices[i*3+2] += (float)chunk->_z+rz;
+        chunk->vertices[i*3] += chunk->_x+rx;
+        chunk->vertices[i*3+1] += chunk->_y+ry;
+        chunk->vertices[i*3+2] += chunk->_z+rz;
     }
     memcpy(chunk->vert_ptr, chunk->vertices, SZ_VERTICES*sizeof(vertex_t));
     chunk->vert_ptr += SZ_VERTICES;
-    memcpy(chunk->indices, base_indices, SZ_INDICES*sizeof(int));
+    memcpy(chunk->indices, base_indices, SZ_INDICES*sizeof(index_t));
     for(i=0;i<SZ_INDICES;i++){
         chunk->indices[i] += chunk->triangles/TRIANGLES_AMOUNT*
                       VERTICES_AMOUNT;
     }
-    memcpy(chunk->indices_ptr, chunk->indices, SZ_INDICES*sizeof(int));
+    memcpy(chunk->indices_ptr, chunk->indices, SZ_INDICES*sizeof(index_t));
     chunk->indices_ptr += SZ_INDICES;
 
-    memcpy(chunk->tex_ptr, chunk->texture_coords, SZ_TEX_COORDS*sizeof(float));
+    memcpy(chunk->tex_ptr, chunk->texture_coords, SZ_TEX_COORDS*
+                                                  sizeof(texture_t));
     chunk->tex_ptr += SZ_TEX_COORDS;
 
     chunk->triangles += 2;
@@ -717,6 +718,7 @@ void chunk_generate_model(Chunk *chunk, unsigned int texture,
     chunk->tex_ptr = chunk->chunk_texture_coords;
     chunk->indices_ptr = chunk->chunk_indices;
     chunk->triangles = 0;
+
     for(chunk->_x=0;chunk->_x<CHUNK_WIDTH;chunk->_x++){
         for(chunk->_y=0;chunk->_y<CHUNK_HEIGHT;chunk->_y++){
             for(chunk->_z=0;chunk->_z<CHUNK_DEPTH;chunk->_z++){
@@ -812,23 +814,23 @@ void chunk_generate_model(Chunk *chunk, unsigned int texture,
                         chunk->vertices[i*3+2] += chunk->_z;
                     }
                     memcpy(chunk->vert_ptr, chunk->vertices,
-                           SZ_VERTICES*2*sizeof(float));
+                           SZ_VERTICES*2*sizeof(vertex_t));
                     chunk->vert_ptr += SZ_VERTICES*2;
                     memcpy(chunk->indices, cross_indices,
-                           SZ_INDICES*2*sizeof(int));
+                           SZ_INDICES*2*sizeof(index_t));
                     for(i=0;i<SZ_INDICES*2;i++){
                         chunk->indices[i] += chunk->triangles/TRIANGLES_AMOUNT*
                                       VERTICES_AMOUNT;
                     }
                     memcpy(chunk->indices_ptr, chunk->indices,
-                           SZ_INDICES*2*sizeof(int));
+                           SZ_INDICES*2*sizeof(index_t));
                     chunk->indices_ptr += SZ_INDICES*2;
 
                     memcpy(chunk->tex_ptr, chunk->texture_coords,
-                           SZ_TEX_COORDS*sizeof(float));
+                           SZ_TEX_COORDS*sizeof(texture_t));
                     chunk->tex_ptr += SZ_TEX_COORDS;
                     memcpy(chunk->tex_ptr, chunk->texture_coords,
-                           SZ_TEX_COORDS*sizeof(float));
+                           SZ_TEX_COORDS*sizeof(texture_t));
                     chunk->tex_ptr += SZ_TEX_COORDS;
 
                     chunk->triangles += 4;
@@ -839,7 +841,8 @@ void chunk_generate_model(Chunk *chunk, unsigned int texture,
 
     gfx_init_model(&chunk->chunk_model, chunk->chunk_vertices,
                    chunk->chunk_indices, chunk->chunk_texture_coords, texture,
-                   1, 1, chunk->triangles, TYPE_VERTEX);
+                   1, 1, chunk->triangles, TYPE_VERTEX, TYPE_INDEX,
+                   TYPE_TEXTURE);
     chunk->remesh = 0;
 }
 

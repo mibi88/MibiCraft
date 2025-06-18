@@ -276,12 +276,19 @@ void world_update(World *world) {
 
 void world_render(World *world) {
     int i;
+
+    gfx_reset_texture_transforms();
+    gfx_set_texture_scale(TILE_WIDTH/(float)TEX_WIDTH,
+                          TILE_HEIGHT/(float)TEX_WIDTH);
+
     for(i=0;i<world->width*world->height;i++) {
         if(!world->chunks[i].ready) continue;
         gfx_draw_model(&world->chunks[i].chunk_model,
                        world->chunks[i].x-0.5, -(CHUNK_HEIGHT/2)-0.5,
                        world->chunks[i].z-0.5, 0, 0, 0);
     }
+
+    gfx_reset_texture_transforms();
 }
 
 Tile world_get_tile(World *world, float x, float y, float z) {

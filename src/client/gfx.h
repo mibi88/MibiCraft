@@ -37,6 +37,8 @@ typedef struct {
     int triangles;
 
     unsigned char vertex_type;
+    unsigned char index_type;
+    unsigned char texture_type;
 } GFXModel;
 
 enum {
@@ -64,6 +66,10 @@ int gfx_get_height(void);
 
 int gfx_get_motion_blur(void);
 
+void gfx_set_texture_scale(float x, float y);
+
+void gfx_reset_texture_transforms(void);
+
 void gfx_enable_fog(float r, float g, float b, float density, float start,
                     float end);
 
@@ -87,7 +93,8 @@ void gfx_draw_rect(float x1, float y1, float x2, float y2);
 
 void gfx_init_model(GFXModel *model, void *vertices, void *indices,
                     void *uv_coords, int texture, int has_indices,
-                    int has_texture, int triangles, int vertex_type);
+                    int has_texture, int triangles, int vertex_type,
+                    int index_type, int texture_type);
 
 void gfx_draw_model(GFXModel *model, float x, float y, float z, float rx,
                     float ry, float rz);

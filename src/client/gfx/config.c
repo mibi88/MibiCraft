@@ -120,6 +120,18 @@ void gfx_set_motion_blur(int v) {
     _config.motion_blur = v;
 }
 
+void gfx_set_texture_scale(float x, float y) {
+    glMatrixMode(GL_TEXTURE);
+    glScalef(x, y, 1);
+    glMatrixMode(GL_MODELVIEW);
+}
+
+void gfx_reset_texture_transforms(void) {
+    glMatrixMode(GL_TEXTURE);
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+}
+
 void gfx_set_camera(float x, float y, float z, float rx, float ry, float rz) {
     _cam_x = x;
     _cam_y = y;
