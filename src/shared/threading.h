@@ -34,7 +34,7 @@
 
 #define THREAD_CREATE(id, call, data) CreateThread(NULL, 0, call, data, 0, &id)
 
-#define THREAD_EXIT() ExitThread(0)
+#define THREAD_EXIT() ExitThread(0); return 0
 
 #else
 

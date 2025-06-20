@@ -1,0 +1,6 @@
+*.c         text eol=lf
+*.h         text eol=lf
+*.build     text eol=lf
+*.ls        text eol=lf
+*.gitignore text eol=lf
+*.txt       text eol=lf

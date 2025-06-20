@@ -20,6 +20,391 @@
 
 #include <time.h>
 
+#if defined(_WIN32) || defined(_WIN64)
+
+/* Win32 code */
+
+/* TODO: Find a better way to pass the window to the windowproc */
+MWWindow *_win;
+
+/*PAINTSTRUCT paint_struct;*/
+
+LRESULT CALLBACK _mw_windowproc(HWND hwnd, UINT uMsg, WPARAM wParam,
+                                LPARAM lParam) {
+    /*LONG width = paint_struct.rcPaint.right-paint_struct.rcPaint.left;
+    LONG height = paint_struct.rcPaint.bottom-paint_struct.rcPaint.top;*/
+    int w, h;
+    int i;
+    POINTS point;
+
+    switch(uMsg) {
+        case WM_DESTROY:
+            /* We want to control if the window can close, so the following
+             * lines are commented, but I still want to keep these lines,
+             * because I want to remember that I could handle closing that
+             * way */
+            /*PostQuitMessage(0);*/
+            _win->should_close = 1;
+            return 0;
+        case WM_CLOSE:
+            _win->should_close = 1;
+            return 0;
+        case WM_SIZE:
+            w = LOWORD(lParam);
+            h = HIWORD(lParam);
+
+            _win->w = w;
+            _win->h = h;
+
+            printf("w: %d, h: %d\n", w, h);
+            _win->resized = 1;
+            break;
+        case WM_PAINT:
+            if(_win->should_swap){
+                SwapBuffers(GetDC(_win->window_handle));
+                _win->should_swap = 0;
+            }
+
+            break;
+        case WM_KEYUP:
+            /* TODO: Support all ASCII characters */
+            if(wParam == VK_SPACE){
+                _win->key = ' ';
+                _win->key_event = 2;
+                break;
+            }
+            for(i='A';i<='Z';i++){
+                if(wParam == i){
+                    _win->key = i-'A'+'a';
+                    _win->key_event = 2;
+                    break;
+                }
+            }
+            break;
+        case WM_KEYDOWN:
+            /* TODO: Support all ASCII characters */
+            if(wParam == VK_SPACE){
+                _win->key = ' ';
+                _win->key_event = 1;
+                break;
+            }
+            for(i='A';i<='Z';i++){
+                if(wParam == i){
+                    _win->key = i-'A'+'a';
+                    _win->key_event = 1;
+                    break;
+                }
+            }
+            break;
+        case WM_LBUTTONDOWN:
+            _win->mouse_buttons[B_LEFT] = 1;
+            _win->button_click = 1;
+            break;
+        case WM_LBUTTONUP:
+            _win->mouse_buttons[B_LEFT] = 0;
+            _win->button_release = 0;
+            break;
+        case WM_MBUTTONDOWN:
+            _win->mouse_buttons[B_MIDDLE] = 1;
+            _win->button_click = 1;
+            break;
+        case WM_MBUTTONUP:
+            _win->mouse_buttons[B_MIDDLE] = 0;
+            _win->button_release = 0;
+            break;
+        case WM_RBUTTONDOWN:
+            _win->mouse_buttons[B_RIGHT] = 1;
+            _win->button_click = 1;
+            break;
+        case WM_RBUTTONUP:
+            _win->mouse_buttons[B_RIGHT] = 0;
+            _win->button_release = 0;
+            break;
+        case WM_MOUSEWHEEL:
+            /* Somehow the event was incorrect when looking if
+             * GET_WHEEL_DELTA_WPARAM(wParam) < 0 */
+            _win->mouse_buttons[GET_WHEEL_DELTA_WPARAM(wParam) > 0 ?
+                                B_SCROLLUP : B_SCROLLDOWN] = 1;
+        case WM_MOUSEMOVE:
+            point = MAKEPOINTS(lParam);
+
+            _win->mx = point.x;
+            _win->my = point.y;
+            
+            _win->pointer_moved = 1;
+
+            break;
+        default:
+            break;
+    }
+    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+}
+
+int mw_init(MWWindow *window, int width, int height, char *title) {
+    size_t i;
+
+    PIXELFORMATDESCRIPTOR format = {
+        sizeof(PIXELFORMATDESCRIPTOR),
+        1,
+        PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
+        PFD_TYPE_RGBA,
+        8,
+        0, 0, 0, 0, 0, 0,
+        0,
+        0,
+        0,
+        0, 0, 0, 0,
+        0,
+        0,
+        0,
+        PFD_MAIN_PLANE,
+        0,
+        0, 0, 0
+    };
+    RECT rect;
+
+    _win = window;
+
+    window->class_name = malloc(sizeof(wchar_t)*strlen(title));
+
+    if(window->class_name == NULL){
+        fputs("[MibiCraft] Allocation failed!\n", stderr);
+        free(window->class_name);
+        window->class_name = NULL;
+
+        return 1;
+    }
+
+    for(i=0;i<strlen(title);i++){
+        window->class_name[i] = title[i];
+    }
+
+    memset(&window->winclass, 0, sizeof(WNDCLASS));
+
+    window->winclass.lpfnWndProc = *_mw_windowproc;
+    window->winclass.hInstance = window->instance_handle;
+    window->winclass.lpszClassName = (LPCSTR)window->class_name;
+
+    RegisterClass(&window->winclass);
+
+    window->window_handle = CreateWindowEx(0, (LPCSTR)window->class_name,
+                                           (LPCSTR)title, WS_OVERLAPPEDWINDOW |
+                                           WS_EX_COMPOSITED,
+                                           CW_USEDEFAULT, CW_USEDEFAULT,
+                                           CW_USEDEFAULT, CW_USEDEFAULT, NULL,
+                                           NULL, window->instance_handle, NULL);
+    if(window->window_handle == NULL){
+        fputs("[MibiCraft] Window creation failed!\n", stderr);
+        free(window->class_name);
+        window->class_name = NULL;
+
+        return 1;
+    }
+
+    ShowWindow(window->window_handle, SW_SHOW);
+
+    /* TODO: Error handling */
+    SetPixelFormat(GetDC(window->window_handle),
+                   ChoosePixelFormat(GetDC(window->window_handle), &format),
+                   &format);
+    window->opengl_context = wglCreateContext(GetDC(window->window_handle));
+
+    if(window->opengl_context == NULL){
+        fputs("[MibiCraft] Context creation failed!\n", stderr);
+        
+        return 1;
+    }
+
+    if(wglMakeCurrent(GetDC(window->window_handle),
+                      window->opengl_context) == FALSE){
+        fputs("[MibiCraft] Failed to make context current!\n", stderr);
+        
+        return 1;
+    }
+
+    if(GetClientRect(window->window_handle, &rect)){
+        window->w = rect.right-rect.left;
+        window->h = rect.bottom-rect.top;
+    }
+
+    window->should_swap = 0;
+    window->should_close = 0;
+    window->resized = 1;
+
+    window->button_click = 0;
+    window->button_release = 0;
+    window->pointer_moved = 0;
+    window->key_event = 0;
+
+    window->key = '\0';
+
+    /* TODO: Handle cursor visibility in a more robust way with e.g.
+     * GetCursorInfo to get the cursor visibility before trying to change it,
+     * but maybe it is too inefficient and/or there is a better way to change
+     * it. */
+    window->cursor_shown = 1;
+
+    return 0;
+}
+
+int mw_get_next_event(MWWindow *window) {
+    MSG msg;
+
+    if(PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)){
+        if(msg.message == WM_QUIT){
+            puts("quit asked!");
+            window->should_close = 1;
+        }
+        _win = window;
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+        return 1;
+    }
+    return 0;
+}
+void mw_get_size(MWWindow *window, int *width, int *height) {
+    *width = window->w;
+    *height = window->h;
+}
+void mw_get_pointer_pos(MWWindow *window, int *x, int *y) {
+    *x = window->mx;
+    *y = window->my;
+}
+int mw_get_pointer_button(MWWindow *window) {
+    size_t i;
+    for(i=B_AMOUNT;--i;){
+        if(window->mouse_buttons[i]){
+            if(i >= B_SCROLLUP){
+                window->mouse_buttons[i] = 0;
+                return 1;
+            }
+            return i;
+        }
+    }
+    return 0;
+}
+unsigned long mw_get_time(void) {
+    struct _timeb time;
+    long out;
+    _ftime(&time);
+    out = time.time*1000L+time.millitm;
+    return out;
+}
+
+void mw_move_pointer(MWWindow *window, int x, int y) {
+    POINT point;
+    
+    point.x = x;
+    point.y = y;
+    
+    if(ClientToScreen(window->window_handle, &point)){
+        SetCursorPos(point.x, point.y);
+    }
+}
+void mw_hide_pointer(MWWindow *window) {
+    if(window->cursor_shown){
+        ShowCursor(FALSE);
+        window->cursor_shown = 0;
+    }
+}
+void mw_show_pointer(MWWindow *window) {
+    if(!window->cursor_shown){
+        ShowCursor(TRUE);
+        window->cursor_shown = 1;
+    }
+}
+
+void mw_start_drawing(void) {
+    /* Do I really need to call BeginPaint and EndPaint, because it also works
+     * without them? */
+    /*BeginPaint(_win->window_handle, &paint_struct);*/
+}
+void mw_end_drawing(void) {
+    /*EndPaint(_win->window_handle, &paint_struct);*/
+}
+void mw_swap_buffers(MWWindow *window) {
+    window->should_swap = 1;
+    /*SwapBuffers(GetDC(window->window_handle));*/
+    InvalidateRect(window->window_handle, NULL, TRUE);
+}
+
+int mw_should_close(MWWindow *window) {
+    if(window->should_close){
+        window->should_close = 0;
+        return 1;
+    }
+    return 0;
+}
+int mw_window_resized(MWWindow *window) {
+    if(window->resized){
+        window->resized = 1;
+        return 1;
+    }
+    return 0;
+}
+int mw_pointer_moved(MWWindow *window) {
+    if(window->pointer_moved){
+        window->pointer_moved = 0;
+        return 1;
+    }
+    return 0;
+}
+int mw_button_pressed(MWWindow *window) {
+    if(window->button_click){
+        window->button_click = 0;
+        return 1;
+    }
+    return 0;
+}
+int mw_button_released(MWWindow *window) {
+    if(window->button_release){
+        window->button_release = 0;
+        return 1;
+    }
+    return 0;
+}
+int mw_key_pressed(MWWindow *window) {
+    if(window->key_event&1){
+        window->key_event = 0;
+        return 1;
+    }
+    return 0;
+}
+int mw_key_released(MWWindow *window) {
+    if(window->key_event&2){
+        window->key_event = 0;
+        return 1;
+    }
+    return 0;
+}
+
+char mw_get_key_char(MWWindow *window) {
+    return window->key;
+}
+unsigned int mw_get_key_code(MWWindow *window) {
+    return window->key;
+}
+
+void mw_close(MWWindow *window) {
+    DestroyWindow(window->window_handle);
+    PostQuitMessage(0);
+
+    /* Free all the window related data */
+
+    free(window->class_name);
+    window->class_name = NULL;
+
+    /* TODO: Error handling */
+    wglMakeCurrent(NULL, NULL);
+    wglDeleteContext(window->opengl_context);
+    free(window->opengl_context);
+    window->opengl_context = NULL;
+}
+
+#else
+
+/* Xorg code */
+
 #include <X11/keysymdef.h>
 #include <X11/XKBlib.h>
 
@@ -267,3 +652,5 @@ void mw_close(MWWindow *window) {
     XDestroyWindow(window->display, window->window);
     XCloseDisplay(window->display);
 }
+
+#endif
