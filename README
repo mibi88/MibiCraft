@@ -43,9 +43,10 @@ I can't test it on modern windows versions. I'm only testing it on Windows XP
 
                     COMPILING MIBICRAFT ON WINDOWS XP
 
-MibiCraft works correctly with zlib 1.3, libpng 1.6.40 and freeglut 1.8.1 (at
-the time I'm writing the document, the 17/01/2025, with the latest commit being
-commit 85ab576 "Add threading support for windows back" from the 15/01/2025)
+MibiCraft works correctly with zlib 1.3 and libpng 1.6.40 (at the time I'm
+writing this, the 20/06/2025, with the latest commit being commit d88a2be "Add
+Win32 support" from the 20/06/2025). Previously, freeglut was required but it
+isn't anymore.
 
 Compiling MibiCraft is quite difficult on Windows XP. I recommend you to
 compile it with OpenWatcom 1.6 (OpenWatcom 1.9 was quite buggy for me, so I
@@ -110,18 +111,13 @@ followed the previous steps properly if it fails.
 
     COMPILING MIBICRAFT
 
-    Compile freeglut
+Now you should be able to compile MibiCraft easily using the build files, by
+opening the project file in the OpenWatcom IDE, marking the target for remake
+and pressing F5.
 
-Compiling freeglut is straightforward. Compile freeglut 2.8.1 (or later if you
-manage to). Copy the generated .lib file to C:\WATCOM\lib386\nt and the header
-files to C:\WATCOM\h\nt (if you installed the OpenWatcom C compiler at
-C:\WATCOM).
-
-    Compile MibiCraft
-
-Now you should be able to compile MibiCraft easily using the build files.
-
-Copy freeglut.dll in the same folder and you should be able to run MibiCraft.
+Now you should be able to run MibiCraft, it is a standalone executable :D
+(previously freeglut.dll was required, but it isn't anymore, because I got rid
+of freeglut, and replaced it with custom code :D).
 
 -------------------------------------------------------------------------------
 
