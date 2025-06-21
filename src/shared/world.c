@@ -234,6 +234,12 @@ THREAD_CALL(_world_update, vworld) {
             chunk_generate_data(chunk, chunk->x, chunk->z, world->seed);
             chunk->remesh = 1;
             chunk->regenerate = 0;
+#if FAKE_THREADING
+            /* TODO: Check if we have enough time to generate another chunk */
+            world->finished = 1;
+            world->update_required = 1;
+            THREAD_EXIT();
+#endif
         }
     }
     for(y=0;y<world->width*world->height;y++){
@@ -242,9 +248,19 @@ THREAD_CALL(_world_update, vworld) {
             chunk_generate_model(chunk, world->texture,
                                  _modelgen_get_tile, world);
             chunk->ready = 1;
+#if FAKE_THREADING
+            /* TODO: Check if we have enough time to generate another mesh */
+            world->finished = 1;
+            world->update_required = 1;
+            THREAD_EXIT();
+#endif
         }
     }
     world->finished = 1;
+#if FAKE_THREADING
+    puts("no more update needed");
+    world->update_required = 0;
+#endif
     THREAD_EXIT();
 }
 
@@ -270,7 +286,9 @@ void world_update(World *world) {
         if(world->finished){
             THREAD_CREATE(id, _world_update, world);
         }
+#if !FAKE_THREADING
         world->update_required = 0;
+#endif
     }
 }
 
