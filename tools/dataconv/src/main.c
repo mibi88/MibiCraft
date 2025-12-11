@@ -27,6 +27,7 @@ int main(int argc, char **argv) {
     FILE *fp;
     FILE *header_fp;
     FILE *source_fp;
+
     if(argc < 4){
         fputs("Need more args!\n", stderr);
         return EXIT_FAILURE;
@@ -36,18 +37,21 @@ int main(int argc, char **argv) {
     fseek(fp, 0, SEEK_END);
     size = ftell(fp);
     rewind(fp);
+
     data = malloc(size);
     if(!data){
         fputs("Out of memory!\n", stderr);
         fclose(fp);
         return EXIT_FAILURE;
     }
+
     fread(data, 1, size, fp);
     fclose(fp);
 
     /* Load the data and generate the C files */
     header_fp = fopen(argv[2], "w");
     source_fp = fopen(argv[3], "w");
+
     /* TODO: Generate the files */
     fclose(header_fp);
     fclose(source_fp);

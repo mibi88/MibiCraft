@@ -16,18 +16,16 @@
  * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 
-#include <tree.h>
+#ifndef ARENA_H
+#define ARENA_H
+
 #include <stdlib.h>
 
-void node_init(Node *node, void *value, size_t size, int type) {
-    node->childs = NULL;
-    node->data = value;
-    node->size = size;
-    node->type = type;
-}
+typedef struct {
+    void **blocks;
+    size_t block;
+    size_t block_size;
+    size_t block_usage;
+} Arena;
 
-void node_free(Node *node) {
-    free(node->childs);
-    free(node->data);
-}
-
+#endif

@@ -1,5 +1,8 @@
 dataconv_sources = [
   'main.c',
+  'arena.c',
+  'tree.c',
+  'parser.c',
 ]
 
 dataconv_incdirs = include_directories('.')

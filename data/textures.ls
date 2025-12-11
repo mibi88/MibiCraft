@@ -3,6 +3,7 @@
  c)
 
 (textures
+    t_void
     t_grass
     t_dirt
     t_stone
