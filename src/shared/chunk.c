@@ -934,157 +934,100 @@ void chunk_generate_model(Chunk *chunk, unsigned int texture,
     index_t *index_ptr = chunk->chunk_indices;
     size_t indices = 0;
 
-    /* Left faces */
+    /* Left/right faces */
     for(z=0;z<CHUNK_DEPTH;z++){
         for(y=0;y<CHUNK_HEIGHT;y++){
-            for(x=0;x<CHUNK_WIDTH-1;x++){
+            for(x=0;x<CHUNK_WIDTH;x++){
                 register Tile tile = chunk->chunk_data[x][y][z];
                 register Tile next;
 
-                if(blocks[tile].shape == NULL ||
-                   blocks[tile].shape->face_left == NULL) continue;
+                if(blocks[tile].shape == NULL) continue;
 
-#if CULL
-                next = chunk->chunk_data[x+1][y][z];
+                if(x < CHUNK_WIDTH-1){
+                    if(blocks[tile].shape->face_left == NULL) goto NOLEFT;
 
-                if(NEXT_BLOCKING(face_right)) continue;
-#endif
+                    next = chunk->chunk_data[x+1][y][z];
 
-                /* Add a left face for this block */
-                CHUNK_ADD_FACE(x, y, z, blocks[tile].shape->face_left,
-                               blocks[tile].texture.left);
-            }
-        }
-    }
+                    if(NEXT_BLOCKING(face_right)) goto NOLEFT;
 
-    /* Right faces */
-    for(z=0;z<CHUNK_DEPTH;z++){
-        for(y=0;y<CHUNK_HEIGHT;y++){
-            for(x=1;x<CHUNK_WIDTH;x++){
-                register Tile tile = chunk->chunk_data[x][y][z];
-                register Tile next;
+                    /* Add a left face for this block */
+                    CHUNK_ADD_FACE(x, y, z, blocks[tile].shape->face_left,
+                                   blocks[tile].texture.left);
+                }
 
-                if(blocks[tile].shape == NULL ||
-                   blocks[tile].shape->face_right == NULL) continue;
+NOLEFT:
 
-#if CULL
-                next = chunk->chunk_data[x-1][y][z];
+                if(x){
+                    if(blocks[tile].shape->face_right == NULL) goto NORIGHT;
 
-                if(NEXT_BLOCKING(face_left)) continue;
-#endif
+                    next = chunk->chunk_data[x-1][y][z];
 
-                /* Add a right face for this block */
-                CHUNK_ADD_FACE(x, y, z, blocks[tile].shape->face_right,
-                               blocks[tile].texture.right);
-            }
-        }
-    }
+                    if(NEXT_BLOCKING(face_left)) goto NORIGHT;
 
-    /* Front faces */
-    for(x=0;x<CHUNK_WIDTH;x++){
-        for(y=0;y<CHUNK_HEIGHT;y++){
-            for(z=0;z<CHUNK_DEPTH-1;z++){
-                register Tile tile = chunk->chunk_data[x][y][z];
-                register Tile next;
+                    /* Add a right face for this block */
+                    CHUNK_ADD_FACE(x, y, z, blocks[tile].shape->face_right,
+                                   blocks[tile].texture.right);
+                }
 
-                if(blocks[tile].shape == NULL ||
-                   blocks[tile].shape->face_front == NULL) continue;
+NORIGHT:
 
-#if CULL
-                next = chunk->chunk_data[x][y][z+1];
+                if(z < CHUNK_DEPTH-1){
+                    if(blocks[tile].shape->face_front == NULL) goto NOFRONT;
 
-                if(NEXT_BLOCKING(face_back)) continue;
-#endif
+                    next = chunk->chunk_data[x][y][z+1];
 
-                /* Add a front face for this block */
-                CHUNK_ADD_FACE(x, y, z, blocks[tile].shape->face_front,
-                               blocks[tile].texture.front);
-            }
-        }
-    }
+                    if(NEXT_BLOCKING(face_back)) goto NOFRONT;
 
-    /* Back faces */
-    for(x=0;x<CHUNK_WIDTH;x++){
-        for(y=0;y<CHUNK_HEIGHT;y++){
-            for(z=1;z<CHUNK_DEPTH;z++){
-                register Tile tile = chunk->chunk_data[x][y][z];
-                register Tile next;
+                    /* Add a front face for this block */
+                    CHUNK_ADD_FACE(x, y, z, blocks[tile].shape->face_front,
+                                   blocks[tile].texture.front);
+                }
 
-                if(blocks[tile].shape == NULL ||
-                   blocks[tile].shape->face_back == NULL) continue;
+NOFRONT:
 
-#if CULL
-                next = chunk->chunk_data[x][y][z-1];
+                if(z){
+                    if(blocks[tile].shape->face_back == NULL) goto NOBACK;
 
-                if(NEXT_BLOCKING(face_front)) continue;
-#endif
+                    next = chunk->chunk_data[x][y][z-1];
 
-                /* Add a back face for this block */
-                CHUNK_ADD_FACE(x, y, z, blocks[tile].shape->face_back,
-                               blocks[tile].texture.back);
-            }
-        }
-    }
+                    if(NEXT_BLOCKING(face_front)) goto NOBACK;
 
-    /* Top faces */
-    for(z=0;z<CHUNK_DEPTH;z++){
-        for(x=0;x<CHUNK_WIDTH;x++){
-            for(y=0;y<CHUNK_HEIGHT;y++){
-                register Tile tile = chunk->chunk_data[x][y][z];
-                register Tile next;
+                    /* Add a back face for this block */
+                    CHUNK_ADD_FACE(x, y, z, blocks[tile].shape->face_back,
+                                   blocks[tile].texture.back);
+                }
 
-                if(blocks[tile].shape == NULL ||
-                   blocks[tile].shape->face_top == NULL) continue;
+NOBACK:
 
-#if CULL
+                if(blocks[tile].shape->face_top == NULL) goto NOTOP;
+
                 if(y < CHUNK_HEIGHT-1){
                     next = chunk->chunk_data[x][y+1][z];
 
-                    if(NEXT_BLOCKING(face_bottom)) continue;
+                    if(NEXT_BLOCKING(face_bottom)) goto NOTOP;
                 }
-#endif
 
                 /* Add a top face for this block */
                 CHUNK_ADD_FACE(x, y, z, blocks[tile].shape->face_top,
                                blocks[tile].texture.top);
-            }
-        }
-    }
 
-    /* Bottom faces */
-    for(z=0;z<CHUNK_DEPTH;z++){
-        for(x=0;x<CHUNK_WIDTH;x++){
-            for(y=0;y<CHUNK_HEIGHT;y++){
-                register Tile tile = chunk->chunk_data[x][y][z];
-                register Tile next;
+NOTOP:
 
-                if(blocks[tile].shape == NULL ||
-                   blocks[tile].shape->face_bottom == NULL) continue;
+                if(blocks[tile].shape->face_bottom == NULL) goto NOBOTTOM;
 
-#if CULL
                 if(y){
                     next = chunk->chunk_data[x][y-1][z];
 
-                    if(NEXT_BLOCKING(face_top)) continue;
+                    if(NEXT_BLOCKING(face_top)) goto NOBOTTOM;
                 }
-#endif
 
                 /* Add a bottom face for this block */
                 CHUNK_ADD_FACE(x, y, z, blocks[tile].shape->face_bottom,
                                blocks[tile].texture.bottom);
-            }
-        }
-    }
 
-    /* Centered model */
-    for(z=0;z<CHUNK_DEPTH;z++){
-        for(x=0;x<CHUNK_WIDTH;x++){
-            for(y=0;y<CHUNK_HEIGHT;y++){
-                register Tile tile = chunk->chunk_data[x][y][z];
-                register Tile next;
+NOBOTTOM:
 
-                if(blocks[tile].shape == NULL ||
-                   blocks[tile].shape->face_middle == NULL) continue;
+                if(blocks[tile].shape->face_middle == NULL) continue;
 
                 CHUNK_ADD_FACE(x, y, z, blocks[tile].shape->face_middle,
                                blocks[tile].texture.middle);
@@ -1092,6 +1035,7 @@ void chunk_generate_model(Chunk *chunk, unsigned int texture,
         }
     }
 
+#if 0
     /* Sides to other chunks */
 
     /* Front side */
@@ -1181,6 +1125,7 @@ void chunk_generate_model(Chunk *chunk, unsigned int texture,
                            blocks[tile].texture.right);
         }
     }
+#endif
 
     gfx_init_model(&chunk->chunk_model, chunk->chunk_vertices,
                    chunk->chunk_indices, chunk->chunk_texture_coords, texture,
