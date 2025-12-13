@@ -85,8 +85,6 @@ int conv(char *input, char *c_header, char *c_source) {
         puts("Error!");
         free(name);
         return EXIT_FAILURE;
-    }else{
-        puts("Success!");
     }
 
     fp_c_header = fopen(c_header, "w");

@@ -100,10 +100,14 @@ void _reshape(int w, int h) {
 }
 
 void _keyboard(unsigned char key, int x, int y) {
+    (void)x;
+    (void)y;
     _keys[key] = 1;
 }
 
 void _release(unsigned char key, int x, int y) {
+    (void)x;
+    (void)y;
     _keys[key] = 0;
     _keyrelease(key);
 }

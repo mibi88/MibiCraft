@@ -20,8 +20,10 @@
 
 #include <noise.h>
 
+#include <stddef.h>
+
 /* Biomes */
-const Biome_property biomes[B_AMOUNT] = {
+const BiomeProperty biomes[B_AMOUNT] = {
     {(CHUNK_HEIGHT/2), 5, T_GRASS, T_DIRT,
      {T_GRASS_PLANT, T_DANDELION, T_ROSE, T_VOID}, {8, 12, 20, 0}},
     {(CHUNK_HEIGHT/1.8), 10, T_PODZOL, T_DIRT,
@@ -34,44 +36,285 @@ const Biome_property biomes[B_AMOUNT] = {
      {T_DEAD_BUSH, T_CACTUS, T_VOID, T_VOID}, {4, 5, 0, 0}}
 };
 
+/* Cube shape */
+static const vertex_t left_vertices[] = {
+    1, 0, 0,
+    1, 1, 0,
+    1, 1, 1,
+    1, 0, 1
+};
+
+static const vertex_t right_vertices[] = {
+    0, 0, 0,
+    0, 1, 0,
+    0, 1, 1,
+    0, 0, 1
+};
+
+static const vertex_t front_vertices[] = {
+    0, 1, 1,
+    0, 0, 1,
+    1, 0, 1,
+    1, 1, 1
+};
+
+static const vertex_t back_vertices[] = {
+    0, 1, 0,
+    0, 0, 0,
+    1, 0, 0,
+    1, 1, 0
+};
+
+static const vertex_t top_vertices[] = {
+    0, 1, 1,
+    0, 1, 0,
+    1, 1, 0,
+    1, 1, 1
+};
+
+static const vertex_t bottom_vertices[] = {
+    0, 0, 1,
+    0, 0, 0,
+    1, 0, 0,
+    1, 0, 1
+};
+
+static const texture_t base_tex[] = {
+    0, 0,
+    0, 1,
+    1, 1,
+    1, 0
+};
+
+static const index_t base_indices[] = {
+    0, 1, 3,
+    3, 1, 2
+};
+
+static const Face left_face = {
+    (vertex_t*)left_vertices, (texture_t*)base_tex, (index_t*)base_indices,
+    sizeof(left_vertices)/sizeof(vertex_t)/3,
+    sizeof(base_indices)/sizeof(index_t),
+    1
+};
+
+static const Face right_face = {
+    (vertex_t*)right_vertices, (texture_t*)base_tex, (index_t*)base_indices,
+    sizeof(right_vertices)/sizeof(vertex_t)/3,
+    sizeof(base_indices)/sizeof(index_t),
+    1
+};
+
+static const Face front_face = {
+    (vertex_t*)front_vertices, (texture_t*)base_tex, (index_t*)base_indices,
+    sizeof(front_vertices)/sizeof(vertex_t)/3,
+    sizeof(base_indices)/sizeof(index_t),
+    1
+};
+
+static const Face back_face = {
+    (vertex_t*)back_vertices, (texture_t*)base_tex, (index_t*)base_indices,
+    sizeof(back_vertices)/sizeof(vertex_t)/3,
+    sizeof(base_indices)/sizeof(index_t),
+    1
+};
+
+static const Face top_face = {
+    (vertex_t*)top_vertices, (texture_t*)base_tex, (index_t*)base_indices,
+    sizeof(top_vertices)/sizeof(vertex_t)/3,
+    sizeof(base_indices)/sizeof(index_t),
+    1
+};
+
+static const Face bottom_face = {
+    (vertex_t*)bottom_vertices, (texture_t*)base_tex, (index_t*)base_indices,
+    sizeof(bottom_vertices)/sizeof(vertex_t)/3,
+    sizeof(base_indices)/sizeof(index_t),
+    1
+};
+
+static const BlockShape cube = {
+    (Face*)&left_face,
+    (Face*)&right_face,
+    (Face*)&front_face,
+    (Face*)&back_face,
+    (Face*)&top_face,
+    (Face*)&bottom_face,
+    NULL
+};
+
+/* Cross shape */
+static const vertex_t cross_vertices[] = {
+    0, 1, 0,
+    0, 0, 0,
+    1, 0, 1,
+    1, 1, 1,
+    0, 1, 1,
+    0, 0, 1,
+    1, 0, 0,
+    1, 1, 0
+};
+
+static const texture_t cross_tex[] = {
+    0, 0,
+    0, 1,
+    1, 1,
+    1, 0,
+    0, 0,
+    0, 1,
+    1, 1,
+    1, 0
+};
+
+static const index_t cross_indices[] = {
+    0, 1, 3,
+    3, 1, 2,
+    4, 5, 7,
+    7, 5, 6
+};
+
+static const Face cross_face = {
+    (vertex_t*)cross_vertices, (texture_t*)cross_tex, (index_t*)cross_indices,
+    sizeof(cross_vertices)/sizeof(vertex_t)/3,
+    sizeof(cross_indices)/sizeof(index_t),
+    0
+};
+
+static const BlockShape cross = {
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+
+    (Face*)&cross_face
+};
+
 /* Blocks */
-const Block_property blocks[T_AMOUNT] = {
-    {S_CUBE, 1, 0, 1},  /* T_VOID */
-    {S_CUBE, 0, 1, 0},  /* T_GRASS */
-    {S_CUBE, 0, 1, 0},  /* T_DIRT */
-    {S_CUBE, 0, 1, 0},  /* T_STONE */
-    {S_CUBE, 0, 1, 0},  /* T_COAL */
-    {S_CUBE, 0, 1, 0},  /* T_IRON */
-    {S_CUBE, 0, 1, 0},  /* T_GOLD */
-    {S_CUBE, 0, 1, 0},  /* T_REDSTONE */
-    {S_CUBE, 0, 1, 0},  /* T_LAPIS */
-    {S_CUBE, 0, 1, 0},  /* T_DIAMOND */
-    {S_CUBE, 0, 1, 0},  /* T_BEDROCK */
-    {S_CUBE, 0, 0, 1},  /* T_WATER */
-    {S_CUBE, 0, 1, 0},  /* T_SAND */
-    {S_CUBE, 0, 1, 0},  /* T_OAK_LOG */
-    {S_CUBE, 0, 1, 0},  /* T_OAK_LEAVES */
-    {S_CUBE, 0, 1, 0},  /* T_PODZOL */
-    {S_CUBE, 0, 1, 0},  /* T_SPRUCE_LOG */
-    {S_CUBE, 0, 1, 0},  /* T_SPRUCE_LEAVES */
-    {S_CUBE, 0, 1, 0},  /* T_SNOW */
-    {S_CUBE, 0, 1, 0},  /* T_DRIED_GRASS */
-    {S_CUBE, 0, 1, 0},  /* T_ACACIA_LOG */
-    {S_CUBE, 0, 1, 0},  /* T_ACACIA_LEAVES */
-    {S_CUBE, 0, 1, 0},  /* T_SAND_STONE */
-    {S_CUBE, 0, 1, 0},  /* T_PALM_LOG */
-    {S_CUBE, 0, 1, 0},  /* T_PALM_LEAVES */
-    {S_CUBE, 0, 1, 0},  /* T_CACTUS */
-    {S_CROSS, 1, 0, 0}, /* T_ROSE */
-    {S_CROSS, 1, 0, 0}, /* T_GRASS_PLANT */
-    {S_CROSS, 1, 0, 0}, /* T_DEAD_BUSH */
-    {S_CROSS, 1, 0, 0}, /* T_BROWN_MUSHROOM */
-    {S_CROSS, 1, 0, 0}, /* T_RED_MUSHROOM */
-    {S_CUBE, 0, 1, 0},  /* T_SPRUCE_PLANKS */
-    {S_CUBE, 1, 1, 0},  /* T_GLASS */
-    {S_CROSS, 1, 0, 0}, /* T_DANDELION */
-    {S_CROSS, 1, 0, 0}, /* T_BERRY_BUSH */
-    {S_CROSS, 1, 0, 0}  /* T_FRUIT_BERRY_BUSH */
+const BlockProperty blocks[T_AMOUNT] = {
+    {NULL,
+     {I_VOID, I_VOID, I_VOID, I_VOID, I_VOID, I_VOID, I_VOID},
+     1, 0, 1},  /* T_VOID */
+    {(BlockShape*)&cube,
+     {I_GRASS, I_GRASS, I_GRASS, I_GRASS, I_GRASS, I_DIRT, I_VOID},
+     0, 1, 0},  /* T_GRASS */
+    {(BlockShape*)&cube,
+     {I_SAND_STONE, I_DIRT, I_DIRT, I_DIRT, I_DIRT, I_DIRT, I_VOID},
+     0, 1, 0},  /* T_DIRT */
+    {(BlockShape*)&cube,
+     {I_STONE, I_STONE, I_STONE, I_STONE, I_STONE, I_STONE, I_VOID},
+     0, 1, 0},  /* T_STONE */
+    {(BlockShape*)&cube,
+     {I_COAL, I_COAL, I_COAL, I_COAL, I_COAL, I_COAL, I_VOID},
+     0, 1, 0},  /* T_COAL */
+    {(BlockShape*)&cube,
+     {I_IRON, I_IRON, I_IRON, I_IRON, I_IRON, I_IRON, I_VOID},
+     0, 1, 0},  /* T_IRON */
+    {(BlockShape*)&cube,
+     {I_GOLD, I_GOLD, I_GOLD, I_GOLD, I_GOLD, I_GOLD, I_VOID},
+     0, 1, 0},  /* T_GOLD */
+    {(BlockShape*)&cube,
+     {I_REDSTONE, I_REDSTONE, I_REDSTONE, I_REDSTONE, I_REDSTONE, I_REDSTONE,
+      I_VOID},
+     0, 1, 0},  /* T_REDSTONE */
+    {(BlockShape*)&cube,
+     {I_LAPIS, I_LAPIS, I_LAPIS, I_LAPIS, I_LAPIS, I_LAPIS, I_VOID},
+     0, 1, 0},  /* T_LAPIS */
+    {(BlockShape*)&cube,
+     {I_DIAMOND, I_DIAMOND, I_DIAMOND, I_DIAMOND, I_DIAMOND, I_DIAMOND,
+      I_VOID},
+     0, 1, 0},  /* T_DIAMOND */
+    {(BlockShape*)&cube,
+     {I_BEDROCK, I_BEDROCK, I_BEDROCK, I_BEDROCK, I_BEDROCK, I_BEDROCK,
+      I_VOID},
+     0, 1, 0},  /* T_BEDROCK */
+    {(BlockShape*)&cube,
+     {I_WATER, I_WATER, I_WATER, I_WATER, I_WATER, I_WATER, I_VOID},
+     0, 0, 1},  /* T_WATER */
+    {(BlockShape*)&cube,
+     {I_SAND, I_SAND, I_SAND, I_SAND, I_SAND, I_SAND, I_VOID},
+     0, 1, 0},  /* T_SAND */
+    {(BlockShape*)&cube,
+     {I_OAK_LOG, I_OAK_LOG, I_OAK_LOG, I_OAK_LOG, I_OAK_LOG, I_OAK_LOG,
+      I_VOID},
+     0, 1, 0},  /* T_OAK_LOG */
+    {(BlockShape*)&cube,
+     {I_OAK_LEAVES, I_OAK_LEAVES, I_OAK_LEAVES, I_OAK_LEAVES, I_OAK_LEAVES,
+      I_OAK_LEAVES, I_VOID},
+     0, 1, 0},  /* T_OAK_LEAVES */
+    {(BlockShape*)&cube,
+     {I_PODZOL, I_PODZOL, I_PODZOL, I_PODZOL, I_PODZOL, I_PODZOL, I_VOID},
+     0, 1, 0},  /* T_PODZOL */
+    {(BlockShape*)&cube,
+     {I_SPRUCE_LOG, I_SPRUCE_LOG, I_SPRUCE_LOG, I_SPRUCE_LOG, I_SPRUCE_LOG,
+      I_SPRUCE_LOG, I_VOID},
+     0, 1, 0},  /* T_SPRUCE_LOG */
+    {(BlockShape*)&cube,
+     {I_SPRUCE_LEAVES, I_SPRUCE_LEAVES, I_SPRUCE_LEAVES, I_SPRUCE_LEAVES,
+      I_SPRUCE_LEAVES, I_SPRUCE_LEAVES, I_VOID},
+     0, 1, 0},  /* T_SPRUCE_LEAVES */
+    {(BlockShape*)&cube,
+     {I_SNOW, I_SNOW, I_SNOW, I_SNOW, I_SNOW, I_SNOW, I_VOID},
+     0, 1, 0},  /* T_SNOW */
+    {(BlockShape*)&cube,
+     {I_DRIED_GRASS, I_DRIED_GRASS, I_DRIED_GRASS, I_DRIED_GRASS,
+      I_DRIED_GRASS, I_DRIED_GRASS, I_VOID},
+     0, 1, 0},  /* T_DRIED_GRASS */
+    {(BlockShape*)&cube,
+     {I_ACACIA_LOG, I_ACACIA_LOG, I_ACACIA_LOG, I_ACACIA_LOG, I_ACACIA_LOG,
+      I_ACACIA_LOG, I_VOID},
+     0, 1, 0},  /* T_ACACIA_LOG */
+    {(BlockShape*)&cube,
+     {I_ACACIA_LEAVES, I_ACACIA_LEAVES, I_ACACIA_LEAVES, I_ACACIA_LEAVES,
+      I_ACACIA_LEAVES, I_ACACIA_LEAVES, I_VOID},
+     0, 1, 0},  /* T_ACACIA_LEAVES */
+    {(BlockShape*)&cube,
+     {I_SAND_STONE, I_SAND_STONE, I_SAND_STONE, I_SAND_STONE, I_SAND_STONE,
+      I_SAND_STONE, I_VOID},
+     0, 1, 0},  /* T_SAND_STONE */
+    {(BlockShape*)&cube,
+     {I_PALM_LOG, I_PALM_LOG, I_PALM_LOG, I_PALM_LOG, I_PALM_LOG, I_PALM_LOG,
+      I_VOID},
+     0, 1, 0},  /* T_PALM_LOG */
+    {(BlockShape*)&cube,
+     {I_PALM_LEAVES, I_PALM_LEAVES, I_PALM_LEAVES, I_PALM_LEAVES,
+      I_PALM_LEAVES, I_PALM_LEAVES, I_VOID},
+     0, 1, 0},  /* T_PALM_LEAVES */
+    {(BlockShape*)&cube,
+     {I_CACTUS, I_CACTUS, I_CACTUS, I_CACTUS, I_CACTUS, I_CACTUS, I_VOID},
+     0, 1, 0},  /* T_CACTUS */
+    {(BlockShape*)&cross,
+     {I_VOID, I_VOID, I_VOID, I_VOID, I_VOID, I_VOID, I_ROSE},
+     1, 0, 0}, /* T_ROSE */
+    {(BlockShape*)&cross,
+     {I_VOID, I_VOID, I_VOID, I_VOID, I_VOID, I_VOID, I_GRASS_PLANT},
+     1, 0, 0}, /* T_GRASS_PLANT */
+    {(BlockShape*)&cross,
+     {I_VOID, I_VOID, I_VOID, I_VOID, I_VOID, I_VOID, I_DEAD_BUSH},
+     1, 0, 0}, /* T_DEAD_BUSH */
+    {(BlockShape*)&cross,
+     {I_VOID, I_VOID, I_VOID, I_VOID, I_VOID, I_VOID, I_BROWN_MUSHROOM},
+     1, 0, 0}, /* T_BROWN_MUSHROOM */
+    {(BlockShape*)&cross,
+     {I_VOID, I_VOID, I_VOID, I_VOID, I_VOID, I_VOID, I_RED_MUSHROOM},
+     1, 0, 0}, /* T_RED_MUSHROOM */
+    {(BlockShape*)&cube,
+     {I_SPRUCE_PLANKS, I_SPRUCE_PLANKS, I_SPRUCE_PLANKS, I_SPRUCE_PLANKS,
+      I_SPRUCE_PLANKS, I_SPRUCE_PLANKS, I_VOID},
+     0, 1, 0},  /* T_SPRUCE_PLANKS */
+    {(BlockShape*)&cube,
+     {I_GLASS, I_GLASS, I_GLASS, I_GLASS, I_GLASS, I_GLASS, I_VOID},
+     1, 1, 0},  /* T_GLASS */
+    {(BlockShape*)&cross,
+     {I_VOID, I_VOID, I_VOID, I_VOID, I_VOID, I_VOID, I_DANDELION},
+     1, 0, 0}, /* T_DANDELION */
+    {(BlockShape*)&cross,
+     {I_VOID, I_VOID, I_VOID, I_VOID, I_VOID, I_VOID, I_BERRY_BUSH},
+     1, 0, 0}, /* T_BERRY_BUSH */
+    {(BlockShape*)&cross,
+     {I_VOID, I_VOID, I_VOID, I_VOID, I_VOID, I_VOID, I_FRUIT_BERRY_BUSH},
+     1, 0, 0}  /* T_FRUIT_BERRY_BUSH */
 };
 /**********/
 
@@ -300,47 +543,6 @@ const Tile fallen_spruce_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
 };
 /*********/
 
-/* Front face */
-const vertex_t front_vertices[SZ_VERTICES] = {
-    0, 1, 1,
-    0, 0, 1,
-    1, 0, 1,
-    1, 1, 1
-};
-const vertex_t top_vertices[SZ_VERTICES] = {
-    0, 1, 1,
-    0, 1, 0,
-    1, 1, 0,
-    1, 1, 1
-};
-const vertex_t left_vertices[SZ_VERTICES] = {
-    1, 0, 0,
-    1, 1, 0,
-    1, 1, 1,
-    1, 0, 1
-};
-
-const index_t base_indices[SZ_INDICES] = {
-    0, 1, 3,
-    3, 1, 2
-};
-
-const vertex_t cross_vertices[SZ_VERTICES*2] = {
-    0, 1, 0,
-    0, 0, 0,
-    1, 0, 1,
-    1, 1, 1,
-    0, 1, 1,
-    0, 0, 1,
-    1, 0, 0,
-    1, 1, 0
-};
-const index_t cross_indices[SZ_INDICES*2] = {
-    0, 1, 3,
-    3, 1, 2,
-    4, 5, 7,
-    7, 5, 6
-};
 /**************/
 
 Biome chunk_get_biome(int sx, int sz, int x, int z, int seed) {
@@ -405,17 +607,17 @@ void chunk_generate_structure(Chunk *chunk, int sx, int sz,
     int i;
     int amount;
     Biome real_biome;
-    Biome_property *properties;
+    BiomeProperty *properties;
     int pos_seed = seed;
     amount = probability/2+chunk_rand(sx, sz, 0, 0, seed, probability/2);
     for(i=0;i<amount;i++){
         x = chunk_rand(sx, sz, 0, 0, xorshift(&pos_seed), CHUNK_WIDTH);
         z = chunk_rand(sx, sz, 0, 0, xorshift(&pos_seed), CHUNK_DEPTH);
         real_biome = chunk_get_biome(sx, sz, x, z, seed);
-        properties = (Biome_property*)&biomes[real_biome];
+        properties = (BiomeProperty*)&biomes[real_biome];
         y = chunk_get_height(sx, sz, x, z, properties->amplitude, seed);
         real_biome = chunk_get_biome(sx, sz, x, z, seed);
-        properties = (Biome_property*)&biomes[real_biome];
+        properties = (BiomeProperty*)&biomes[real_biome];
         if(y >= CHUNK_HEIGHT/2){
             if(real_biome == biome){
                 chunk_place_structure(chunk, x-dx, y, z-dz, structure,
@@ -511,11 +713,11 @@ void chunk_generate_plants(Chunk *chunk, int sx, int sz, int seed) {
     Tile plant = T_ROSE;
     int plant_max = 0;
     Biome real_biome;
-    Biome_property *properties;
+    BiomeProperty *properties;
     int pos_seed = seed;
     int plant_rand;
     real_biome = chunk_get_biome(sx, sz, 0, 0, seed);
-    properties = (Biome_property*)&biomes[real_biome];
+    properties = (BiomeProperty*)&biomes[real_biome];
     plant_max = 0;
     for(n=0;n<PLANTS;n++){
         if(properties->plants[n] > T_VOID &&
@@ -529,10 +731,10 @@ void chunk_generate_plants(Chunk *chunk, int sx, int sz, int seed) {
         x = chunk_rand(sx, sz, 0, 0, xorshift(&pos_seed), CHUNK_WIDTH);
         z = chunk_rand(sx, sz, 0, 0, xorshift(&pos_seed), CHUNK_DEPTH);
         real_biome = chunk_get_biome(sx, sz, x, z, seed);
-        properties = (Biome_property*)&biomes[real_biome];
+        properties = (BiomeProperty*)&biomes[real_biome];
         y = chunk_get_height(sx, sz, x, z, properties->amplitude, seed);
         if(y >= CHUNK_HEIGHT/2){
-            properties = (Biome_property*)&biomes[real_biome];
+            properties = (BiomeProperty*)&biomes[real_biome];
             plant_max = 0;
             for(n=0;n<PLANTS;n++){
                 if(properties->plants[n] > T_VOID &&
@@ -574,13 +776,13 @@ void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
     int x, y, z;
     float height;
     Biome biome = B_PLAINS;
-    Biome_property *properties;
+    BiomeProperty *properties;
 
     for(x=0;x<CHUNK_WIDTH;x++){
         for(z=0;z<CHUNK_DEPTH;z++){
             biome = chunk_get_biome(sx, sz, x, z, seed);
 
-            properties = (Biome_property*)&biomes[biome];
+            properties = (BiomeProperty*)&biomes[biome];
 
             height = chunk_get_height(sx, sz, x, z, properties->amplitude,
                     seed);
@@ -644,22 +846,22 @@ void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
                              TREE_WIDTH/2, TREE_DEPTH/2);
     chunk_generate_snow(chunk, sx, sz, properties->amplitude, seed);
     chunk_generate_plants(chunk, sx, sz, seed);
-}
 
-void chunk_generate_texture_coords(Chunk *chunk, int tex_x, int tex_y) {
-    /* Position of the vertices for a square facing the player */
-    /* Bottom left */
-    chunk->texture_coords[0] = tex_x;
-    chunk->texture_coords[1] = tex_y;
-    /* Top left */
-    chunk->texture_coords[2] = tex_x;
-    chunk->texture_coords[3] = tex_y+1;
-    /* Top right */
-    chunk->texture_coords[4] = tex_x+1;
-    chunk->texture_coords[5] = tex_y+1;
-    /* Bottom right */
-    chunk->texture_coords[6] = tex_x+1;
-    chunk->texture_coords[7] = tex_y;
+#if DEBUG_EXTREME_TERRAIN
+    {
+        size_t x, y, z, c = 0;
+        for(z=0;z<CHUNK_DEPTH;z++){
+            for(y=0;y<CHUNK_HEIGHT;y++){
+                for(x=0;x<CHUNK_WIDTH;x++){
+                    chunk->chunk_data[x][y][z] = c ? T_VOID : T_GRASS;
+                    c ^= 1;
+                }
+                c ^= 1;
+            }
+            c ^= 1;
+        }
+    }
+#endif
 }
 
 Tile chunk_get_tile(Chunk *chunk, int x, int y, int z, int rx, int ry, int rz) {
@@ -680,169 +882,308 @@ void chunk_set_tile(Chunk *chunk, Tile tile, int x, int y, int z) {
    }
 }
 
-void chunk_add_face_to_model(Chunk *chunk, const vertex_t *face_vertices,
-                             int rx, int ry, int rz) {
-    int i;
-    chunk_generate_texture_coords(chunk, chunk->tex_x, chunk->tex_y);
-    /* Front face */
-    memcpy(chunk->vertices, face_vertices, SZ_VERTICES*sizeof(vertex_t));
-    for(i=0;i<VERTICES_AMOUNT;i++){
-        chunk->vertices[i*3] += chunk->_x+rx;
-        chunk->vertices[i*3+1] += chunk->_y+ry;
-        chunk->vertices[i*3+2] += chunk->_z+rz;
+#define CHUNK_ADD_FACE(x, y, z, face, tex) \
+    { \
+        size_t i; \
+        ptrdiff_t offset = vert_ptr-chunk->chunk_vertices; \
+ \
+        const size_t vertex_size = face->vertex_count*3; \
+        const size_t tex_size = face->vertex_count*2; \
+ \
+        int u = (tex-1)%TILE_AWIDTH; \
+        int v = (tex-1)/TILE_AWIDTH; \
+ \
+        for(i=0;i<vertex_size;i+=3){ \
+            *(vert_ptr++) = face->vertices[i]+x; \
+            *(vert_ptr++) = face->vertices[i+1]+y; \
+            *(vert_ptr++) = face->vertices[i+2]+z; \
+        } \
+ \
+        for(i=0;i<tex_size;i+=2){ \
+            *(tex_ptr++) = face->tex_coordinates[i]+u; \
+            *(tex_ptr++) = face->tex_coordinates[i+1]+v; \
+        } \
+ \
+        for(i=0;i<face->index_count;i++){ \
+            *(index_ptr++) = face->indices[i]+offset/3; \
+        } \
+ \
+        indices += face->index_count; \
     }
-    memcpy(chunk->vert_ptr, chunk->vertices, SZ_VERTICES*sizeof(vertex_t));
-    chunk->vert_ptr += SZ_VERTICES;
-    memcpy(chunk->indices, base_indices, SZ_INDICES*sizeof(index_t));
-    for(i=0;i<SZ_INDICES;i++){
-        chunk->indices[i] += chunk->triangles/TRIANGLES_AMOUNT*
-                      VERTICES_AMOUNT;
-    }
-    memcpy(chunk->indices_ptr, chunk->indices, SZ_INDICES*sizeof(index_t));
-    chunk->indices_ptr += SZ_INDICES;
 
-    memcpy(chunk->tex_ptr, chunk->texture_coords, SZ_TEX_COORDS*
-                                                  sizeof(texture_t));
-    chunk->tex_ptr += SZ_TEX_COORDS;
+#define CULL 1
 
-    chunk->triangles += 2;
-}
+#define NEXT_BLOCKING(face) \
+    (blocks[next].shape != NULL && \
+     blocks[next].shape->face != NULL && \
+     blocks[next].shape->face->blocking && \
+     ((!blocks[tile].transparent == !blocks[next].transparent && \
+       !blocks[tile].solid == !blocks[next].solid) || \
+       (!blocks[tile].transparent && blocks[next].solid)))
 
 void chunk_generate_model(Chunk *chunk, unsigned int texture,
-                          Tile get_tile(Chunk *chunk, int x, int y, int z,
-                                        int rx, int ry, int rz, void *extra),
+                          Tile get_surrounding_tile(Chunk *chunk, int x, int y,
+                                                    int z, int rx, int ry,
+                                                    int rz, void *extra),
                           void *extra) {
-    int i;
-    Tile tile = T_VOID, real_tile, side_tile;
-    chunk->vert_ptr = chunk->chunk_vertices;
-    chunk->tex_ptr = chunk->chunk_texture_coords;
-    chunk->indices_ptr = chunk->chunk_indices;
-    chunk->triangles = 0;
+    size_t i;
+    size_t x, y, z;
 
-    for(chunk->_x=0;chunk->_x<CHUNK_WIDTH;chunk->_x++){
-        for(chunk->_y=0;chunk->_y<CHUNK_HEIGHT;chunk->_y++){
-            for(chunk->_z=0;chunk->_z<CHUNK_DEPTH;chunk->_z++){
-                tile = chunk->chunk_data[chunk->_x][chunk->_y][chunk->_z];
-                if(blocks[tile].shape == S_CUBE && !blocks[tile].transparent) {
-                    real_tile = tile-1;
-                    chunk->tex_x = real_tile%TILE_AWIDTH;
-                    chunk->tex_y = real_tile/TILE_AWIDTH;
-                    side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
-                                         0, 0, 1, extra);
-                    if(blocks[side_tile].transparent ||
-                       (blocks[side_tile].replaceable && side_tile != tile)){
-                        chunk_add_face_to_model(chunk, front_vertices, 0, 0, 0);
-                    }
-                    side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
-                                         0, 0, -1, extra);
-                    if(blocks[side_tile].transparent ||
-                       (blocks[side_tile].replaceable && side_tile != tile)){
-                        chunk_add_face_to_model(chunk, front_vertices, 0, 0,
-                                                -1);
-                    }
-                    side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
-                                         0, 1, 0, extra);
-                    if(blocks[side_tile].transparent ||
-                       (blocks[side_tile].replaceable && side_tile != tile)){
-                        chunk_add_face_to_model(chunk, top_vertices, 0, 0, 0);
-                    }
-                    side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
-                                         0, -1, 0, extra);
-                    if(blocks[side_tile].transparent ||
-                       (blocks[side_tile].replaceable && side_tile != tile)){
-                        chunk_add_face_to_model(chunk, top_vertices, 0, -1, 0);
-                    }
-                    side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
-                                         1, 0, 0, extra);
-                    if(blocks[side_tile].transparent ||
-                       (blocks[side_tile].replaceable && side_tile != tile)){
-                        chunk_add_face_to_model(chunk, left_vertices, 0, 0, 0);
-                    }
-                    side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
-                                         -1, 0, 0, extra);
-                    if(blocks[side_tile].transparent ||
-                       (blocks[side_tile].replaceable && side_tile != tile)){
-                        chunk_add_face_to_model(chunk, left_vertices, -1, 0, 0);
-                    }
-                }else if(blocks[tile].shape == S_CUBE && tile != T_VOID){
-                    real_tile = tile-1;
-                    chunk->tex_x = real_tile%TILE_AWIDTH;
-                    chunk->tex_y = real_tile/TILE_AWIDTH;
-                    side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
-                                         0, 0, 1, extra);
-                    if((side_tile != tile || side_tile == T_VOID)){
-                        chunk_add_face_to_model(chunk, front_vertices, 0, 0, 0);
-                    }
-                    side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
-                                         0, 0, -1, extra);
-                    if(side_tile != tile || side_tile == T_VOID){
-                        chunk_add_face_to_model(chunk, front_vertices, 0, 0,
-                                                -1);
-                    }
-                    side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
-                                         0, 1, 0, extra);
-                    if(side_tile != tile || side_tile == T_VOID){
-                        chunk_add_face_to_model(chunk, top_vertices, 0, 0, 0);
-                    }
-                    side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
-                                         0, -1, 0, extra);
-                    if(side_tile != tile || side_tile == T_VOID){
-                        chunk_add_face_to_model(chunk, top_vertices, 0, -1, 0);
-                    }
-                    side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
-                                         1, 0, 0, extra);
-                    if(side_tile != tile || side_tile == T_VOID){
-                        chunk_add_face_to_model(chunk, left_vertices, 0, 0, 0);
-                    }
-                    side_tile = get_tile(chunk, chunk->_x, chunk->_y, chunk->_z,
-                                         -1, 0, 0, extra);
-                    if(side_tile != tile || side_tile == T_VOID){
-                        chunk_add_face_to_model(chunk, left_vertices, -1, 0, 0);
-                    }
-                }else if(blocks[tile].shape == S_CROSS && tile != T_VOID){
-                    real_tile = tile-1;
-                    chunk->tex_x = real_tile%TILE_AWIDTH;
-                    chunk->tex_y = real_tile/TILE_AWIDTH;
-                    chunk_generate_texture_coords(chunk, chunk->tex_x,
-                                                  chunk->tex_y);
-                    /* Front face */
-                    memcpy(chunk->vertices, cross_vertices,
-                           SZ_VERTICES*2*sizeof(vertex_t));
-                    for(i=0;i<VERTICES_AMOUNT*2;i++){
-                        chunk->vertices[i*3] += chunk->_x;
-                        chunk->vertices[i*3+1] += chunk->_y;
-                        chunk->vertices[i*3+2] += chunk->_z;
-                    }
-                    memcpy(chunk->vert_ptr, chunk->vertices,
-                           SZ_VERTICES*2*sizeof(vertex_t));
-                    chunk->vert_ptr += SZ_VERTICES*2;
-                    memcpy(chunk->indices, cross_indices,
-                           SZ_INDICES*2*sizeof(index_t));
-                    for(i=0;i<SZ_INDICES*2;i++){
-                        chunk->indices[i] += chunk->triangles/TRIANGLES_AMOUNT*
-                                      VERTICES_AMOUNT;
-                    }
-                    memcpy(chunk->indices_ptr, chunk->indices,
-                           SZ_INDICES*2*sizeof(index_t));
-                    chunk->indices_ptr += SZ_INDICES*2;
+    vertex_t *vert_ptr = chunk->chunk_vertices;
+    texture_t *tex_ptr = chunk->chunk_texture_coords;
+    index_t *index_ptr = chunk->chunk_indices;
+    size_t indices = 0;
 
-                    memcpy(chunk->tex_ptr, chunk->texture_coords,
-                           SZ_TEX_COORDS*sizeof(texture_t));
-                    chunk->tex_ptr += SZ_TEX_COORDS;
-                    memcpy(chunk->tex_ptr, chunk->texture_coords,
-                           SZ_TEX_COORDS*sizeof(texture_t));
-                    chunk->tex_ptr += SZ_TEX_COORDS;
+    /* Left faces */
+    for(z=0;z<CHUNK_DEPTH;z++){
+        for(y=0;y<CHUNK_HEIGHT;y++){
+            for(x=0;x<CHUNK_WIDTH-1;x++){
+                register Tile tile = chunk->chunk_data[x][y][z];
+                register Tile next;
 
-                    chunk->triangles += 4;
-                }
+                if(blocks[tile].shape == NULL ||
+                   blocks[tile].shape->face_left == NULL) continue;
+
+#if CULL
+                next = chunk->chunk_data[x+1][y][z];
+
+                if(NEXT_BLOCKING(face_right)) continue;
+#endif
+
+                /* Add a left face for this block */
+                CHUNK_ADD_FACE(x, y, z, blocks[tile].shape->face_left,
+                               blocks[tile].texture.left);
             }
+        }
+    }
+
+    /* Right faces */
+    for(z=0;z<CHUNK_DEPTH;z++){
+        for(y=0;y<CHUNK_HEIGHT;y++){
+            for(x=1;x<CHUNK_WIDTH;x++){
+                register Tile tile = chunk->chunk_data[x][y][z];
+                register Tile next;
+
+                if(blocks[tile].shape == NULL ||
+                   blocks[tile].shape->face_right == NULL) continue;
+
+#if CULL
+                next = chunk->chunk_data[x-1][y][z];
+
+                if(NEXT_BLOCKING(face_left)) continue;
+#endif
+
+                /* Add a right face for this block */
+                CHUNK_ADD_FACE(x, y, z, blocks[tile].shape->face_right,
+                               blocks[tile].texture.right);
+            }
+        }
+    }
+
+    /* Front faces */
+    for(x=0;x<CHUNK_WIDTH;x++){
+        for(y=0;y<CHUNK_HEIGHT;y++){
+            for(z=0;z<CHUNK_DEPTH-1;z++){
+                register Tile tile = chunk->chunk_data[x][y][z];
+                register Tile next;
+
+                if(blocks[tile].shape == NULL ||
+                   blocks[tile].shape->face_front == NULL) continue;
+
+#if CULL
+                next = chunk->chunk_data[x][y][z+1];
+
+                if(NEXT_BLOCKING(face_back)) continue;
+#endif
+
+                /* Add a front face for this block */
+                CHUNK_ADD_FACE(x, y, z, blocks[tile].shape->face_front,
+                               blocks[tile].texture.front);
+            }
+        }
+    }
+
+    /* Back faces */
+    for(x=0;x<CHUNK_WIDTH;x++){
+        for(y=0;y<CHUNK_HEIGHT;y++){
+            for(z=1;z<CHUNK_DEPTH;z++){
+                register Tile tile = chunk->chunk_data[x][y][z];
+                register Tile next;
+
+                if(blocks[tile].shape == NULL ||
+                   blocks[tile].shape->face_back == NULL) continue;
+
+#if CULL
+                next = chunk->chunk_data[x][y][z-1];
+
+                if(NEXT_BLOCKING(face_front)) continue;
+#endif
+
+                /* Add a back face for this block */
+                CHUNK_ADD_FACE(x, y, z, blocks[tile].shape->face_back,
+                               blocks[tile].texture.back);
+            }
+        }
+    }
+
+    /* Top faces */
+    for(z=0;z<CHUNK_DEPTH;z++){
+        for(x=0;x<CHUNK_WIDTH;x++){
+            for(y=0;y<CHUNK_HEIGHT;y++){
+                register Tile tile = chunk->chunk_data[x][y][z];
+                register Tile next;
+
+                if(blocks[tile].shape == NULL ||
+                   blocks[tile].shape->face_top == NULL) continue;
+
+#if CULL
+                if(y < CHUNK_HEIGHT-1){
+                    next = chunk->chunk_data[x][y+1][z];
+
+                    if(NEXT_BLOCKING(face_bottom)) continue;
+                }
+#endif
+
+                /* Add a top face for this block */
+                CHUNK_ADD_FACE(x, y, z, blocks[tile].shape->face_top,
+                               blocks[tile].texture.top);
+            }
+        }
+    }
+
+    /* Bottom faces */
+    for(z=0;z<CHUNK_DEPTH;z++){
+        for(x=0;x<CHUNK_WIDTH;x++){
+            for(y=0;y<CHUNK_HEIGHT;y++){
+                register Tile tile = chunk->chunk_data[x][y][z];
+                register Tile next;
+
+                if(blocks[tile].shape == NULL ||
+                   blocks[tile].shape->face_bottom == NULL) continue;
+
+#if CULL
+                if(y){
+                    next = chunk->chunk_data[x][y-1][z];
+
+                    if(NEXT_BLOCKING(face_top)) continue;
+                }
+#endif
+
+                /* Add a bottom face for this block */
+                CHUNK_ADD_FACE(x, y, z, blocks[tile].shape->face_bottom,
+                               blocks[tile].texture.bottom);
+            }
+        }
+    }
+
+    /* Centered model */
+    for(z=0;z<CHUNK_DEPTH;z++){
+        for(x=0;x<CHUNK_WIDTH;x++){
+            for(y=0;y<CHUNK_HEIGHT;y++){
+                register Tile tile = chunk->chunk_data[x][y][z];
+                register Tile next;
+
+                if(blocks[tile].shape == NULL ||
+                   blocks[tile].shape->face_middle == NULL) continue;
+
+                CHUNK_ADD_FACE(x, y, z, blocks[tile].shape->face_middle,
+                               blocks[tile].texture.middle);
+            }
+        }
+    }
+
+    /* Sides to other chunks */
+
+    /* Front side */
+    for(x=0;x<CHUNK_WIDTH;x++){
+        for(y=0;y<CHUNK_HEIGHT;y++){
+            register Tile tile;
+            register Tile next;
+
+            tile = chunk->chunk_data[x][y][CHUNK_DEPTH-1];
+
+            if(blocks[tile].shape == NULL ||
+               blocks[tile].shape->face_front == NULL) continue;
+
+            next = get_surrounding_tile(chunk, chunk->x, 0, chunk->z, x, y,
+                                        CHUNK_DEPTH, extra);
+
+            if(NEXT_BLOCKING(face_back)) continue;
+
+            /* Add a left face for this block */
+            CHUNK_ADD_FACE(x, y, CHUNK_DEPTH-1, blocks[tile].shape->face_front,
+                           blocks[tile].texture.front);
+        }
+    }
+
+    /* Back side */
+    for(x=0;x<CHUNK_WIDTH;x++){
+        for(y=0;y<CHUNK_HEIGHT;y++){
+            register Tile tile;
+            register Tile next;
+
+            tile = chunk->chunk_data[x][y][0];
+
+            if(blocks[tile].shape == NULL ||
+               blocks[tile].shape->face_back == NULL) continue;
+
+            next = get_surrounding_tile(chunk, chunk->x, 0, chunk->z, x, y,
+                                        -1, extra);
+
+            if(NEXT_BLOCKING(face_front)) continue;
+
+            /* Add a left face for this block */
+            CHUNK_ADD_FACE(x, y, 0, blocks[tile].shape->face_back,
+                           blocks[tile].texture.back);
+        }
+    }
+
+    /* Left side */
+    for(z=0;z<CHUNK_DEPTH;z++){
+        for(y=0;y<CHUNK_HEIGHT;y++){
+            register Tile tile;
+            register Tile next;
+
+            tile = chunk->chunk_data[CHUNK_WIDTH-1][y][z];
+
+            if(blocks[tile].shape == NULL ||
+               blocks[tile].shape->face_left == NULL) continue;
+
+            next = get_surrounding_tile(chunk, chunk->x, 0, chunk->z,
+                                        CHUNK_WIDTH, y, z, extra);
+
+            if(NEXT_BLOCKING(face_right)) continue;
+
+            /* Add a left face for this block */
+            CHUNK_ADD_FACE(CHUNK_WIDTH-1, y, z, blocks[tile].shape->face_left,
+                           blocks[tile].texture.left);
+        }
+    }
+
+    /* Right side */
+    for(z=0;z<CHUNK_DEPTH;z++){
+        for(y=0;y<CHUNK_HEIGHT;y++){
+            register Tile tile;
+            register Tile next;
+
+            tile = chunk->chunk_data[0][y][z];
+
+            if(blocks[tile].shape == NULL ||
+               blocks[tile].shape->face_right == NULL) continue;
+
+            next = get_surrounding_tile(chunk, chunk->x, 0, chunk->z,
+                                        -1, y, z, extra);
+
+            if(NEXT_BLOCKING(face_left)) continue;
+
+            /* Add a left face for this block */
+            CHUNK_ADD_FACE(0, y, z, blocks[tile].shape->face_right,
+                           blocks[tile].texture.right);
         }
     }
 
     gfx_init_model(&chunk->chunk_model, chunk->chunk_vertices,
                    chunk->chunk_indices, chunk->chunk_texture_coords, texture,
-                   1, 1, chunk->triangles, TYPE_VERTEX, TYPE_INDEX,
-                   TYPE_TEXTURE);
+                   1, 1, indices/3, TYPE_VERTEX, TYPE_INDEX, TYPE_TEXTURE);
     chunk->remesh = 0;
 }
-

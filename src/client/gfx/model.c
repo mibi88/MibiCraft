@@ -53,7 +53,9 @@ void gfx_init_model(GFXModel *model, void *vertices, void *indices,
 
 void gfx_draw_model(GFXModel *model, float x, float y, float z, float rx,
                     float ry, float rz) {
+#if 0 /* TODO: Fix code for immediate mode rendering */
     int i;
+#endif
 
     const int gl_types[TYPE_AMOUNT] = {
         GL_INT,
@@ -163,6 +165,9 @@ void gfx_free(GFXModel *model) {
 void gfx_load_obj(FILE *fp) {
     char line[LINE_MAX_SIZE];
     float value = 0;
+
+    (void)value;
+
     while(fgets(line, LINE_MAX_SIZE, fp)){
         value = atof(line);
         if(STARTSWITH(line, "v")){

@@ -19,32 +19,30 @@
 #ifndef CHUNK_H
 #define CHUNK_H
 
-#define CHUNK_WIDTH       8
-#define CHUNK_HEIGHT      128
-#define CHUNK_DEPTH       8
+#define CHUNK_WIDTH           8
+#define CHUNK_HEIGHT          128
+#define CHUNK_DEPTH           8
 
-#define TEX_WIDTH         256
-#define TEX_HEIGHT        256
+#define TEX_WIDTH             256
+#define TEX_HEIGHT            256
 
-#define TILE_WIDTH        16
-#define TILE_HEIGHT       16
+#define TILE_WIDTH            16
+#define TILE_HEIGHT           16
 
-#define TILE_AWIDTH       (TEX_WIDTH/TILE_WIDTH)
-#define TILE_AHEIGHT      (TEX_HEIGHT/TILE_HEIGHT)
+#define TILE_AWIDTH           (TEX_WIDTH/TILE_WIDTH)
+#define TILE_AHEIGHT          (TEX_HEIGHT/TILE_HEIGHT)
 
-#define VERTICES_AMOUNT   4
-#define TRIANGLES_AMOUNT  2
+#define BLOCK_VERTEX_MAX      (6*4*3/2)
+#define BLOCK_INDEX_MAX       (6*6/2)
+#define BLOCK_TEXTURE_MAX     (6*4*2/2)
 
-/* Data size for one face */
-#define SZ_VERTICES       (VERTICES_AMOUNT*3)
-#define SZ_INDICES        6
-#define SZ_TEX_COORDS     8
+#define TREE_WIDTH            5
+#define TREE_HEIGHT           8
+#define TREE_DEPTH            5
 
-#define TREE_WIDTH        5
-#define TREE_HEIGHT       8
-#define TREE_DEPTH        5
+#define PLANTS                4
 
-#define PLANTS            4
+#define DEBUG_EXTREME_TERRAIN 0
 
 #include <gfx.h>
 #include <string.h>
@@ -56,6 +54,46 @@ typedef unsigned short int index_t;
 #define TYPE_INDEX TYPE_USHORT
 typedef short int texture_t;
 #define TYPE_TEXTURE TYPE_SHORT
+
+typedef enum {
+    I_VOID,
+    I_GRASS,
+    I_DIRT,
+    I_STONE,
+    I_COAL,
+    I_IRON,
+    I_GOLD,
+    I_REDSTONE,
+    I_LAPIS,
+    I_DIAMOND,
+    I_BEDROCK,
+    I_WATER,
+    I_SAND,
+    I_OAK_LOG,
+    I_OAK_LEAVES,
+    I_PODZOL,
+    I_SPRUCE_LOG,
+    I_SPRUCE_LEAVES,
+    I_SNOW,
+    I_DRIED_GRASS,
+    I_ACACIA_LOG,
+    I_ACACIA_LEAVES,
+    I_SAND_STONE,
+    I_PALM_LOG,
+    I_PALM_LEAVES,
+    I_CACTUS,
+    I_ROSE,
+    I_GRASS_PLANT,
+    I_DEAD_BUSH,
+    I_BROWN_MUSHROOM,
+    I_RED_MUSHROOM,
+    I_SPRUCE_PLANKS,
+    I_GLASS,
+    I_DANDELION,
+    I_BERRY_BUSH,
+    I_FRUIT_BERRY_BUSH,
+    I_AMOUNT
+} Texture;
 
 typedef enum {
     T_VOID,
@@ -107,23 +145,13 @@ typedef enum {
 
 typedef struct {
     unsigned char chunk_data[CHUNK_WIDTH][CHUNK_HEIGHT][CHUNK_DEPTH];
-    vertex_t chunk_vertices[8*6*CHUNK_WIDTH*CHUNK_HEIGHT*CHUNK_DEPTH];
-    index_t chunk_indices[8*6*CHUNK_WIDTH*CHUNK_HEIGHT*CHUNK_DEPTH];
-    texture_t chunk_texture_coords[8*6*CHUNK_WIDTH*CHUNK_HEIGHT*CHUNK_DEPTH];
+    vertex_t chunk_vertices[BLOCK_VERTEX_MAX*CHUNK_WIDTH*CHUNK_HEIGHT*
+                            CHUNK_DEPTH];
+    index_t chunk_indices[BLOCK_INDEX_MAX*CHUNK_WIDTH*CHUNK_HEIGHT*CHUNK_DEPTH];
+    texture_t chunk_texture_coords[BLOCK_TEXTURE_MAX*CHUNK_WIDTH*CHUNK_HEIGHT*
+                                   CHUNK_DEPTH];
     GFXModel chunk_model;
     int x, z;
-    /* For model generation */
-    vertex_t *vert_ptr;
-    texture_t *tex_ptr;
-    index_t *indices_ptr;
-    int triangles;
-    int _x, _y, _z;
-    int tex_x, tex_y;
-
-    vertex_t vertices[SZ_VERTICES*2];
-    index_t indices[SZ_VERTICES*2];
-
-    texture_t texture_coords[SZ_TEX_COORDS];
 
     int ready;
 
@@ -132,18 +160,46 @@ typedef struct {
     int regenerate;
 } Chunk;
 
-typedef enum {
-    S_CUBE,
-    S_CROSS,
-    S_AMOUNT
-} Block_shape;
+typedef struct {
+    vertex_t *vertices;
+    texture_t *tex_coordinates;
+    index_t *indices;
+    size_t vertex_count;
+    size_t index_count;
+    unsigned char blocking;
+} Face;
 
 typedef struct {
-    Block_shape shape;
-    int transparent;
-    int solid;
-    int replaceable;
-} Block_property;
+    /* XXX: Is it good to make the faces pointer or is it more beneficial to
+     * waste a few bytes and process them even if they are empty? */
+    Face *face_left;
+    Face *face_right;
+    Face *face_front;
+    Face *face_back;
+    Face *face_top;
+    Face *face_bottom;
+
+    Face *face_middle;
+} BlockShape;
+
+typedef struct {
+    BlockShape *shape;
+
+    struct {
+        unsigned char left;
+        unsigned char right;
+        unsigned char front;
+        unsigned char back;
+        unsigned char top;
+        unsigned char bottom;
+
+        unsigned char middle;
+    } texture;
+
+    unsigned char transparent;
+    unsigned char solid;
+    unsigned char replaceable;
+} BlockProperty;
 
 typedef struct {
     float amplitude;
@@ -152,17 +208,18 @@ typedef struct {
     Tile layer_material;
     int plants[PLANTS];
     int plant_probability[PLANTS];
-} Biome_property;
+} BiomeProperty;
 
-extern const Block_property blocks[T_AMOUNT];
+extern const BlockProperty blocks[T_AMOUNT];
 
 void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed);
 void chunk_generate_texture_coords(Chunk *chunk, int tex_x, int tex_y);
 Tile chunk_get_tile(Chunk *chunk, int x, int y, int z, int rx, int ry, int rz);
 void chunk_set_tile(Chunk *chunk, Tile tile, int x, int y, int z);
 void chunk_generate_model(Chunk *chunk, unsigned int texture,
-                          Tile get_tile(Chunk *chunk, int x, int y, int z,
-                                        int rx, int ry, int rz, void *extra),
+                          Tile get_surrounding_tile(Chunk *chunk, int x, int y,
+                                                    int z, int rx, int ry,
+                                                    int rz, void *extra),
                           void *extra);
 
 #endif

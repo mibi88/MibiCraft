@@ -50,6 +50,7 @@ void player_init(Player *player) {
     player->swimming_down_speed = PLAYER_SWIMMING_DOWN_SPEED;
     player->acceleration = 2.5;
     player->adherence = 1;
+    player->moved = 0;
     memcpy(player->swimming_hitbox, swimming_hitbox, HITBOX_SZ*3*sizeof(float));
 }
 

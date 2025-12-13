@@ -61,9 +61,9 @@ typedef struct {
     int button_release;
     int pointer_moved;
     int key_event;
-    
+
     int cursor_shown;
-    
+
     char key;
 
     int mx, my;

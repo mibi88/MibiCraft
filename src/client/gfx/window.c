@@ -130,7 +130,7 @@ LRESULT CALLBACK _mw_windowproc(HWND hwnd, UINT uMsg, WPARAM wParam,
 
             _win->mx = point.x;
             _win->my = point.y;
-            
+
             _win->pointer_moved = 1;
 
             break;
@@ -211,14 +211,14 @@ int mw_init(MWWindow *window, int width, int height, char *title) {
 
     if(window->opengl_context == NULL){
         fputs("[MibiCraft] Context creation failed!\n", stderr);
-        
+
         return 1;
     }
 
     if(wglMakeCurrent(GetDC(window->window_handle),
                       window->opengl_context) == FALSE){
         fputs("[MibiCraft] Failed to make context current!\n", stderr);
-        
+
         return 1;
     }
 
@@ -293,10 +293,10 @@ unsigned long mw_get_time(void) {
 
 void mw_move_pointer(MWWindow *window, int x, int y) {
     POINT point;
-    
+
     point.x = x;
     point.y = y;
-    
+
     if(ClientToScreen(window->window_handle, &point)){
         SetCursorPos(point.x, point.y);
     }

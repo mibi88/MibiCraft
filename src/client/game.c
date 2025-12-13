@@ -20,7 +20,7 @@
 
 #include <buildconfig.h>
 
-extern const Block_property blocks[T_AMOUNT];
+extern const BlockProperty blocks[T_AMOUNT];
 
 void _game_sky(Game *game){
     gfx_set_clear_color(0.7, 0.9, 1.0);
@@ -305,6 +305,8 @@ void game_logic(Game *game, float delta) {
 }
 
 int _game_selection_draw(int x, int y, int z, void *data) {
+    /* FIXME: Apparently I'm reading something uninitialized when increasing
+       the map size */
     if(!blocks[world_get_tile(data, x, y, z)].replaceable){
         gfx_set_color(0, 0, 0, 1);
         gfx_render_wire_cube(x, y-CHUNK_HEIGHT/2, z, 1.01);

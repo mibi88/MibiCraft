@@ -266,9 +266,9 @@ THREAD_CALL(_world_update, vworld) {
 
 void world_update(World *world) {
     /* TODO: Support multiple players */
-    THREAD_ID(id);
     int i;
     int update_required = 0;
+    THREAD_ID(id);
     if(!world->finished) return;
     for(i=0;i<world->player_num;i++){
         if(((int)world->players[i].entity.x-world->x)/CHUNK_WIDTH !=
@@ -315,15 +315,16 @@ Tile world_get_tile(World *world, float x, float y, float z) {
     for(i=0;i<world->width*world->height;i++){
         tile_chunk = &world->chunks[i];
         if(x >= tile_chunk->x && x < tile_chunk->x+CHUNK_WIDTH &&
-           z >= tile_chunk->z && z < tile_chunk->z+CHUNK_DEPTH){
+           z >= tile_chunk->z && z < tile_chunk->z+CHUNK_DEPTH &&
+           !tile_chunk->regenerate){
 #if DEBUG_WORLD
-            if(chunk_get_tile(tile_chunk,  x-tile_chunk->x, y,
+            if(chunk_get_tile(tile_chunk, x-tile_chunk->x, y,
                                   z-tile_chunk->z, 0, 0, 0) != T_VOID){
                 gfx_set_color(0, 0, 0, 1);
                 gfx_render_wire_cube(x, y-CHUNK_HEIGHT/2, z, 1.01);
             }
 #endif
-            return chunk_get_tile(tile_chunk,  x-tile_chunk->x, y,
+            return chunk_get_tile(tile_chunk, x-tile_chunk->x, y,
                                   z-tile_chunk->z, 0, 0, 0);
         }
     }

@@ -153,17 +153,22 @@ int entity_is_inside(Entity *entity, World *world, float x, float y, float z) {
     float xmin, xmax;
     float ymin, ymax;
     float zmin, zmax;
+
+    (void)world;
+
     xmin = MIN(entity->hitbox[0], entity->hitbox[3]);
     xmax = MAX(entity->hitbox[0], entity->hitbox[3]);
     ymin = MIN(entity->hitbox[1], entity->hitbox[4]);
     ymax = MAX(entity->hitbox[1], entity->hitbox[4]);
     zmin = MIN(entity->hitbox[2], entity->hitbox[5]);
     zmax = MAX(entity->hitbox[2], entity->hitbox[5]);
+
     if(x >= entity->x+xmin && x <= entity->x+xmax &&
        y >= entity->y+ymin && y <= entity->y+ymax &&
        z >= entity->z+zmin && z <= entity->z+zmax){
         return 1;
     }
+
     return 0;
 }
 
@@ -173,15 +178,20 @@ int entity_is_block_inside(Entity *entity, World *world, int sx, int sy,
     float ymin, ymax;
     float zmin, zmax;
     float x, y, z;
+
+    (void)world;
+
     x = sx-0.5;
     y = sy-0.5-CHUNK_HEIGHT/2;
     z = sz-0.5;
+
     xmin = MIN(entity->hitbox[0], entity->hitbox[3]);
     xmax = MAX(entity->hitbox[0], entity->hitbox[3]);
     ymin = MIN(entity->hitbox[1], entity->hitbox[4]);
     ymax = MAX(entity->hitbox[1], entity->hitbox[4]);
     zmin = MIN(entity->hitbox[2], entity->hitbox[5]);
     zmax = MAX(entity->hitbox[2], entity->hitbox[5]);
+
     if((x > entity->x+xmin || x+1 > entity->x+xmin) &&
        (x < entity->x+xmax || x+1 < entity->x+xmax) &&
        (y > entity->y+ymin || y+1 > entity->y+ymin) &&
