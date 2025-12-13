@@ -1033,7 +1033,7 @@ NOBOTTOM:
             }
 
             {
-                /* Add the chunk sides */
+                /* Add the front and back chunk sides */
                 register Tile tile;
                 register Tile next;
 
@@ -1073,7 +1073,7 @@ CHUNKNOFRONT:
         }
     }
 
-    /* Left side */
+    /* Left/right chunk sides */
     for(z=0;z<CHUNK_DEPTH;z++){
         for(y=0;y<CHUNK_HEIGHT;y++){
             register Tile tile;
@@ -1110,7 +1110,7 @@ CHUNKNOLEFT:
 
             /* Add a left face for this block */
             CHUNK_ADD_FACE(0, y, z, blocks[tile].shape->face_right,
-                               blocks[tile].texture.right);
+                           blocks[tile].texture.right);
         }
     }
 

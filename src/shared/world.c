@@ -46,16 +46,18 @@ Tile _modelgen_get_tile(Chunk *chunk, int x, int y, int z, int rx, int ry,
     y += ry;
     z += rz+chunk->z;
 
+    if(y < 0 || y >= CHUNK_HEIGHT) return T_VOID;
+
     if(chunk->last_hit != NULL &&
        x >= chunk->last_hit->x && x < chunk->last_hit->x+CHUNK_WIDTH &&
        z >= chunk->last_hit->z && z < chunk->last_hit->z+CHUNK_DEPTH){
-        return chunk_get_tile(chunk, x-chunk->last_hit->x, y,
-                              z-chunk->last_hit->z, 0, 0, 0);
+        return chunk->last_hit
+               ->chunk_data[x-chunk->last_hit->x][y][z-chunk->last_hit->z];
     }
 
     if(x >= chunk->x && x < chunk->x+CHUNK_WIDTH &&
        z >= chunk->z && z < chunk->z+CHUNK_DEPTH){
-        return chunk_get_tile(chunk, x-chunk->x, y, z-chunk->z, 0, 0, 0);
+        return chunk->chunk_data[x-chunk->x][y][z-chunk->z];
     }
 
     for(i=0;i<world->width*world->height;i++){
@@ -63,8 +65,8 @@ Tile _modelgen_get_tile(Chunk *chunk, int x, int y, int z, int rx, int ry,
         if(x >= tile_chunk->x && x < tile_chunk->x+CHUNK_WIDTH &&
            z >= tile_chunk->z && z < tile_chunk->z+CHUNK_DEPTH){
                chunk->last_hit = tile_chunk;
-               return chunk_get_tile(tile_chunk, x-tile_chunk->x, y,
-                                     z-tile_chunk->z, 0, 0, 0);
+               return tile_chunk
+                      ->chunk_data[x-tile_chunk->x][y][z-tile_chunk->z];
            }
     }
     return T_GRASS;
@@ -470,4 +472,3 @@ void world_free(World *world) {
     free(world->chunks);
     world->chunks = NULL;
 }
-
