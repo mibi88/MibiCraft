@@ -19,7 +19,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define RENDER_DISTANCE  1
+#define RENDER_DISTANCE  8
 #define RAYCAST_DISTANCE 20
 #define FAKE_THREADING   1
 #define THREADING        (1 && !FAKE_THREADING)

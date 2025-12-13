@@ -143,13 +143,17 @@ typedef enum {
     B_AMOUNT
 } Biome;
 
-typedef struct {
+typedef struct Chunk Chunk;
+struct Chunk {
     unsigned char chunk_data[CHUNK_WIDTH][CHUNK_HEIGHT][CHUNK_DEPTH];
     vertex_t chunk_vertices[BLOCK_VERTEX_MAX*CHUNK_WIDTH*CHUNK_HEIGHT*
                             CHUNK_DEPTH];
     index_t chunk_indices[BLOCK_INDEX_MAX*CHUNK_WIDTH*CHUNK_HEIGHT*CHUNK_DEPTH];
     texture_t chunk_texture_coords[BLOCK_TEXTURE_MAX*CHUNK_WIDTH*CHUNK_HEIGHT*
                                    CHUNK_DEPTH];
+
+    Chunk *last_hit;
+
     GFXModel chunk_model;
     int x, z;
 
@@ -158,7 +162,7 @@ typedef struct {
     int remesh;
 
     int regenerate;
-} Chunk;
+};
 
 typedef struct {
     vertex_t *vertices;

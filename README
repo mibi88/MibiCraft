@@ -9,15 +9,15 @@ A small game in a world of cubes
 
 [ ] Fix the sluggishness caused by warping the pointer.
 
-[ ] Use mutexes and/or barriers for safer threading
-[ ] Use config file to generate C code with tool/dataconv, to make block
+[ ] Use mutexes and/or barriers for safer threading
+[ ] Use config file to generate C code with tool/dataconv, to make block
     definition easier and add other block shapes easily
-[ ] Add support for multiple textures per block
-[ ] Allow for block rotation
+[x] Add support for multiple textures per block
+[ ] Allow for block rotation
 [ ] Optimize the culled mesher
-[ ] Add lighting
-[ ] Add water movement
-[ ] Add world saving
+[ ] Add lighting
+[ ] Add water movement
+[ ] Add world saving
 
 -------------------------------------------------------------------------------
 

@@ -926,7 +926,6 @@ void chunk_generate_model(Chunk *chunk, unsigned int texture,
                                                     int z, int rx, int ry,
                                                     int rz, void *extra),
                           void *extra) {
-    size_t i;
     size_t x, y, z;
 
     vertex_t *vert_ptr = chunk->chunk_vertices;
@@ -935,9 +934,9 @@ void chunk_generate_model(Chunk *chunk, unsigned int texture,
     size_t indices = 0;
 
     /* Left/right faces */
-    for(z=0;z<CHUNK_DEPTH;z++){
+    for(x=0;x<CHUNK_WIDTH;x++){
         for(y=0;y<CHUNK_HEIGHT;y++){
-            for(x=0;x<CHUNK_WIDTH;x++){
+            for(z=0;z<CHUNK_DEPTH;z++){
                 register Tile tile = chunk->chunk_data[x][y][z];
                 register Tile next;
 
@@ -1032,53 +1031,45 @@ NOBOTTOM:
                 CHUNK_ADD_FACE(x, y, z, blocks[tile].shape->face_middle,
                                blocks[tile].texture.middle);
             }
-        }
-    }
 
-#if 0
-    /* Sides to other chunks */
+            {
+                /* Add the chunk sides */
+                register Tile tile;
+                register Tile next;
 
-    /* Front side */
-    for(x=0;x<CHUNK_WIDTH;x++){
-        for(y=0;y<CHUNK_HEIGHT;y++){
-            register Tile tile;
-            register Tile next;
+                /* Front */
+                tile = chunk->chunk_data[x][y][CHUNK_DEPTH-1];
 
-            tile = chunk->chunk_data[x][y][CHUNK_DEPTH-1];
+                if(blocks[tile].shape == NULL ||
+                   blocks[tile].shape->face_front == NULL) goto CHUNKNOFRONT;
 
-            if(blocks[tile].shape == NULL ||
-               blocks[tile].shape->face_front == NULL) continue;
+                next = get_surrounding_tile(chunk, chunk->x, 0, chunk->z, x, y,
+                                            CHUNK_DEPTH, extra);
 
-            next = get_surrounding_tile(chunk, chunk->x, 0, chunk->z, x, y,
-                                        CHUNK_DEPTH, extra);
+                if(NEXT_BLOCKING(face_back)) goto CHUNKNOFRONT;
 
-            if(NEXT_BLOCKING(face_back)) continue;
+                /* Add a left face for this block */
+                CHUNK_ADD_FACE(x, y, CHUNK_DEPTH-1,
+                               blocks[tile].shape->face_front,
+                               blocks[tile].texture.front);
 
-            /* Add a left face for this block */
-            CHUNK_ADD_FACE(x, y, CHUNK_DEPTH-1, blocks[tile].shape->face_front,
-                           blocks[tile].texture.front);
-        }
-    }
+CHUNKNOFRONT:
 
-    /* Back side */
-    for(x=0;x<CHUNK_WIDTH;x++){
-        for(y=0;y<CHUNK_HEIGHT;y++){
-            register Tile tile;
-            register Tile next;
+                /* Back */
+                tile = chunk->chunk_data[x][y][0];
 
-            tile = chunk->chunk_data[x][y][0];
+                if(blocks[tile].shape == NULL ||
+                   blocks[tile].shape->face_back == NULL) continue;
 
-            if(blocks[tile].shape == NULL ||
-               blocks[tile].shape->face_back == NULL) continue;
+                next = get_surrounding_tile(chunk, chunk->x, 0, chunk->z, x, y,
+                                            -1, extra);
 
-            next = get_surrounding_tile(chunk, chunk->x, 0, chunk->z, x, y,
-                                        -1, extra);
+                if(NEXT_BLOCKING(face_front)) continue;
 
-            if(NEXT_BLOCKING(face_front)) continue;
-
-            /* Add a left face for this block */
-            CHUNK_ADD_FACE(x, y, 0, blocks[tile].shape->face_back,
-                           blocks[tile].texture.back);
+                /* Add a left face for this block */
+                CHUNK_ADD_FACE(x, y, 0, blocks[tile].shape->face_back,
+                               blocks[tile].texture.back);
+            }
         }
     }
 
@@ -1088,28 +1079,25 @@ NOBOTTOM:
             register Tile tile;
             register Tile next;
 
+            /* Left */
             tile = chunk->chunk_data[CHUNK_WIDTH-1][y][z];
 
             if(blocks[tile].shape == NULL ||
-               blocks[tile].shape->face_left == NULL) continue;
+               blocks[tile].shape->face_left == NULL) goto CHUNKNOLEFT;
 
             next = get_surrounding_tile(chunk, chunk->x, 0, chunk->z,
                                         CHUNK_WIDTH, y, z, extra);
 
-            if(NEXT_BLOCKING(face_right)) continue;
+            if(NEXT_BLOCKING(face_right)) goto CHUNKNOLEFT;
 
             /* Add a left face for this block */
-            CHUNK_ADD_FACE(CHUNK_WIDTH-1, y, z, blocks[tile].shape->face_left,
+            CHUNK_ADD_FACE(CHUNK_WIDTH-1, y, z,
+                           blocks[tile].shape->face_left,
                            blocks[tile].texture.left);
-        }
-    }
 
-    /* Right side */
-    for(z=0;z<CHUNK_DEPTH;z++){
-        for(y=0;y<CHUNK_HEIGHT;y++){
-            register Tile tile;
-            register Tile next;
+CHUNKNOLEFT:
 
+            /* Right */
             tile = chunk->chunk_data[0][y][z];
 
             if(blocks[tile].shape == NULL ||
@@ -1122,10 +1110,9 @@ NOBOTTOM:
 
             /* Add a left face for this block */
             CHUNK_ADD_FACE(0, y, z, blocks[tile].shape->face_right,
-                           blocks[tile].texture.right);
+                               blocks[tile].texture.right);
         }
     }
-#endif
 
     gfx_init_model(&chunk->chunk_model, chunk->chunk_vertices,
                    chunk->chunk_indices, chunk->chunk_texture_coords, texture,

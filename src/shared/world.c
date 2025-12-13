@@ -45,14 +45,24 @@ Tile _modelgen_get_tile(Chunk *chunk, int x, int y, int z, int rx, int ry,
     x += rx+chunk->x;
     y += ry;
     z += rz+chunk->z;
+
+    if(chunk->last_hit != NULL &&
+       x >= chunk->last_hit->x && x < chunk->last_hit->x+CHUNK_WIDTH &&
+       z >= chunk->last_hit->z && z < chunk->last_hit->z+CHUNK_DEPTH){
+        return chunk_get_tile(chunk, x-chunk->last_hit->x, y,
+                              z-chunk->last_hit->z, 0, 0, 0);
+    }
+
     if(x >= chunk->x && x < chunk->x+CHUNK_WIDTH &&
        z >= chunk->z && z < chunk->z+CHUNK_DEPTH){
         return chunk_get_tile(chunk, x-chunk->x, y, z-chunk->z, 0, 0, 0);
     }
+
     for(i=0;i<world->width*world->height;i++){
-        tile_chunk = &world->chunks[i];
+        tile_chunk = world->chunks+i;
         if(x >= tile_chunk->x && x < tile_chunk->x+CHUNK_WIDTH &&
            z >= tile_chunk->z && z < tile_chunk->z+CHUNK_DEPTH){
+               chunk->last_hit = tile_chunk;
                return chunk_get_tile(tile_chunk, x-tile_chunk->x, y,
                                      z-tile_chunk->z, 0, 0, 0);
            }
@@ -130,29 +140,46 @@ void world_init_data(World *world) {
 int world_init(World *world, int width, int height, int seed,
                unsigned int texture, int player_num) {
     int i;
+
     world->width = width;
     world->height = height;
     world->players = malloc(sizeof(Player)*player_num);
     world->player_num = player_num;
+
     if(!world->players){
         puts("Player init failed");
         return 1;
     }
+
     world->chunks = malloc(width*height*sizeof(Chunk));
+
     if(!world->chunks){
         puts("World init failed");
         free(world->players);
         world->players = NULL;
         return 1;
     }
+
+    /* HACK: Initialize last_hit to NULL to avoid dereferencing an
+     * uninitialized pointer in _modelgen_get_tile. */
+    for(i=0;i<width*height;i++){
+        world->chunks[i].last_hit = NULL;
+        world->chunks[i].x = 0;
+        world->chunks[i].z = 0;
+    }
+
     world->seed = seed;
     world->texture = texture;
+
     for(i=0;i<player_num;i++){
         player_init(world->players+i);
     }
+
     world->x = world->players[0].entity.x;
     world->y = world->players[0].entity.z;
+
     world_init_data(world);
+
     return 0;
 }
 
