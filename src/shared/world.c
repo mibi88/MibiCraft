@@ -22,6 +22,8 @@
 
 #include <threading.h>
 
+#include <limits.h>
+
 int _cx, _cy;
 int _ncx, _ncy;
 
@@ -69,7 +71,7 @@ Tile _modelgen_get_tile(Chunk *chunk, int x, int y, int z, int rx, int ry,
                       ->chunk_data[x-tile_chunk->x][y][z-tile_chunk->z];
            }
     }
-    return T_GRASS;
+    return T_VOID;
 }
 
 #define GET_TILE _modelgen_get_tile
@@ -108,20 +110,17 @@ void world_generate_data(World *world) {
     world->finished = 1;
 }
 
+static Tile no_surrounding(Chunk *chunk, int x, int y, int z, int rx, int ry,
+                           int rz, void *vworld) {
+    return T_VOID;
+}
+
 void world_init_data(World *world) {
     int x, y, pos, start;
     world->finished = 0;
     y = world->height/2;
     x = world->width/2;
-    pos = y*world->width+x;
-    world->chunks[pos].ready = 0;
-    chunk_generate_data(world->chunks+pos, world->x+x*CHUNK_WIDTH,
-                        world->y+y*CHUNK_DEPTH, world->seed);
-    chunk_generate_model(world->chunks+pos, world->texture, GET_TILE, world);
-    world->chunks[pos].regenerate = 0;
-    world->chunks[pos].remesh = 1;
-    world->chunks[pos].ready = 1;
-    start = pos;
+    start = y*world->width+x;
     for(y=0;y<world->height;y++) {
         for(x=0;x<world->width;x++) {
             _cx = x;
@@ -131,10 +130,25 @@ void world_init_data(World *world) {
                 world->chunks[pos].ready = 0;
                 world->chunks[pos].x = world->x+x*CHUNK_WIDTH;
                 world->chunks[pos].z = world->y+y*CHUNK_DEPTH;
+                world->chunks[pos].last_hit = NULL;
                 world->chunks[pos].regenerate = 1;
             }
         }
     }
+
+    y = world->height/2;
+    x = world->width/2;
+
+    world->chunks[start].ready = 0;
+    world->chunks[start].last_hit = NULL;
+    chunk_generate_data(world->chunks+start, world->x+x*CHUNK_WIDTH,
+                        world->y+y*CHUNK_DEPTH, world->seed);
+    chunk_generate_model(world->chunks+start, world->texture, no_surrounding,
+                         world);
+    world->chunks[start].regenerate = 0;
+    world->chunks[start].remesh = 1;
+    world->chunks[start].ready = 1;
+
     world->finished = 1;
     world->update_required = 1;
 }
@@ -160,14 +174,6 @@ int world_init(World *world, int width, int height, int seed,
         free(world->players);
         world->players = NULL;
         return 1;
-    }
-
-    /* HACK: Initialize last_hit to NULL to avoid dereferencing an
-     * uninitialized pointer in _modelgen_get_tile. */
-    for(i=0;i<width*height;i++){
-        world->chunks[i].last_hit = NULL;
-        world->chunks[i].x = 0;
-        world->chunks[i].z = 0;
     }
 
     world->seed = seed;
@@ -236,6 +242,7 @@ THREAD_CALL(_world_update, vworld) {
                     chunk->regenerate = 1;
                 }
                 /* Update old chunks */
+
                 if(chunk->x == world->x+CHUNK_WIDTH){
                     chunk->ready = 0;
                     chunk->remesh = 1;
@@ -445,6 +452,7 @@ void world_update_chunk_model_at(World *world, float sx, float sz) {
 
 int world_change_size(World *world, int width, int height) {
     Chunk *chunks;
+
     if(!world->finished) return 1;
     world->finished = 0;
     /* TODO: Do not reload all the chunks: keep the chunks that are already
@@ -454,6 +462,7 @@ int world_change_size(World *world, int width, int height) {
         puts("Failed to change the world size!");
         return 2;
     }
+
     /* TODO: Add support for multiple players. */
     world->x -= (width-world->width)/2*CHUNK_WIDTH;
     world->y -= (height-world->height)/2*CHUNK_DEPTH;
