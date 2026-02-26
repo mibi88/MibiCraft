@@ -16,11 +16,10 @@
  * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 
-#include <player.h>
+#include <shared/player.h>
+#include <shared/raycast.h>
 
 #include <math.h>
-
-#include <raycast.h>
 
 void player_init(Player *player) {
     Entity entity = {
@@ -203,13 +202,8 @@ void player_respawn(Player *player, World *world) {
         player->entity.y = CHUNK_HEIGHT/2;
     }
     player->entity.z = 0;
-    world->x = -(world->width/2*CHUNK_WIDTH+CHUNK_WIDTH/2);
-    world->y = -(world->height/2*CHUNK_DEPTH+CHUNK_DEPTH/2);
     player->entity.ry = 0;
     player->entity.rx = 0;
     player->velocity = 0;
     player->entity.y_velocity = 0;
-    /* TODO: Refactor chunk loading to avoid having to reload the world to
-     * avoid issues */
-    world_init_data(world);
 }

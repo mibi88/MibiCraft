@@ -19,18 +19,18 @@
 #ifndef WORLD_H
 #define WORLD_H
 
-#include <config.h>
+#include <shared/config.h>
 
-#include <chunk.h>
+#include <shared/chunk.h>
 
-#include <structs.h>
+#include <shared/structs.h>
+
+int world_init(World *world, int width, int height, int seed,
+               unsigned int texture, int player_num);
 
 void world_generate_data(World *world);
 void world_init_data(World *world);
 void world_generate_models(World *world);
-
-int world_init(World *world, int width, int height, int seed,
-               unsigned int texture, int player_num);
 
 void world_update(World *world);
 

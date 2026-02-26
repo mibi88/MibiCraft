@@ -16,7 +16,7 @@
  * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 
-#include <gfx.h>
+#include <client/gfx.h>
 
 #include <string.h>
 #include <GL/glu.h>

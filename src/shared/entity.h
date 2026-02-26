@@ -19,7 +19,7 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 
-#include <world.h>
+#include <shared/world.h>
 
 int entity_on_floor(Entity *entity, World *world);
 

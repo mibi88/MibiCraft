@@ -16,13 +16,15 @@
  * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 
-#ifndef RAYCAST_H
-#define RAYCAST_H
+#ifndef CHUNK_QUEUE_H
+#define CHUNK_QUEUE_H
 
-#include <shared/world.h>
-#include <shared/entity.h>
+#include <shared/structs.h>
 
-void raycast(Entity *player, float len,
-             int voxel(int x, int y, int z, void *data), void *data);
+int chunk_queue_init(ChunkQueue *queue, size_t size);
+int chunk_queue_push(ChunkQueue *queue, Chunk *chunk);
+int chunk_queue_skip(ChunkQueue *queue, Chunk *chunk);
+Chunk *chunk_queue_pop(ChunkQueue *queue);
+void chunk_queue_free(ChunkQueue *queue);
 
 #endif

@@ -19,7 +19,7 @@
 #ifndef THREADING_H
 #define THREADING_H
 
-#include <config.h>
+#include <shared/config.h>
 
 #if THREADING
 
@@ -36,6 +36,15 @@
 
 #define THREAD_EXIT() ExitThread(0); return 0
 
+/* XXX: Is this working correctly? */
+typedef HANDLE thread_lock_t;
+
+#define THREAD_LOCK_INIT(l) l = CreateMutex(NULL, FALSE, NULL);
+#define THREAD_LOCK_LOCK(l) WaitForSingleObject(l, INFINITE);
+#define THREAD_LOCK_TRYLOCK(l) WaitForSingleObject(l, 0) == WAIT_OBJECT_0;
+#define THREAD_LOCK_UNLOCK(l) ReleaseMutex(l);
+#define THREAD_LOCK_DESTROY(l) CloseHandle(l);
+
 #else
 
 #include <pthread.h>
@@ -49,6 +58,14 @@
 #define THREAD_CREATE(id, call, data) pthread_create(&id, NULL, call, \
                                                      (void*)data); \
                                       pthread_detach(id)
+
+typedef pthread_mutex_t thread_lock_t;
+
+#define THREAD_LOCK_INIT(l) pthread_mutex_init(&l, NULL);
+#define THREAD_LOCK_LOCK(l) pthread_mutex_lock(&l);
+#define THREAD_LOCK_TRYLOCK(l) pthread_mutex_trylock(&l);
+#define THREAD_LOCK_UNLOCK(l) pthread_mutex_unlock(&l);
+#define THREAD_LOCK_DESTROY(l) pthread_mutex_destroy(&l);
 
 #endif
 

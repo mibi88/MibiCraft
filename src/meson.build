@@ -19,7 +19,7 @@ mibicraft_sources += [
   'shared/player.c',
 ]
 
-mibicraft_incdirs = include_directories('client', 'shared')
+mibicraft_incdirs = include_directories('.')
 
 mibicraft_deps = [
   dependency('GL', native: true),

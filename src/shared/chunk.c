@@ -16,9 +16,9 @@
  * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 
-#include <chunk.h>
+#include <shared/chunk.h>
 
-#include <noise.h>
+#include <shared/noise.h>
 
 #include <stddef.h>
 
@@ -544,6 +544,12 @@ const Tile fallen_spruce_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
 /*********/
 
 /**************/
+
+int chunk_init(void) {
+    /* Empty for now */
+
+    return 0;
+}
 
 Biome chunk_get_biome(int sx, int sz, int x, int z, int seed) {
     int i;
@@ -1117,5 +1123,4 @@ CHUNKNOLEFT:
     gfx_init_model(&chunk->chunk_model, chunk->chunk_vertices,
                    chunk->chunk_indices, chunk->chunk_texture_coords, texture,
                    1, 1, indices/3, TYPE_VERTEX, TYPE_INDEX, TYPE_TEXTURE);
-    chunk->remesh = 0;
 }

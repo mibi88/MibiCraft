@@ -21,8 +21,7 @@
 
 #define RENDER_DISTANCE  1
 #define RAYCAST_DISTANCE 20
-#define FAKE_THREADING   1
-#define THREADING        (1 && !FAKE_THREADING)
+#define THREADING        1
 #define DEBUG_WORLD      0
 
 #endif

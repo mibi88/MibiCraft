@@ -16,7 +16,7 @@
  * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 
-#include <entity.h>
+#include <shared/entity.h>
 
 #include <math.h>
 

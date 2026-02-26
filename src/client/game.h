@@ -19,8 +19,8 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include <world.h>
-#include <raycast.h>
+#include <shared/world.h>
+#include <shared/raycast.h>
 
 #include <blocks.h>
 #include <crosshair.h>
@@ -28,13 +28,13 @@
 
 #include <math.h>
 
-#include <entity.h>
+#include <shared/entity.h>
 
-#include <config.h>
+#include <shared/config.h>
 
-#include <player.h>
+#include <shared/player.h>
 
-#include <button.h>
+#include <client/button.h>
 
 #define COPYRIGHT "(C) 2023 Mibi88"
 

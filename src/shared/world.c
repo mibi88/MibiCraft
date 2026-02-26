@@ -16,98 +16,108 @@
  * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 
-#include <world.h>
+#include <shared/world.h>
 
-#include <player.h>
+#include <shared/player.h>
 
-#include <threading.h>
+#include <shared/threading.h>
+
+#include <shared/chunk_queue.h>
 
 #include <limits.h>
 
 int _cx, _cy;
 int _ncx, _ncy;
 
-Chunk *world_get_chunk(World *world, int x, int y) {
-    int chunk_x = x/CHUNK_WIDTH, chunk_y = y/CHUNK_DEPTH;
-    _ncx = chunk_x;
-    _ncy = chunk_y;
-    if(chunk_x >= 0 && chunk_x < world->width && chunk_y >= 0 &&
-       chunk_y < world->height){
-        return &world->chunks[chunk_y*world->width+chunk_x];
-    }
-    return NULL;
-}
+int world_init(World *world, size_t width, size_t height, size_t player_num,
+               size_t queue_num, int seed, unsigned int texture) {
+    size_t i;
 
-Tile _modelgen_get_tile(Chunk *chunk, int x, int y, int z, int rx, int ry,
-                        int rz, void *vworld) {
-    int i;
-    Chunk *tile_chunk;
-    World *world = (World*)vworld;
+    world->width = width;
+    world->height = height;
+    world->players = malloc(sizeof(Player)*player_num);
+    world->player_num = player_num;
 
-    x += rx+chunk->x;
-    y += ry;
-    z += rz+chunk->z;
-
-    if(y < 0 || y >= CHUNK_HEIGHT) return T_VOID;
-
-    if(chunk->last_hit != NULL &&
-       x >= chunk->last_hit->x && x < chunk->last_hit->x+CHUNK_WIDTH &&
-       z >= chunk->last_hit->z && z < chunk->last_hit->z+CHUNK_DEPTH){
-        return chunk->last_hit
-               ->chunk_data[x-chunk->last_hit->x][y][z-chunk->last_hit->z];
+    if(world->players == NULL){
+        fputs("Player init failed!\n", stderr);
+        return 1;
     }
 
-    if(x >= chunk->x && x < chunk->x+CHUNK_WIDTH &&
-       z >= chunk->z && z < chunk->z+CHUNK_DEPTH){
-        return chunk->chunk_data[x-chunk->x][y][z-chunk->z];
+    world->chunk_data = malloc(width*height*player_num*sizeof(Chunk));
+    world->chunks = malloc(width*height*player_num*sizeof(Chunk*));
+    world->queues = malloc(queue_num*sizeof(ChunkQueue));
+    world->empty = malloc(width*height*player_num*sizeof(Chunk*));
+
+    if(world->chunk_data == NULL ||
+       world->chunks == NULL ||
+       world->queues == NULL ||
+       world->empty == NULL){
+        fputs("World init failed!\n", stderr);
+
+        free(world->chunk_data);
+        world->chunk_data = NULL;
+
+        free(world->chunks);
+        world->chunks = NULL;
+
+        free(world->queues);
+        world->queues = NULL;
+
+        free(world->players);
+        world->players = NULL;
+
+        free(world->empty);
+        world->empty = NULL;
+
+        return 1;
     }
 
-    for(i=0;i<world->width*world->height;i++){
-        tile_chunk = world->chunks+i;
-        if(x >= tile_chunk->x && x < tile_chunk->x+CHUNK_WIDTH &&
-           z >= tile_chunk->z && z < tile_chunk->z+CHUNK_DEPTH){
-               chunk->last_hit = tile_chunk;
-               return tile_chunk
-                      ->chunk_data[x-tile_chunk->x][y][z-tile_chunk->z];
-           }
-    }
-    return T_VOID;
-}
+    for(i=0;i<queue_num;i++){
+        if(chunk_queue_init(world->queues+i, width*height*player_num)){
+            size_t n;
 
-#define GET_TILE _modelgen_get_tile
+            fputs("Queue init failed!\n", stderr);
 
-void world_generate_models(World *world) {
-    int x, y;
-    world->finished = 0;
-    for(y=0;y<world->height;y++) {
-        for(x=0;x<world->width;x++) {
-            _cx = x;
-            _cy = y;
-            world->chunks[y*world->width+x].ready = 0;
-            chunk_generate_model(&world->chunks[y*world->width+x],
-                                 world->texture, GET_TILE, world);
-            world->chunks[y*world->width+x].ready = 1;
+            for(n=i;n--;) chunk_queue_free(world->queues+n);
+
+            free(world->chunk_data);
+            world->chunk_data = NULL;
+
+            free(world->chunks);
+            world->chunks = NULL;
+
+            free(world->queues);
+            world->queues = NULL;
+
+            free(world->players);
+            world->players = NULL;
+
+            return 1;
         }
     }
-    world->finished = 1;
+
+    world->seed = seed;
+    world->texture = texture;
+
+    for(i=0;i<player_num;i++){
+        player_init(world->players+i);
+    }
+
+    world_init_data(world);
+
+    return 0;
+}
+
+Chunk *world_get_chunk(World *world, int x, int y) {
+    /* FIXME */
+}
+
+void world_generate_models(World *world) {
+    /* FIXME */
 }
 
 void world_generate_data(World *world) {
-    int x, y, pos;
-    world->finished = 0;
-    for(y=0;y<world->height;y++) {
-        for(x=0;x<world->width;x++) {
-            _cx = x;
-            _cy = y;
-            pos = y*world->width+x;
-            world->chunks[pos].ready = 0;
-            chunk_generate_data(&world->chunks[pos], world->x+x*CHUNK_WIDTH,
-                                world->y+y*CHUNK_DEPTH, world->seed);
-            world->chunks[pos].ready = 1;
-        }
-    }
-    world_generate_models(world);
-    world->finished = 1;
+    /* FIXME */
 }
 
 static Tile no_surrounding(Chunk *chunk, int x, int y, int z, int rx, int ry,
@@ -117,10 +127,14 @@ static Tile no_surrounding(Chunk *chunk, int x, int y, int z, int rx, int ry,
 
 void world_init_data(World *world) {
     int x, y, pos, start;
+
     world->finished = 0;
+
     y = world->height/2;
     x = world->width/2;
+
     start = y*world->width+x;
+
     for(y=0;y<world->height;y++) {
         for(x=0;x<world->width;x++) {
             _cx = x;
@@ -153,179 +167,21 @@ void world_init_data(World *world) {
     world->update_required = 1;
 }
 
-int world_init(World *world, int width, int height, int seed,
-               unsigned int texture, int player_num) {
-    int i;
+struct update_data {
+    World *w;
+    size_t queue_id;
+};
 
-    world->width = width;
-    world->height = height;
-    world->players = malloc(sizeof(Player)*player_num);
-    world->player_num = player_num;
+static THREAD_CALL(update_thread, vupdate_data) {
+    struct update_data *d = vupdate_data;
 
-    if(!world->players){
-        puts("Player init failed");
-        return 1;
-    }
+    /* TODO: Process a queue */
 
-    world->chunks = malloc(width*height*sizeof(Chunk));
-
-    if(!world->chunks){
-        puts("World init failed");
-        free(world->players);
-        world->players = NULL;
-        return 1;
-    }
-
-    world->seed = seed;
-    world->texture = texture;
-
-    for(i=0;i<player_num;i++){
-        player_init(world->players+i);
-    }
-
-    world->x = world->players[0].entity.x;
-    world->y = world->players[0].entity.z;
-
-    world_init_data(world);
-
-    return 0;
-}
-
-THREAD_CALL(_world_update, vworld) {
-    World *world = (World*)vworld;
-    int x, y;
-    int chunk_x = (world->new_x-world->x)/CHUNK_WIDTH;
-    int chunk_y = (world->new_z-world->y)/CHUNK_DEPTH;
-    int center_x = world->width/2, center_y = world->height/2;
-    int old_x, old_y;
-    Chunk *chunk;
-
-    if(!world->finished){
-        THREAD_EXIT();
-    }
-    world->finished = 0;
-    while(chunk_x != center_x || chunk_y != center_y){
-        old_x = world->x;
-        old_y = world->y;
-        if(chunk_y < center_y){
-            world->y -= CHUNK_DEPTH;
-        }
-        if(chunk_y > center_y){
-            world->y += CHUNK_DEPTH;
-        }
-        if(chunk_x < center_x){
-            world->x -= CHUNK_WIDTH;
-        }
-        if(chunk_x > center_x){
-            world->x += CHUNK_WIDTH;
-        }
-        for(y=0;y<world->height;y++){
-            for(x=0;x<world->width;x++){
-                chunk = &world->chunks[y*world->width+x];
-                /* Generate new chunks */
-                if(chunk->x < world->x){
-                    chunk->ready = 0;
-                    chunk->x = old_x+world->width*CHUNK_WIDTH;
-                    chunk->regenerate = 1;
-                }else if(chunk->x >= world->x+world->width*CHUNK_WIDTH){
-                    chunk->ready = 0;
-                    chunk->x = world->x;
-                    chunk->regenerate = 1;
-                }
-                if(chunk->z < world->y){
-                    chunk->ready = 0;
-                    chunk->z = old_y+world->height*CHUNK_DEPTH;
-                    chunk->regenerate = 1;
-                }else if(chunk->z >= world->y+world->height*CHUNK_DEPTH){
-                    chunk->ready = 0;
-                    chunk->z = world->y;
-                    chunk->regenerate = 1;
-                }
-                /* Update old chunks */
-
-                if(chunk->x == world->x+CHUNK_WIDTH){
-                    chunk->ready = 0;
-                    chunk->remesh = 1;
-                }else if(chunk->x == world->x+(world->width-2)*CHUNK_WIDTH){
-                    chunk->ready = 0;
-                    chunk->remesh = 1;
-                }
-                if(chunk->z == world->y+CHUNK_DEPTH){
-                    chunk->ready = 0;
-                    chunk->remesh = 1;
-                }else if(chunk->z == world->y+(world->height-2)*CHUNK_DEPTH){
-                    chunk->ready = 0;
-                    chunk->remesh = 1;
-                }
-            }
-        }
-        chunk_x = (world->new_x-world->x)/CHUNK_WIDTH;
-        chunk_y = (world->new_z-world->y)/CHUNK_DEPTH;
-        center_x = world->width/2, center_y = world->height/2;
-    }
-    for(y=0;y<world->width*world->height;y++){
-        chunk = &world->chunks[y];
-        if(chunk->regenerate){
-            chunk->ready = 0;
-            chunk_generate_data(chunk, chunk->x, chunk->z, world->seed);
-            chunk->remesh = 1;
-            chunk->regenerate = 0;
-#if FAKE_THREADING
-            /* TODO: Check if we have enough time to generate another chunk */
-            world->finished = 1;
-            world->update_required = 1;
-            THREAD_EXIT();
-#endif
-        }
-    }
-    for(y=0;y<world->width*world->height;y++){
-        chunk = &world->chunks[y];
-        if(chunk->remesh){
-            chunk_generate_model(chunk, world->texture,
-                                 _modelgen_get_tile, world);
-            chunk->ready = 1;
-#if FAKE_THREADING
-            /* TODO: Check if we have enough time to generate another mesh */
-            world->finished = 1;
-            world->update_required = 1;
-            THREAD_EXIT();
-#endif
-        }
-    }
-    world->finished = 1;
-#if FAKE_THREADING
-    puts("no more update needed");
-    world->update_required = 0;
-#endif
     THREAD_EXIT();
 }
 
 void world_update(World *world) {
-    /* TODO: Support multiple players */
-    int i;
-    int update_required = 0;
-    THREAD_ID(id);
-    if(!world->finished) return;
-    for(i=0;i<world->player_num;i++){
-        if(((int)world->players[i].entity.x-world->x)/CHUNK_WIDTH !=
-                world->width/2 ||
-           ((int)world->players[i].entity.z-world->y)/CHUNK_DEPTH !=
-                   world->height/2){
-            update_required = 1;
-            break;
-        }
-    }
-    if(world->update_required || update_required){
-        puts("update required");
-        world->new_x = world->players[0].entity.x;
-        world->new_z = world->players[0].entity.z;
-        if(world->finished){
-            THREAD_CREATE(id, _world_update, world);
-        }
-#if !FAKE_THREADING
-        world->update_required = 0;
-#endif
-    }
+    /* FIXME */
 }
 
 void world_render(World *world) {

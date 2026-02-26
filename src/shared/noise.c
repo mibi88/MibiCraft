@@ -16,7 +16,7 @@
  * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 
-#include <noise.h>
+#include <shared/noise.h>
 
 #include <math.h>
 

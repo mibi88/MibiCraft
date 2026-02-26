@@ -19,11 +19,9 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-#include <entity.h>
-
-#include <world.h>
-
-#include <chunk.h>
+#include <shared/entity.h>
+#include <shared/world.h>
+#include <shared/chunk.h>
 
 #define PLAYER_WALKING_SPEED 6
 #define PLAYER_DEFAULT_FRICTION 0.5

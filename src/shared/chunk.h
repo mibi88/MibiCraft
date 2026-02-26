@@ -44,16 +44,11 @@
 
 #define DEBUG_EXTREME_TERRAIN 0
 
-#include <gfx.h>
-#include <string.h>
+/* TODO: Move client-related things elsewhere */
 
-/* It's unfortunate that OpenGL doesn't support storing vertices in chars */
-typedef short int vertex_t;
-#define TYPE_VERTEX TYPE_SHORT
-typedef unsigned short int index_t;
-#define TYPE_INDEX TYPE_USHORT
-typedef short int texture_t;
-#define TYPE_TEXTURE TYPE_SHORT
+#include <client/gfx.h>
+#include <shared/structs.h>
+#include <string.h>
 
 typedef enum {
     I_VOID,
@@ -143,26 +138,7 @@ typedef enum {
     B_AMOUNT
 } Biome;
 
-typedef struct Chunk Chunk;
-struct Chunk {
-    unsigned char chunk_data[CHUNK_WIDTH][CHUNK_HEIGHT][CHUNK_DEPTH];
-    vertex_t chunk_vertices[BLOCK_VERTEX_MAX*CHUNK_WIDTH*CHUNK_HEIGHT*
-                            CHUNK_DEPTH];
-    index_t chunk_indices[BLOCK_INDEX_MAX*CHUNK_WIDTH*CHUNK_HEIGHT*CHUNK_DEPTH];
-    texture_t chunk_texture_coords[BLOCK_TEXTURE_MAX*CHUNK_WIDTH*CHUNK_HEIGHT*
-                                   CHUNK_DEPTH];
-
-    Chunk *last_hit;
-
-    GFXModel chunk_model;
-    int x, z;
-
-    int ready;
-
-    int remesh;
-
-    int regenerate;
-};
+/* TODO: Move many of these structs elsewhere */
 
 typedef struct {
     vertex_t *vertices;
@@ -174,8 +150,8 @@ typedef struct {
 } Face;
 
 typedef struct {
-    /* XXX: Is it good to make the faces pointer or is it more beneficial to
-     * waste a few bytes and process them even if they are empty? */
+    /* XXX: Is it good to make the faces pointer or is it better to waste a few
+     *      bytes and process them even if they are empty? */
     Face *face_left;
     Face *face_right;
     Face *face_front;
@@ -216,6 +192,7 @@ typedef struct {
 
 extern const BlockProperty blocks[T_AMOUNT];
 
+int chunk_init(void);
 void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed);
 void chunk_generate_texture_coords(Chunk *chunk, int tex_x, int tex_y);
 Tile chunk_get_tile(Chunk *chunk, int x, int y, int z, int rx, int ry, int rz);
