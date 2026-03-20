@@ -1,5 +1,5 @@
 /*
- * MibiCraft - A small game in a world of cubes
+ * MibiCraft -- A small game in a world of cubes
  * Copyright (C) 2023  Mibi88
  *
  * This program is free software; you can redistribute it and/or modify
@@ -25,9 +25,6 @@
 #include <shared/chunk_queue.h>
 
 #include <limits.h>
-
-int _cx, _cy;
-int _ncx, _ncy;
 
 int world_init(World *world, size_t width, size_t height, size_t player_num,
                size_t queue_num, int seed, unsigned int texture) {
@@ -108,68 +105,13 @@ int world_init(World *world, size_t width, size_t height, size_t player_num,
     return 0;
 }
 
-Chunk *world_get_chunk(World *world, int x, int y) {
-    /* FIXME */
-}
-
-void world_generate_models(World *world) {
-    /* FIXME */
-}
-
-void world_generate_data(World *world) {
-    /* FIXME */
-}
-
-static Tile no_surrounding(Chunk *chunk, int x, int y, int z, int rx, int ry,
-                           int rz, void *vworld) {
-    return T_VOID;
-}
-
 void world_init_data(World *world) {
-    int x, y, pos, start;
-
-    world->finished = 0;
-
-    y = world->height/2;
-    x = world->width/2;
-
-    start = y*world->width+x;
-
-    for(y=0;y<world->height;y++) {
-        for(x=0;x<world->width;x++) {
-            _cx = x;
-            _cy = y;
-            pos = y*world->width+x;
-            if(pos != start){
-                world->chunks[pos].ready = 0;
-                world->chunks[pos].x = world->x+x*CHUNK_WIDTH;
-                world->chunks[pos].z = world->y+y*CHUNK_DEPTH;
-                world->chunks[pos].last_hit = NULL;
-                world->chunks[pos].regenerate = 1;
-            }
-        }
-    }
-
-    y = world->height/2;
-    x = world->width/2;
-
-    world->chunks[start].ready = 0;
-    world->chunks[start].last_hit = NULL;
-    chunk_generate_data(world->chunks+start, world->x+x*CHUNK_WIDTH,
-                        world->y+y*CHUNK_DEPTH, world->seed);
-    chunk_generate_model(world->chunks+start, world->texture, no_surrounding,
-                         world);
-    world->chunks[start].regenerate = 0;
-    world->chunks[start].remesh = 1;
-    world->chunks[start].ready = 1;
-
-    world->finished = 1;
-    world->update_required = 1;
+    /* FIXME */
 }
 
 struct update_data {
     World *w;
-    size_t queue_id;
+    ChunkQueue *queue;
 };
 
 static THREAD_CALL(update_thread, vupdate_data) {
@@ -184,151 +126,24 @@ void world_update(World *world) {
     /* FIXME */
 }
 
-void world_render(World *world) {
-    int i;
+static Chunk *world_get_chunk(World *world, int x, int y) {
+    size_t i;
 
-    gfx_reset_texture_transforms();
-    gfx_set_texture_scale(TILE_WIDTH/(float)TEX_WIDTH,
-                          TILE_HEIGHT/(float)TEX_WIDTH);
-
-    for(i=0;i<world->width*world->height;i++) {
-        if(!world->chunks[i].ready) continue;
-        gfx_draw_model(&world->chunks[i].chunk_model,
-                       world->chunks[i].x-0.5, -(CHUNK_HEIGHT/2)-0.5,
-                       world->chunks[i].z-0.5, 0, 0, 0);
+    for(i=0;i<world->player_num;i++){
+        /* TODO */
     }
-
-    gfx_reset_texture_transforms();
-}
-
-Tile world_get_tile(World *world, float x, float y, float z) {
-    int i;
-    Chunk *tile_chunk;
-    for(i=0;i<world->width*world->height;i++){
-        tile_chunk = &world->chunks[i];
-        if(x >= tile_chunk->x && x < tile_chunk->x+CHUNK_WIDTH &&
-           z >= tile_chunk->z && z < tile_chunk->z+CHUNK_DEPTH &&
-           !tile_chunk->regenerate){
-#if DEBUG_WORLD
-            if(chunk_get_tile(tile_chunk, x-tile_chunk->x, y,
-                                  z-tile_chunk->z, 0, 0, 0) != T_VOID){
-                gfx_set_color(0, 0, 0, 1);
-                gfx_render_wire_cube(x, y-CHUNK_HEIGHT/2, z, 1.01);
-            }
-#endif
-            return chunk_get_tile(tile_chunk, x-tile_chunk->x, y,
-                                  z-tile_chunk->z, 0, 0, 0);
-        }
-    }
-    return T_VOID;
 }
 
 void world_set_tile(World *world, Tile tile, int x, int y, int z) {
-    int i, n;
-    Chunk *tile_chunk;
-    Chunk *neighbor_chunk;
-    puts("Set tile");
-    for(i=0;i<world->width*world->height;i++){
-        tile_chunk = &world->chunks[i];
-        if(x >= tile_chunk->x && x < tile_chunk->x+CHUNK_WIDTH &&
-           z >= tile_chunk->z && z < tile_chunk->z+CHUNK_DEPTH){
-            chunk_set_tile(tile_chunk, tile, x-tile_chunk->x, y,
-                           z-tile_chunk->z);
-            tile_chunk->remesh = 1;
-            world->update_required = 1;
-            break;
-        }
-        /* Check if we need to update a neighboring chunk */
-        if(x == tile_chunk->x){
-            puts("Update neighboring chunk < x");
-            for(n=0;n<world->width*world->height;n++){
-                neighbor_chunk = &world->chunks[n];
-                if(x-1 >= neighbor_chunk->x &&
-                   x-1 < neighbor_chunk->x+CHUNK_WIDTH &&
-                   z >= neighbor_chunk->z && z < neighbor_chunk->z+CHUNK_DEPTH){
-                    neighbor_chunk->remesh = 1;
-                    printf("Chunk at %d, %d updated!\n", neighbor_chunk->x,
-                           neighbor_chunk->z);
-                    break;
-                }
-            }
-        }else if(x == tile_chunk->x+CHUNK_WIDTH-1){
-            puts("Update neighboring chunk > x");
-            for(n=0;n<world->width*world->height;n++){
-                neighbor_chunk = &world->chunks[n];
-                if(x+1 >= neighbor_chunk->x &&
-                   x+1 < neighbor_chunk->x+CHUNK_WIDTH &&
-                   z >= neighbor_chunk->z && z < neighbor_chunk->z+CHUNK_DEPTH){
-                    neighbor_chunk->remesh = 1;
-                    printf("Chunk at %d, %d updated!\n", neighbor_chunk->x,
-                           neighbor_chunk->z);
-                    break;
-                }
-            }
-        }
-        if(z == tile_chunk->z){
-            puts("Update neighboring chunk < z");
-            for(n=0;n<world->width*world->height;n++){
-                neighbor_chunk = &world->chunks[n];
-                if(z-1 >= neighbor_chunk->z &&
-                   z-1 < neighbor_chunk->z+CHUNK_DEPTH &&
-                   x >= neighbor_chunk->x && x < neighbor_chunk->x+CHUNK_WIDTH){
-                    neighbor_chunk->remesh = 1;
-                    printf("Chunk at %d, %d updated!\n", neighbor_chunk->x,
-                           neighbor_chunk->z);
-                    break;
-                }
-            }
-        }else if(z == tile_chunk->z+CHUNK_DEPTH-1){
-            puts("Update neighboring chunk > z");
-            for(n=0;n<world->width*world->height;n++){
-                neighbor_chunk = &world->chunks[n];
-                if(z+1 >= neighbor_chunk->z &&
-                   z+1 < neighbor_chunk->z+CHUNK_DEPTH &&
-                   x >= neighbor_chunk->x && x < neighbor_chunk->x+CHUNK_WIDTH){
-                    neighbor_chunk->remesh = 1;
-                    printf("Chunk at %d, %d updated!\n", neighbor_chunk->x,
-                           neighbor_chunk->z);
-                    break;
-                }
-            }
-        }
-    }
+    /* FIXME */
 }
 
-void world_update_chunk_model_at(World *world, float sx, float sz) {
-    int x = (int)sx-world->x, z = (int)sz-world->y;
-    int chunk_x = x/CHUNK_WIDTH, chunk_y = z/CHUNK_DEPTH;
-    if(chunk_x >= 0 && chunk_x < world->width && chunk_y >= 0 &&
-       chunk_y < world->height) {
-        Chunk *chunk = &world->chunks[chunk_y*world->width+chunk_x];
-        chunk->remesh = 1;
-    }
+Tile world_get_tile(World *world, float x, float y, float z) {
+    /* FIXME */
 }
 
 int world_change_size(World *world, int width, int height) {
-    Chunk *chunks;
-
-    if(!world->finished) return 1;
-    world->finished = 0;
-    /* TODO: Do not reload all the chunks: keep the chunks that are already
-     * loaded. */
-    chunks = realloc(world->chunks, width*height*sizeof(Chunk));
-    if(!chunks){
-        puts("Failed to change the world size!");
-        return 2;
-    }
-
-    /* TODO: Add support for multiple players. */
-    world->x -= (width-world->width)/2*CHUNK_WIDTH;
-    world->y -= (height-world->height)/2*CHUNK_DEPTH;
-    world->width = width;
-    world->height = height;
-    world->chunks = chunks;
-    world_init_data(world);
-    world->finished = 1;
-    world->update_required =  1;
-    return 0;
+    /* FIXME */
 }
 
 void world_free(World *world) {

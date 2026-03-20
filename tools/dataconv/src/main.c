@@ -1,5 +1,5 @@
 /*
- * MibiCraft - A small game in a world of cubes
+ * MibiCraft -- A small game in a world of cubes
  * Copyright (C) 2023  Mibi88
  *
  * This program is free software; you can redistribute it and/or modify

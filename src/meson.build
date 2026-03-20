@@ -2,6 +2,8 @@ mibicraft_sources += [
   'client/main.c',
   'client/game.c',
   'client/button.c',
+  'client/world.c',
+  'client/chunk.c',
   
   'client/gfx/base.c',
   'client/gfx/config.c',
@@ -11,6 +13,7 @@ mibicraft_sources += [
   'client/gfx/window.c',
   
   'shared/chunk.c',
+  'shared/chunk_queue.c',
   'shared/world.c',
   'shared/entity.c',
   'shared/raycast.c',

@@ -1,5 +1,5 @@
 /*
- * MibiCraft - A small game in a world of cubes
+ * MibiCraft -- A small game in a world of cubes
  * Copyright (C) 2023  Mibi88
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,8 +16,8 @@
  * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 
-#ifndef BUTTON_H
-#define BUTTON_H
+#ifndef CLIENT_BUTTON_H
+#define CLIENT_BUTTON_H
 
 #define DEFAULT_R 0.5
 #define DEFAULT_G 0.5

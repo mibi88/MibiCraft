@@ -1,5 +1,5 @@
 /*
- * MibiCraft - A small game in a world of cubes
+ * MibiCraft -- A small game in a world of cubes
  * Copyright (C) 2023  Mibi88
  *
  * This program is free software; you can redistribute it and/or modify
@@ -86,7 +86,7 @@ void game_input(Game *game, int v1, int v2, int type) {
                     if(button_mouse_inside(&game->button_singleplayer, game->mx,
                                            game->my)){
                         if(!world_init(&game->world, game->render_distance*2+1,
-                                       game->render_distance*2+1, game->seed,
+                                       game->render_distance*2+1, 1, game->seed,
                                        game->texture, 1)){
                             game->player = game->world.players;
                             game->screen = D_INGAME;
@@ -259,7 +259,8 @@ void game_logic(Game *game, float delta) {
             game->button_title.x = (gfx_get_width()-game->button_title.w)/2;
             game->button_title.y = (gfx_get_height()+game->button_resume.h)/2+8*
                     game->gui_scale;
-            if(game->close_asked && game->world.finished){
+            /* TODO: Add a thread stopping mechanism to shared/world.c. */
+            if(game->close_asked /*&& game->world.finished*/){
                 game->screen = D_TITLE;
                 world_free(&game->world);
                 _game_sky(game);

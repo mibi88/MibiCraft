@@ -16,16 +16,26 @@
  * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 
-#ifndef PARSER_H
-#define PARSER_H
+#include <shared/world.h>
+#include <client/world.h>
 
-#include <stddef.h>
+void world_render(World *world, int player) {
+    int i;
 
-#include <tree.h>
+    gfx_reset_texture_transforms();
+    gfx_set_texture_scale(TILE_WIDTH/(float)TEX_WIDTH,
+                          TILE_HEIGHT/(float)TEX_WIDTH);
 
-typedef struct {
-    Node *root_node;
-} Parser;
+    for(i=0;i<world->width*world->height;i++) {
+        if(!world->chunks[i]->ready) continue;
+        gfx_draw_model(&world->chunks[i].chunk_model,
+                       world->chunks[i].x-0.5, -(CHUNK_HEIGHT/2)-0.5,
+                       world->chunks[i].z-0.5, 0, 0, 0);
+    }
 
-#endif
+    gfx_reset_texture_transforms();
+}
 
+void world_update_chunk_model_at(World *world, float sx, float sz) {
+    /* FIXME */
+}

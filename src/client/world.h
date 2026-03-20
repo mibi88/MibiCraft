@@ -16,16 +16,9 @@
  * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 
-#ifndef PARSER_H
-#define PARSER_H
+#ifndef CLIENT_WORLD_H
+#define CLIENT_WORLD_H
 
-#include <stddef.h>
-
-#include <tree.h>
-
-typedef struct {
-    Node *root_node;
-} Parser;
+void world_update_chunk_model_at(World *world, float sx, float sz);
 
 #endif
-

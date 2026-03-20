@@ -1,5 +1,5 @@
 /*
- * MibiCraft - A small game in a world of cubes
+ * MibiCraft -- A small game in a world of cubes
  * Copyright (C) 2023  Mibi88
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,8 +16,8 @@
  * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef SHARED_CONFIG_H
+#define SHARED_CONFIG_H
 
 #define RENDER_DISTANCE  1
 #define RAYCAST_DISTANCE 20

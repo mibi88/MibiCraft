@@ -1,5 +1,5 @@
 /*
- * MibiCraft - A small game in a world of cubes
+ * MibiCraft -- A small game in a world of cubes
  * Copyright (C) 2023  Mibi88
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,8 +16,8 @@
  * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 
-#ifndef WORLD_H
-#define WORLD_H
+#ifndef SHARED_WORLD_H
+#define SHARED_WORLD_H
 
 #include <shared/config.h>
 
@@ -25,22 +25,15 @@
 
 #include <shared/structs.h>
 
-int world_init(World *world, int width, int height, int seed,
-               unsigned int texture, int player_num);
+int world_init(World *world, size_t width, size_t height, size_t player_num,
+               size_t queue_num, int seed, unsigned int texture);
 
-void world_generate_data(World *world);
 void world_init_data(World *world);
-void world_generate_models(World *world);
-
-void world_update(World *world);
-
-void world_render(World *world);
 
 void world_update(World *world);
 
 Tile world_get_tile(World *world, float x, float y, float z);
 void world_set_tile(World *world, Tile tile, int x, int y, int z);
-void world_update_chunk_model_at(World *world, float sx, float sz);
 
 int world_change_size(World *world, int width, int height);
 

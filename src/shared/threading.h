@@ -1,5 +1,5 @@
 /*
- * MibiCraft - A small game in a world of cubes
+ * MibiCraft -- A small game in a world of cubes
  * Copyright (C) 2023  Mibi88
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,8 +16,8 @@
  * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 
-#ifndef THREADING_H
-#define THREADING_H
+#ifndef SHARED_THREADING_H
+#define SHARED_THREADING_H
 
 #include <shared/config.h>
 
@@ -27,6 +27,8 @@
 
 #include <windows.h>
 #include <tchar.h>
+
+#include <buildconfig.h>
 
 #define THREAD_ID(id) DWORD id;
 
@@ -44,6 +46,8 @@ typedef HANDLE thread_lock_t;
 #define THREAD_LOCK_TRYLOCK(l) WaitForSingleObject(l, 0) == WAIT_OBJECT_0;
 #define THREAD_LOCK_UNLOCK(l) ReleaseMutex(l);
 #define THREAD_LOCK_DESTROY(l) CloseHandle(l);
+
+#define THREAD_NPROC() 1 /* TODO */
 
 #else
 
@@ -66,6 +70,14 @@ typedef pthread_mutex_t thread_lock_t;
 #define THREAD_LOCK_TRYLOCK(l) pthread_mutex_trylock(&l);
 #define THREAD_LOCK_UNLOCK(l) pthread_mutex_unlock(&l);
 #define THREAD_LOCK_DESTROY(l) pthread_mutex_destroy(&l);
+
+#if SYS == linux
+#include <sys/sysinfo.h>
+
+#define THREAD_NPROC() get_nprocs()
+#else
+#define THREAD_NPROC() 1 /* TODO: Support *BSD systems. */
+#endif
 
 #endif
 

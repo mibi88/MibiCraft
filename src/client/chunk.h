@@ -16,16 +16,3 @@
  * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 
-#ifndef PARSER_H
-#define PARSER_H
-
-#include <stddef.h>
-
-#include <tree.h>
-
-typedef struct {
-    Node *root_node;
-} Parser;
-
-#endif
-

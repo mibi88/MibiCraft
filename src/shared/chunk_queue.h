@@ -1,5 +1,5 @@
 /*
- * MibiCraft - A small game in a world of cubes
+ * MibiCraft -- A small game in a world of cubes
  * Copyright (C) 2023  Mibi88
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,14 +16,14 @@
  * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 
-#ifndef CHUNK_QUEUE_H
-#define CHUNK_QUEUE_H
+#ifndef SHARED_CHUNK_QUEUE_H
+#define SHARED_CHUNK_QUEUE_H
 
 #include <shared/structs.h>
 
 int chunk_queue_init(ChunkQueue *queue, size_t size);
 int chunk_queue_push(ChunkQueue *queue, Chunk *chunk);
-int chunk_queue_skip(ChunkQueue *queue, Chunk *chunk);
+int chunk_queue_bypass(ChunkQueue *queue, Chunk *chunk);
 Chunk *chunk_queue_pop(ChunkQueue *queue);
 void chunk_queue_free(ChunkQueue *queue);
 

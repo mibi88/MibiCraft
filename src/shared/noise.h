@@ -1,5 +1,5 @@
 /*
- * MibiCraft - A small game in a world of cubes
+ * MibiCraft -- A small game in a world of cubes
  * Copyright (C) 2023  Mibi88
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,8 +16,8 @@
  * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 
-#ifndef NOISE_H
-#define NOISE_H
+#ifndef SHARED_NOISE_H
+#define SHARED_NOISE_H
 
 float noise_2d(float sx, float sy, int seed);
 float noise_3d(float sx, float sy, float sz, int seed);

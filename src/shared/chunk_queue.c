@@ -1,5 +1,5 @@
 /*
- * MibiCraft - A small game in a world of cubes
+ * MibiCraft -- A small game in a world of cubes
  * Copyright (C) 2023  Mibi88
  *
  * This program is free software; you can redistribute it and/or modify
@@ -53,7 +53,7 @@ int chunk_queue_push(ChunkQueue *queue, Chunk *chunk) {
     return 0;
 }
 
-int chunk_queue_skip(ChunkQueue *queue, Chunk *chunk) {
+int chunk_queue_bypass(ChunkQueue *queue, Chunk *chunk) {
     if(!queue->start){
         size_t len;
         size_t new_start;

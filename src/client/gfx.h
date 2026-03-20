@@ -1,5 +1,5 @@
 /*
- * MibiCraft - A small game in a world of cubes
+ * MibiCraft -- A small game in a world of cubes
  * Copyright (C) 2023  Mibi88
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,8 +16,8 @@
  * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 
-#ifndef GFX_H
-#define GFX_H
+#ifndef CLIENT_GFX_H
+#define CLIENT_GFX_H
 
 #include <stdlib.h>
 #include <stdio.h>

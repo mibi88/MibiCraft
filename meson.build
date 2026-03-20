@@ -11,6 +11,7 @@ r = run_command('git', 'rev-parse', 'HEAD', check: true)
 commit = r.stdout().strip()
 config_h.set_quoted('VERSION', meson.project_version()+'-git'+commit)
 config_h.set_quoted('NAME', meson.project_name())
+config_h.set('SYS', target_machine.system())
 configure_file(
   output: 'buildconfig.h',
   configuration: config_h,
