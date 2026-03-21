@@ -45,7 +45,7 @@ typedef HANDLE thread_lock_t;
 #define THREAD_LOCK_LOCK(l) WaitForSingleObject(l, INFINITE)
 #define THREAD_LOCK_TRYLOCK(l) WaitForSingleObject(l, 0) == WAIT_OBJECT_0
 #define THREAD_LOCK_UNLOCK(l) ReleaseMutex(l)
-#define THREAD_LOCK_DESTROY(l) CloseHandle(l)
+#define THREAD_LOCK_FREE(l) CloseHandle(l)
 
 #define THREAD_NPROC() 1 /* TODO */
 
@@ -69,7 +69,7 @@ typedef pthread_mutex_t thread_lock_t;
 #define THREAD_LOCK_LOCK(l) pthread_mutex_lock(&l)
 #define THREAD_LOCK_TRYLOCK(l) pthread_mutex_trylock(&l)
 #define THREAD_LOCK_UNLOCK(l) pthread_mutex_unlock(&l)
-#define THREAD_LOCK_DESTROY(l) pthread_mutex_destroy(&l)
+#define THREAD_LOCK_FREE(l) pthread_mutex_destroy(&l)
 
 #if SYS == linux
 #include <sys/sysinfo.h>

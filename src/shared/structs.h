@@ -98,6 +98,8 @@ typedef struct {
 
     size_t start;
     size_t end;
+
+    thread_lock_t lock;
 } ChunkQueue;
 
 typedef struct {

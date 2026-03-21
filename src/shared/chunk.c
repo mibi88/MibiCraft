@@ -1125,3 +1125,9 @@ CHUNKNOLEFT:
                    chunk->chunk_indices, chunk->chunk_texture_coords, texture,
                    1, 1, indices/3, TYPE_VERTEX, TYPE_INDEX, TYPE_TEXTURE);
 }
+
+void chunk_free(Chunk *chunk) {
+    (void)chunk;
+
+    /* Empty for now. */
+}

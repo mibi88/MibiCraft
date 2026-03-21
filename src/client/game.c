@@ -75,6 +75,10 @@ void game_init(Game *game, int seed) {
                 32*(game->gui_scale+1), "Title screen");
     _game_sky(game);
 
+    /* TODO: Change this when adding multiplayer support and playing in
+     * multiplayer. */
+    game->player_id = 0;
+
     gfx_enable_closing();
 }
 
@@ -345,7 +349,7 @@ void game_draw(Game *game, float delta) {
             gfx_end_2d();
             break;
         case D_PAUSE:
-            world_render(&game->world);
+            world_render(&game->world, game->player_id);
             gfx_start_2d();
             button_draw(&game->button_resume, game->mx, game->my,
                         game->gui_scale, game->font);
@@ -371,7 +375,7 @@ void game_draw(Game *game, float delta) {
                     game->player->entity.z);
             sprintf(game->render_distance_str, "Render distance: %d",
                     game->render_distance);
-            world_render(&game->world);
+            world_render(&game->world, game->player_id);
             /* Display the selected block */
             raycast(&game->player->entity, RAYCAST_DISTANCE,
                     _game_selection_draw, &game->world);

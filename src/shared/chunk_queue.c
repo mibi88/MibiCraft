@@ -18,6 +18,8 @@
 
 #include <shared/chunk_queue.h>
 
+#include <string.h>
+
 int chunk_queue_init(ChunkQueue *queue, size_t size) {
     queue->data = malloc(size*sizeof(Chunk*));
     if(queue->data == NULL){
@@ -28,10 +30,19 @@ int chunk_queue_init(ChunkQueue *queue, size_t size) {
     queue->start = size/2;
     queue->end = size/2;
 
+    if(THREAD_LOCK_INIT(queue->lock)){
+        free(queue->data);
+        queue->data = NULL;
+
+        return 2;
+    }
+
     return 0;
 }
 
 int chunk_queue_push(ChunkQueue *queue, Chunk *chunk) {
+    THREAD_LOCK_LOCK(queue->lock);
+
     if(queue->end+1 >= queue->size){
         size_t len;
         size_t new_start;
@@ -50,10 +61,14 @@ int chunk_queue_push(ChunkQueue *queue, Chunk *chunk) {
 
     queue->data[queue->end++] = chunk;
 
+    THREAD_LOCK_UNLOCK(queue->lock);
+
     return 0;
 }
 
 int chunk_queue_bypass(ChunkQueue *queue, Chunk *chunk) {
+    THREAD_LOCK_LOCK(queue->lock);
+
     if(!queue->start){
         size_t len;
         size_t new_start;
@@ -72,11 +87,17 @@ int chunk_queue_bypass(ChunkQueue *queue, Chunk *chunk) {
 
     queue->data[queue->start--] = chunk;
 
+    THREAD_LOCK_UNLOCK(queue->lock);
+
     return 0;
 }
 
 Chunk *chunk_queue_pop(ChunkQueue *queue) {
+    THREAD_LOCK_LOCK(queue->lock);
+
     if(queue->start < queue->end) return queue->data[queue->end--];
+
+    THREAD_LOCK_UNLOCK(queue->lock);
 
     return NULL;
 }

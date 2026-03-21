@@ -20,7 +20,7 @@
 #include <client/world.h>
 
 void world_render(World *world, int player) {
-    int i;
+    size_t i;
 
     gfx_reset_texture_transforms();
     gfx_set_texture_scale(TILE_WIDTH/(float)TEX_WIDTH,

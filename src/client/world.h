@@ -19,6 +19,7 @@
 #ifndef CLIENT_WORLD_H
 #define CLIENT_WORLD_H
 
+void world_render(World *world, int player);
 void world_update_chunk_model_at(World *world, float sx, float sz);
 
 #endif

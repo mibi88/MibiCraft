@@ -194,6 +194,7 @@ void chunk_generate_model(Chunk *chunk, unsigned int texture,
                                                     int z, int rx, int ry,
                                                     int rz, void *extra),
                           void *extra);
+void chunk_free(Chunk *chunk);
 
 #endif
 

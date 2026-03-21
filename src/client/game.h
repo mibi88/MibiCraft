@@ -36,7 +36,9 @@
 
 #include <client/button.h>
 
-#define COPYRIGHT "(C) 2023 Mibi88"
+#include <client/world.h>
+
+#define COPYRIGHT "(C) 2023-2026 Mibi88"
 
 /* Screen */
 enum {
@@ -57,6 +59,7 @@ enum {
 
 typedef struct {
     Player *player;
+    int player_id;
     int mx, my;
     float gui_scale;
     unsigned int texture, crosshair, font;
