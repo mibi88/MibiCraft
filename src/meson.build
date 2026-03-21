@@ -39,6 +39,9 @@ executable('MibiCraft', mibicraft_sources,
   include_directories: mibicraft_incdirs,
   dependencies: mibicraft_deps,
   install: true,
+  link_args: [
+    #'-ltsan',
+  ],
   c_args: [
     has_xfixes.found() ? '-DHAS_XFIXES' : '',
   ],

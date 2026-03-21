@@ -129,9 +129,6 @@ struct world {
     thread_t *threads;
     UpdateData *thread_data;
 
-    char *emptying_queue;
-    thread_lock_t emptying_queue_lock;
-
     Chunk **empty;
     size_t empty_chunks;
     thread_lock_t empty_lock;

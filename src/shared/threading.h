@@ -34,7 +34,7 @@ typedef DWORD thread_t;
 
 #define THREAD_CALL(name, data) DWORD WINAPI name(LPVOID data)
 
-#define THREAD_CREATE(id, call, data) CreateThread(NULL, 0, call, data, 0, &id)
+#define THREAD_CREATE(id, call, data) CreateThread(NULL, 0, call, data, 0, id)
 #define THREAD_JOIN(id) WaitForSingleObject(id, INFINITE)
 
 #define THREAD_EXIT() ExitThread(0); return 0
@@ -60,9 +60,8 @@ typedef pthread_t thread_t;
 
 #define THREAD_EXIT() pthread_exit(NULL)
 
-#define THREAD_CREATE(id, call, data) (pthread_create(&id, NULL, call, \
-                                                      (void*)data) | \
-                                       pthread_detach(id))
+#define THREAD_CREATE(id, call, data) (pthread_create(id, NULL, call, \
+                                                      (void*)data))
 #define THREAD_JOIN(id) pthread_join(id, NULL);
 
 typedef pthread_mutex_t thread_lock_t;

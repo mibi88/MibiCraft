@@ -19,6 +19,8 @@ configure_file(
 add_project_arguments([
   '-I' + meson.project_build_root(),
   '-I' + meson.project_build_root() + '/img',
+  #'-fsanitize=thread',
+  #'-g',
 ], language: 'c')
 
 subdir('tools')

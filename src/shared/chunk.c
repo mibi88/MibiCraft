@@ -548,6 +548,10 @@ const Tile fallen_spruce_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
 int chunk_init(Chunk *chunk) {
     THREAD_LOCK_INIT(chunk->lock);
 
+    gfx_init_model(&chunk->chunk_model, chunk->chunk_vertices,
+                   chunk->chunk_indices, chunk->chunk_texture_coords, 0,
+                   1, 1, 0, TYPE_VERTEX, TYPE_INDEX, TYPE_TEXTURE);
+
     return 0;
 }
 
