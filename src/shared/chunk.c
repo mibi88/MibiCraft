@@ -545,8 +545,9 @@ const Tile fallen_spruce_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
 
 /**************/
 
-int chunk_init(void) {
+int chunk_init(Chunk *chunk) {
     /* Empty for now */
+    (void)chunk;
 
     return 0;
 }

@@ -184,7 +184,7 @@ typedef struct {
 
 extern const BlockProperty blocks[T_AMOUNT];
 
-int chunk_init(void);
+int chunk_init(Chunk *chunk);
 void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed);
 void chunk_generate_texture_coords(Chunk *chunk, int tex_x, int tex_y);
 Tile chunk_get_tile(Chunk *chunk, int x, int y, int z, int rx, int ry, int rz);
