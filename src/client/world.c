@@ -28,13 +28,11 @@ void world_render(World *world, size_t player) {
                           TILE_HEIGHT/(float)TEX_WIDTH);
 
     for(i=0;i<world->width*world->height;i++) {
-        printf("%f, %f\n", world->chunks[b+i]->x-0.5,
-                           world->chunks[b+i]->z-0.5);
-        /*if(!THREAD_LOCK_TRYLOCK(world->chunk_locks[i])) continue;*/
+        if(!THREAD_LOCK_TRYLOCK(world->chunks[i]->lock)) continue;
         gfx_draw_model(&world->chunks[b+i]->chunk_model,
                        world->chunks[b+i]->x-0.5, -(CHUNK_HEIGHT/2)-0.5,
                        world->chunks[b+i]->z-0.5, 0, 0, 0);
-        /*THREAD_LOCK_UNLOCK(world->chunk_locks[i]);*/
+        THREAD_LOCK_UNLOCK(world->chunks[i]->lock);
     }
 
     gfx_reset_texture_transforms();

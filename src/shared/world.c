@@ -35,6 +35,8 @@ int world_init(World *world, size_t width, size_t height, size_t player_num,
     world->players = malloc(sizeof(Player)*player_num);
     world->player_num = player_num;
 
+    world->stop = 0;
+
     if(world->players == NULL){
         fputs("Player init failed!\n", stderr);
         return 1;
@@ -47,16 +49,18 @@ int world_init(World *world, size_t width, size_t height, size_t player_num,
 
     world->chunk_data = malloc(width*height*player_num*sizeof(Chunk));
     world->chunks = malloc(width*height*player_num*sizeof(Chunk*));
-    world->chunk_locks = malloc(width*height*player_num*sizeof(thread_lock_t));
     world->queues = malloc(queue_num*sizeof(ChunkQueue));
-    world->empty = malloc(width*height*player_num*sizeof(Chunk*));
     world->emptying_queue = malloc(queue_num);
+    world->threads = malloc(queue_num*sizeof(thread_t));
+    world->thread_data = malloc(queue_num*sizeof(UpdateData));
+    world->empty = malloc(width*height*player_num*sizeof(Chunk*));
 
     if(world->chunk_data == NULL ||
        world->chunks == NULL ||
-       world->chunk_locks == NULL ||
        world->queues == NULL ||
        world->emptying_queue == NULL ||
+       world->threads == NULL ||
+       world->thread_data == NULL ||
        world->empty == NULL){
         fputs("World init failed!\n", stderr);
 
@@ -66,14 +70,17 @@ int world_init(World *world, size_t width, size_t height, size_t player_num,
         free(world->chunks);
         world->chunks = NULL;
 
-        free(world->chunk_locks);
-        world->chunk_locks = NULL;
-
         free(world->queues);
         world->queues = NULL;
 
         free(world->emptying_queue);
         world->emptying_queue = NULL;
+
+        free(world->threads);
+        world->threads = NULL;
+
+        free(world->thread_data);
+        world->thread_data = NULL;
 
         free(world->players);
         world->players = NULL;
@@ -97,14 +104,15 @@ int world_init(World *world, size_t width, size_t height, size_t player_num,
 
             fputs("Queue init failed!\n", stderr);
 
+            for(n=0;n<i;n++){
+                chunk_queue_free(world->queues+n);
+            }
+
             free(world->chunk_data);
             world->chunk_data = NULL;
 
             free(world->chunks);
             world->chunks = NULL;
-
-            free(world->chunk_locks);
-            world->chunk_locks = NULL;
 
             free(world->queues);
             world->queues = NULL;
@@ -112,15 +120,17 @@ int world_init(World *world, size_t width, size_t height, size_t player_num,
             free(world->emptying_queue);
             world->emptying_queue = NULL;
 
+            free(world->threads);
+            world->threads = NULL;
+
+            free(world->thread_data);
+            world->thread_data = NULL;
+
             free(world->players);
             world->players = NULL;
 
             free(world->empty);
             world->empty = NULL;
-
-            for(n=0;n<i;n++){
-                chunk_queue_free(world->queues+n);
-            }
 
             THREAD_LOCK_FREE(world->emptying_queue_lock);
 
@@ -137,13 +147,20 @@ int world_init(World *world, size_t width, size_t height, size_t player_num,
         player_init(world->players+i);
 
         for(n=0;n<player_num*width*height;n++){
-            chunk_init(world->chunk_data+n);
             world->chunks[n] = world->chunk_data+n;
 
-            if(THREAD_LOCK_INIT(world->chunk_locks[n])){
+            if(chunk_init(world->chunk_data+n)){
                 size_t m;
 
-                fputs("Lock init failed!\n", stderr);
+                fputs("Chunk init failed!\n", stderr);
+
+                for(m=0;m<queue_num;m++){
+                    chunk_queue_free(world->queues+m);
+                }
+
+                for(m=0;m<n;m++){
+                    chunk_free(world->chunks[m]);
+                }
 
                 free(world->chunk_data);
                 world->chunk_data = NULL;
@@ -151,28 +168,23 @@ int world_init(World *world, size_t width, size_t height, size_t player_num,
                 free(world->chunks);
                 world->chunks = NULL;
 
-                free(world->chunk_locks);
-                world->chunk_locks = NULL;
-
                 free(world->queues);
                 world->queues = NULL;
 
                 free(world->emptying_queue);
                 world->emptying_queue = NULL;
 
+                free(world->threads);
+                world->threads = NULL;
+
+                free(world->thread_data);
+                world->thread_data = NULL;
+
                 free(world->players);
                 world->players = NULL;
 
                 free(world->empty);
                 world->empty = NULL;
-
-                for(m=0;m<queue_num;m++){
-                    chunk_queue_free(world->queues+m);
-                }
-
-                for(m=0;m<n;m++){
-                    THREAD_LOCK_FREE(world->chunk_locks[m]);
-                }
 
                 THREAD_LOCK_FREE(world->emptying_queue_lock);
 
@@ -323,13 +335,6 @@ void world_init_data(World *world) {
     }
 }
 
-
-
-struct update_data {
-    World *w;
-    ChunkQueue *queue;
-};
-
 static Tile get_tile(Chunk *c, int x, int y, int z, int rx, int ry, int rz,
                      void *extra) {
     (void)extra;
@@ -337,12 +342,13 @@ static Tile get_tile(Chunk *c, int x, int y, int z, int rx, int ry, int rz,
 }
 
 static THREAD_CALL(update_thread, vupdate_data) {
-    struct update_data *d = vupdate_data;
+    UpdateData *d = vupdate_data;
     ChunkUpdate update;
 
     /*puts("thread");*/
 
     while((update = chunk_queue_pop(d->queue)).chunk != NULL){
+        if(d->w->stop) break;
         printf("%d, %d\n", update.chunk->x, update.chunk->z);
         if(update.flags&CU_DATA){
             chunk_generate_data(update.chunk, update.chunk->x,
@@ -357,8 +363,6 @@ static THREAD_CALL(update_thread, vupdate_data) {
     d->w->emptying_queue[d->w->queues-d->queue] = 0;
     THREAD_LOCK_UNLOCK(d->w->emptying_queue_lock);
 
-    free(d);
-
     THREAD_EXIT();
 }
 
@@ -369,19 +373,15 @@ void world_update(World *world) {
         char e;
 
         THREAD_LOCK_LOCK(world->emptying_queue_lock);
-        if(!world->emptying_queue[i]){
-            struct update_data *d;
-            THREAD_ID(id);
+        if(!world->emptying_queue[i] && !chunk_queue_empty(world->queues+i)){
+            UpdateData *d = world->thread_data+i;
+            thread_t *id = world->threads+i;
 
-            d = malloc(sizeof(struct update_data));
+            d->w = world;
+            d->queue = world->queues+i;
 
-            if(d != NULL){
-                d->w = world;
-                d->queue = world->queues+i;
-
-                if(!THREAD_CREATE(id, update_thread, d)){
-                    world->emptying_queue[i] = 1;
-                }
+            if(!THREAD_CREATE(*id, update_thread, d)){
+                world->emptying_queue[i] = 1;
             }
         }
         THREAD_LOCK_UNLOCK(world->emptying_queue_lock);
@@ -416,13 +416,18 @@ int world_change_size(World *world, int width, int height) {
 void world_free(World *world) {
     size_t i;
 
+    world->stop = 1;
+    for(i=0;i<world->queue_num;i++){
+        THREAD_JOIN(world->threads[i]);
+    }
+    world->stop = 0;
+
     for(i=0;i<world->queue_num;i++){
         chunk_queue_free(world->queues+i);
     }
 
     for(i=0;i<world->width*world->height*world->player_num;i++){
         chunk_free(world->chunk_data+i);
-        THREAD_LOCK_FREE(world->chunk_locks[i]);
     }
 
     free(world->chunk_data);
@@ -431,14 +436,17 @@ void world_free(World *world) {
     free(world->chunks);
     world->chunks = NULL;
 
-    free(world->chunk_locks);
-    world->chunk_locks = NULL;
-
     free(world->queues);
     world->queues = NULL;
 
     free(world->emptying_queue);
     world->emptying_queue = NULL;
+
+    free(world->threads);
+    world->threads = NULL;
+
+    free(world->thread_data);
+    world->thread_data = NULL;
 
     free(world->players);
     world->players = NULL;

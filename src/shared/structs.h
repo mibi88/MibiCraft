@@ -90,6 +90,8 @@ struct Chunk {
     GFXModel chunk_model;
 
     int x, z;
+
+    thread_lock_t lock;
 };
 
 typedef struct {
@@ -107,7 +109,14 @@ typedef struct {
     thread_lock_t lock;
 } ChunkQueue;
 
+typedef struct world World;
+
 typedef struct {
+    World *w;
+    ChunkQueue *queue;
+} UpdateData;
+
+struct world {
     Player *players;
     size_t player_num;
 
@@ -117,6 +126,8 @@ typedef struct {
     ChunkQueue *queues;
     size_t queue_num;
     size_t last_queue;
+    thread_t *threads;
+    UpdateData *thread_data;
 
     char *emptying_queue;
     thread_lock_t emptying_queue_lock;
@@ -125,13 +136,13 @@ typedef struct {
     size_t empty_chunks;
     thread_lock_t empty_lock;
 
-    thread_lock_t *chunk_locks;
+    int stop;
 
     size_t width, height;
 
     int seed;
 
     unsigned int texture;
-} World;
+};
 
 #endif

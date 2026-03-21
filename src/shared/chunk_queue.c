@@ -142,6 +142,18 @@ ChunkUpdate chunk_queue_pop(ChunkQueue *queue) {
     return r;
 }
 
+int chunk_queue_empty(ChunkQueue *queue) {
+    int r;
+
+    THREAD_LOCK_LOCK(queue->lock);
+
+    r = queue->start == queue->end;
+
+    THREAD_LOCK_UNLOCK(queue->lock);
+
+    return r;
+}
+
 void chunk_queue_free(ChunkQueue *queue) {
 #if DEBUG_CHUNKQUEUE
     printf("%p: free\n", queue);

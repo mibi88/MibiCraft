@@ -546,8 +546,7 @@ const Tile fallen_spruce_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
 /**************/
 
 int chunk_init(Chunk *chunk) {
-    /* Empty for now */
-    (void)chunk;
+    THREAD_LOCK_INIT(chunk->lock);
 
     return 0;
 }
@@ -1127,7 +1126,5 @@ CHUNKNOLEFT:
 }
 
 void chunk_free(Chunk *chunk) {
-    (void)chunk;
-
-    /* Empty for now. */
+    THREAD_LOCK_FREE(chunk->lock);
 }
