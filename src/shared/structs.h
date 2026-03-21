@@ -23,7 +23,17 @@
 
 #include <shared/threading.h>
 
+#include <client/gfx.h>
+
 #include <stddef.h>
+
+#define CHUNK_WIDTH           8
+#define CHUNK_HEIGHT          128
+#define CHUNK_DEPTH           8
+
+#define BLOCK_VERTEX_MAX      (6*4*3/2)
+#define BLOCK_INDEX_MAX       (6*6/2)
+#define BLOCK_TEXTURE_MAX     (6*4*2/2)
 
 #define HITBOX_SZ 2
 

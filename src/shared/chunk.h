@@ -19,10 +19,6 @@
 #ifndef SHARED_CHUNK_H
 #define SHARED_CHUNK_H
 
-#define CHUNK_WIDTH           8
-#define CHUNK_HEIGHT          128
-#define CHUNK_DEPTH           8
-
 #define TEX_WIDTH             256
 #define TEX_HEIGHT            256
 
@@ -31,10 +27,6 @@
 
 #define TILE_AWIDTH           (TEX_WIDTH/TILE_WIDTH)
 #define TILE_AHEIGHT          (TEX_HEIGHT/TILE_HEIGHT)
-
-#define BLOCK_VERTEX_MAX      (6*4*3/2)
-#define BLOCK_INDEX_MAX       (6*6/2)
-#define BLOCK_TEXTURE_MAX     (6*4*2/2)
 
 #define TREE_WIDTH            5
 #define TREE_HEIGHT           8
