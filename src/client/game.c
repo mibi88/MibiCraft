@@ -90,8 +90,9 @@ void game_input(Game *game, int v1, int v2, int type) {
                     if(button_mouse_inside(&game->button_singleplayer, game->mx,
                                            game->my)){
                         if(!world_init(&game->world, game->render_distance*2+1,
-                                       game->render_distance*2+1, 1, game->seed,
-                                       game->texture, 1)){
+                                       game->render_distance*2+1, 1,
+                                       THREAD_NPROC(), game->seed,
+                                       game->texture)){
                             game->player = game->world.players;
                             game->screen = D_INGAME;
                             gfx_cursor_hide();

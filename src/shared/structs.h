@@ -93,7 +93,12 @@ struct Chunk {
 };
 
 typedef struct {
-    Chunk **data;
+    Chunk *chunk;
+    unsigned char flags;
+} ChunkUpdate;
+
+typedef struct {
+    ChunkUpdate *data;
     size_t size;
 
     size_t start;
@@ -111,6 +116,10 @@ typedef struct {
 
     ChunkQueue *queues;
     size_t queue_num;
+    size_t last_queue;
+
+    char *emptying_queue;
+    thread_lock_t emptying_queue_lock;
 
     Chunk **empty;
     size_t empty_chunks;

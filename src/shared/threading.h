@@ -59,9 +59,9 @@ typedef HANDLE thread_lock_t;
 
 #define THREAD_EXIT() pthread_exit(NULL)
 
-#define THREAD_CREATE(id, call, data) pthread_create(&id, NULL, call, \
-                                                     (void*)data); \
-                                      pthread_detach(id)
+#define THREAD_CREATE(id, call, data) (pthread_create(&id, NULL, call, \
+                                                      (void*)data) | \
+                                       pthread_detach(id))
 
 typedef pthread_mutex_t thread_lock_t;
 

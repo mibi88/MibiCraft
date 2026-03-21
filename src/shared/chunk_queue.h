@@ -21,10 +21,12 @@
 
 #include <shared/structs.h>
 
+#define CHUNK_QUEUE_EMPTY(q) = (q)->start == (q)->end;
+
 int chunk_queue_init(ChunkQueue *queue, size_t size);
-int chunk_queue_push(ChunkQueue *queue, Chunk *chunk);
-int chunk_queue_bypass(ChunkQueue *queue, Chunk *chunk);
-Chunk *chunk_queue_pop(ChunkQueue *queue);
+int chunk_queue_push(ChunkQueue *queue, ChunkUpdate update);
+int chunk_queue_bypass(ChunkQueue *queue, ChunkUpdate update);
+ChunkUpdate chunk_queue_pop(ChunkQueue *queue);
 void chunk_queue_free(ChunkQueue *queue);
 
 #endif

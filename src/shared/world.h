@@ -25,6 +25,11 @@
 
 #include <shared/structs.h>
 
+enum {
+    CU_MESH = 1,
+    CU_DATA = 2
+};
+
 int world_init(World *world, size_t width, size_t height, size_t player_num,
                size_t queue_num, int seed, unsigned int texture);
 

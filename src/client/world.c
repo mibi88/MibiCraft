@@ -19,19 +19,22 @@
 #include <shared/world.h>
 #include <client/world.h>
 
-void world_render(World *world, int player) {
+void world_render(World *world, size_t player) {
     size_t i;
+    size_t b = player*world->width*world->height;
 
     gfx_reset_texture_transforms();
     gfx_set_texture_scale(TILE_WIDTH/(float)TEX_WIDTH,
                           TILE_HEIGHT/(float)TEX_WIDTH);
 
     for(i=0;i<world->width*world->height;i++) {
-        if(!THREAD_LOCK_TRYLOCK(world->chunk_locks[i])) continue;
-        gfx_draw_model(&world->chunks[i]->chunk_model,
-                       world->chunks[i]->x-0.5, -(CHUNK_HEIGHT/2)-0.5,
-                       world->chunks[i]->z-0.5, 0, 0, 0);
-        THREAD_LOCK_UNLOCK(world->chunk_locks[i]);
+        printf("%f, %f\n", world->chunks[b+i]->x-0.5,
+                           world->chunks[b+i]->z-0.5);
+        /*if(!THREAD_LOCK_TRYLOCK(world->chunk_locks[i])) continue;*/
+        gfx_draw_model(&world->chunks[b+i]->chunk_model,
+                       world->chunks[b+i]->x-0.5, -(CHUNK_HEIGHT/2)-0.5,
+                       world->chunks[b+i]->z-0.5, 0, 0, 0);
+        /*THREAD_LOCK_UNLOCK(world->chunk_locks[i]);*/
     }
 
     gfx_reset_texture_transforms();
