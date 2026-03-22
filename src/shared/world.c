@@ -25,6 +25,7 @@
 #include <shared/chunk_queue.h>
 
 #include <limits.h>
+#include <math.h>
 
 int world_init(World *world, size_t width, size_t height, size_t player_num,
                size_t queue_num, int seed, unsigned int texture) {
@@ -200,41 +201,36 @@ void world_update_chunk_fast(World *world, Chunk *chunk, unsigned char flags) {
 void world_update_all(World *world, size_t player, unsigned char flags) {
     size_t b = player*world->width*world->height;
 
-    if(world->width == world->height && (world->width&1) && 0){
+    if(world->width == world->height && (world->width&1)){
         size_t s = world->width/2;
         size_t i;
 
-        world_update_chunk(world, world->chunks[b+s*(world->width+1)+s],
-                           flags);
+        world_update_chunk(world, world->chunks[b+s*world->width+s], flags);
 
         for(i=1;i<=s;i++){
             size_t n;
 
             for(n=0;n<i;n++){
                 world_update_chunk(world,
-                                   world->chunks[b+(s-i+n)*(world->width+1)+
-                                                 s-n],
+                                   world->chunks[b+(s-i+n)*world->width+s-n],
                                    flags);
             }
 
             for(n=0;n<i;n++){
                 world_update_chunk(world,
-                                   world->chunks[b+(s+n)*(world->width+1)+
-                                                 s-i+n],
+                                   world->chunks[b+(s+n)*world->width+s-i+n],
                                    flags);
             }
 
             for(n=0;n<i;n++){
                 world_update_chunk(world,
-                                   world->chunks[b+(s+i-n)*(world->width+1)+
-                                                 s+n],
+                                   world->chunks[b+(s+i-n)*world->width+s+n],
                                    flags);
             }
 
             for(n=0;n<i;n++){
                 world_update_chunk(world,
-                                   world->chunks[b+(s-n)*(world->width+1)+
-                                                 s+i-n],
+                                   world->chunks[b+(s-n)*world->width+s+i-n],
                                    flags);
             }
 
@@ -245,28 +241,28 @@ void world_update_all(World *world, size_t player, unsigned char flags) {
 
             for(n=0;n<i+1;n++){
                 world_update_chunk(world,
-                                   world->chunks[b+n*(world->width+1)+i-n],
+                                   world->chunks[b+n*world->width+i-n],
                                    flags);
             }
 
             for(n=0;n<i+1;n++){
                 world_update_chunk(world,
                                    world->chunks[b+(world->height-1-i+n)*
-                                                 (world->width+1)+n],
+                                                 world->width+n],
                                    flags);
             }
 
             for(n=0;n<i+1;n++){
                 world_update_chunk(world,
                                    world->chunks[b+(world->height-1-n)*
-                                                 (world->width+1)+
+                                                 world->width+
                                                  world->width-1-i+n],
                                    flags);
             }
 
             for(n=0;n<i+1;n++){
                 world_update_chunk(world,
-                                   world->chunks[b+(i-n)*(world->width+1)+
+                                   world->chunks[b+(i-n)*world->width+
                                                  world->width-1-n],
                                    flags);
             }
@@ -328,7 +324,9 @@ static THREAD_CALL(update_thread, vupdate_data) {
         if(d->w->stop) break;
         THREAD_LOCK_LOCK(update.chunk->lock);
 
+#if 0
         printf("%d, %d\n", update.chunk->x, update.chunk->z);
+#endif
 
         if(update.flags&CU_DATA){
             chunk_generate_data(update.chunk, update.chunk->x,
@@ -378,11 +376,80 @@ static Chunk *world_get_chunk(World *world, int x, int y) {
 }
 
 void world_set_tile(World *world, Tile tile, int x, int y, int z) {
-    /* FIXME */
+    long min_x, min_z;
+    long ix = floor(x+0.5);
+    long iy = floor(y+0.5);
+    long iz = floor(z+0.5);
+
+    /* TODO: Support multiple players */
+    THREAD_LOCK_LOCK(world->chunks[0]->lock);
+
+    min_x = world->chunks[0]->x;
+    min_z = world->chunks[0]->z;
+
+    THREAD_LOCK_UNLOCK(world->chunks[0]->lock);
+
+    if(ix >= min_x && ix < min_x+(long)world->width*CHUNK_WIDTH &&
+       iz >= min_z && iz < min_z+(long)world->height*CHUNK_DEPTH){
+        Chunk *c;
+
+        long cx = ix;
+        long cz = iz;
+
+        Tile t;
+
+        ix -= min_x;
+        iz -= min_z;
+
+        c = world->chunks[iz/CHUNK_DEPTH*world->width+ix/CHUNK_WIDTH];
+
+        THREAD_LOCK_LOCK(c->lock);
+
+        chunk_set_tile(c, tile, cx-c->x, iy, cz-c->z);
+
+        THREAD_LOCK_UNLOCK(c->lock);
+
+        world_update_chunk_fast(world, c, CU_MESH);
+    }
 }
 
 Tile world_get_tile(World *world, float x, float y, float z) {
-    /* FIXME */
+    long min_x, min_z;
+    long ix = floor(x+0.5);
+    long iy = floor(y+0.5);
+    long iz = floor(z+0.5);
+
+    /* TODO: Support multiple players */
+    THREAD_LOCK_LOCK(world->chunks[0]->lock);
+
+    min_x = world->chunks[0]->x;
+    min_z = world->chunks[0]->z;
+
+    THREAD_LOCK_UNLOCK(world->chunks[0]->lock);
+
+    if(ix >= min_x && ix < min_x+(long)world->width*CHUNK_WIDTH &&
+       iz >= min_z && iz < min_z+(long)world->height*CHUNK_DEPTH){
+        Chunk *c;
+
+        long cx = ix;
+        long cz = iz;
+
+        Tile t;
+
+        ix -= min_x;
+        iz -= min_z;
+
+        c = world->chunks[iz/CHUNK_DEPTH*world->width+ix/CHUNK_WIDTH];
+
+        THREAD_LOCK_LOCK(c->lock);
+
+        t = chunk_get_tile(c, cx-c->x, iy, cz-c->z, 0, 0, 0);
+
+        THREAD_LOCK_UNLOCK(c->lock);
+
+        return t;
+    }
+
     return T_VOID;
 }
 
