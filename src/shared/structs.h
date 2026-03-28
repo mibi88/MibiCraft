@@ -72,6 +72,11 @@ typedef unsigned short int index_t;
 typedef short int texture_t;
 #define TYPE_TEXTURE TYPE_SHORT
 
+enum {
+    CF_INIT = 1,
+    CF_WAITMESH = 2
+};
+
 typedef struct Chunk Chunk;
 struct Chunk {
     /* TODO: Allocate all this stuff on the heap, and only allocate
@@ -91,9 +96,10 @@ struct Chunk {
 
     int x, z;
 
-    int initialized;
+    unsigned char flags;
 
     thread_lock_t lock;
+    thread_lock_t flags_lock;
 };
 
 typedef struct {

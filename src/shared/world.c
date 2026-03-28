@@ -176,6 +176,28 @@ int world_init(World *world, size_t width, size_t height, size_t player_num,
     return 0;
 }
 
+Chunk *world_get_chunk(World *world, long x, long z) {
+    long min_x, min_z;
+
+    /* TODO: Support multiple players */
+    THREAD_LOCK_LOCK(world->chunks[0]->lock);
+
+    min_x = world->chunks[0]->x;
+    min_z = world->chunks[0]->z;
+
+    THREAD_LOCK_UNLOCK(world->chunks[0]->lock);
+
+    if(x >= min_x && x < min_x+(long)world->width*CHUNK_WIDTH &&
+       z >= min_z && z < min_z+(long)world->height*CHUNK_DEPTH){
+        x -= min_x;
+        z -= min_z;
+
+        return world->chunks[z/CHUNK_DEPTH*world->width+x/CHUNK_WIDTH];
+    }
+
+    return NULL;
+}
+
 void world_update_chunk(World *world, Chunk *chunk, unsigned char flags) {
     ChunkUpdate update;
 
@@ -353,8 +375,10 @@ static Tile get_tile(Chunk *ch, int x, int y, int z, int rx, int ry, int rz,
             }
         }
 
-        if(!c->initialized) t = T_VOID;
+        THREAD_LOCK_LOCK(c->flags_lock);
+        if(!(c->flags&CF_INIT)) t = T_VOID;
         else t = c->chunk_data[cx-c->x][iy][cz-c->z];
+        THREAD_LOCK_UNLOCK(c->flags_lock);
 
         if(ch != c) THREAD_LOCK_UNLOCK(c->lock);
 
@@ -519,8 +543,10 @@ Tile world_get_tile(World *world, float x, float y, float z) {
 
         THREAD_LOCK_LOCK(c->lock);
 
-        if(!c->initialized) t = T_VOID;
+        THREAD_LOCK_LOCK(c->flags_lock);
+        if(!(c->flags&CF_INIT)) t = T_VOID;
         else t = c->chunk_data[cx-c->x][iy][cz-c->z];
+        THREAD_LOCK_UNLOCK(c->flags_lock);
 
         THREAD_LOCK_UNLOCK(c->lock);
 

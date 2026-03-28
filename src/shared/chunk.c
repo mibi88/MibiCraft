@@ -548,7 +548,13 @@ const Tile fallen_spruce_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
 int chunk_init(Chunk *chunk) {
     if(THREAD_LOCK_INIT(chunk->lock)) return 1;
 
-    chunk->initialized = 0;
+    if(THREAD_LOCK_INIT(chunk->flags_lock)){
+        THREAD_LOCK_FREE(chunk->lock);
+
+        return 2;
+    }
+
+    chunk->flags = 0;
 
     gfx_init_model(&chunk->chunk_model, chunk->chunk_vertices,
                    chunk->chunk_indices, chunk->chunk_texture_coords, 0,
@@ -875,7 +881,9 @@ void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
     }
 #endif
 
-    chunk->initialized = 1;
+    THREAD_LOCK_LOCK(chunk->flags_lock);
+    chunk->flags = CF_INIT;
+    THREAD_LOCK_UNLOCK(chunk->flags_lock);
 }
 
 Tile chunk_get_tile(Chunk *chunk, int x, int y, int z, int rx, int ry, int rz) {
