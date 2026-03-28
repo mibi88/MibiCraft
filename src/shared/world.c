@@ -317,22 +317,20 @@ static Tile get_tile(Chunk *ch, int x, int y, int z, int rx, int ry, int rz,
     long iy = y+ry;
     long iz = z+rz;
 
-    return T_VOID;
-
     if(iy < 0 || iy >= CHUNK_HEIGHT) return T_VOID;
 
     /* TODO: Support multiple players */
-    if(ch != world->chunks[0]) {THREAD_LOCK_LOCK(world->chunks[0]->lock);
-    puts("c0 locked");}
+    if(ch != world->chunks[0]){
+        while(THREAD_LOCK_TRYLOCK(world->chunks[0]->lock)){
+            THREAD_LOCK_UNLOCK(ch->lock);
+            THREAD_LOCK_LOCK(ch->lock);
+        }
+    }
 
     min_x = world->chunks[0]->x;
     min_z = world->chunks[0]->z;
 
-    if(ch != world->chunks[0]) {THREAD_LOCK_UNLOCK(world->chunks[0]->lock);
-    puts("c0 unlocked");}
-
-    printf("%d, %d -- %d, %d -- %ld, %ld, %ld\n", ch->x, ch->z, min_x, min_z,
-           ix, iy, iz);
+    if(ch != world->chunks[0]) THREAD_LOCK_UNLOCK(world->chunks[0]->lock);
 
     if(ix >= min_x && ix < min_x+(long)world->width*CHUNK_WIDTH &&
        iz >= min_z && iz < min_z+(long)world->height*CHUNK_DEPTH){
@@ -348,15 +346,17 @@ static Tile get_tile(Chunk *ch, int x, int y, int z, int rx, int ry, int rz,
 
         c = world->chunks[iz/CHUNK_DEPTH*world->width+ix/CHUNK_WIDTH];
 
-        printf("%d, %d -- %d, %d\n", ch->x, ch->z, c->x, c->z);
+        if(ch != c){
+            while(THREAD_LOCK_TRYLOCK(c->lock)){
+                THREAD_LOCK_UNLOCK(ch->lock);
+                THREAD_LOCK_LOCK(ch->lock);
+            }
+        }
 
-        if(ch != c) {THREAD_LOCK_LOCK(c->lock);
-        puts("c locked");}
+        if(!c->initialized) t = T_VOID;
+        else t = c->chunk_data[cx-c->x][iy][cz-c->z];
 
-        t = c->chunk_data[ix][iy][iz];
-
-        if(ch != c) {THREAD_LOCK_UNLOCK(c->lock);
-        puts("c unlocked");}
+        if(ch != c) THREAD_LOCK_UNLOCK(c->lock);
 
         return t;
     }
@@ -421,6 +421,8 @@ void world_set_tile(World *world, Tile tile, int x, int y, int z) {
     long iy = floor(y+0.5);
     long iz = floor(z+0.5);
 
+    if(iy < 0 || iy >= CHUNK_HEIGHT) return;
+
     /* TODO: Support multiple players */
     THREAD_LOCK_LOCK(world->chunks[0]->lock);
 
@@ -443,7 +445,7 @@ void world_set_tile(World *world, Tile tile, int x, int y, int z) {
 
         THREAD_LOCK_LOCK(c->lock);
 
-        chunk_set_tile(c, tile, cx-c->x, iy, cz-c->z);
+        c->chunk_data[cx-c->x][iy][cz-c->z] = tile;
 
         THREAD_LOCK_UNLOCK(c->lock);
 
@@ -456,6 +458,8 @@ Tile world_get_tile(World *world, float x, float y, float z) {
     long ix = floor(x+0.5);
     long iy = floor(y+0.5);
     long iz = floor(z+0.5);
+
+    if(iy < 0 || iy >= CHUNK_HEIGHT) return T_VOID;
 
     /* TODO: Support multiple players */
     THREAD_LOCK_LOCK(world->chunks[0]->lock);
@@ -481,7 +485,8 @@ Tile world_get_tile(World *world, float x, float y, float z) {
 
         THREAD_LOCK_LOCK(c->lock);
 
-        t = chunk_get_tile(c, cx-c->x, iy, cz-c->z, 0, 0, 0);
+        if(!c->initialized) t = T_VOID;
+        else t = c->chunk_data[cx-c->x][iy][cz-c->z];
 
         THREAD_LOCK_UNLOCK(c->lock);
 

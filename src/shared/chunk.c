@@ -548,6 +548,8 @@ const Tile fallen_spruce_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
 int chunk_init(Chunk *chunk) {
     if(THREAD_LOCK_INIT(chunk->lock)) return 1;
 
+    chunk->initialized = 0;
+
     gfx_init_model(&chunk->chunk_model, chunk->chunk_vertices,
                    chunk->chunk_indices, chunk->chunk_texture_coords, 0,
                    1, 1, 0, TYPE_VERTEX, TYPE_INDEX, TYPE_TEXTURE);
@@ -872,6 +874,8 @@ void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
         }
     }
 #endif
+
+    chunk->initialized = 1;
 }
 
 Tile chunk_get_tile(Chunk *chunk, int x, int y, int z, int rx, int ry, int rz) {
@@ -1056,6 +1060,7 @@ NOBOTTOM:
                 next = get_surrounding_tile(chunk, chunk->x, 0, chunk->z, x, y,
                                             CHUNK_DEPTH, extra);
 
+                printf("%d\n", next);
                 if(NEXT_BLOCKING(face_back)) goto CHUNKNOFRONT;
 
                 /* Add a left face for this block */

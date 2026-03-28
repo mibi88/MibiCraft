@@ -91,6 +91,8 @@ struct Chunk {
 
     int x, z;
 
+    int initialized;
+
     thread_lock_t lock;
 };
 
