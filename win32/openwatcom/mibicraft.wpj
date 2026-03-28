@@ -4,9 +4,9 @@ projectIdent
 VpeMain
 1
 WRect
-1996
-1365
-5822
+0
+0
+5818
 8192
 2
 MProject
@@ -30,10 +30,10 @@ WVList
 VComponent
 8
 WRect
-365
-312
+362
+303
 5632
-4135
+4133
 0
 0
 9
@@ -41,5 +41,5 @@ WFileName
 13
 mibicraft.tgt
 0
-18
+0
 7

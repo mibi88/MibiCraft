@@ -415,16 +415,6 @@ void world_update(World *world) {
     }
 }
 
-static Chunk *world_get_chunk(World *world, int x, int y) {
-    size_t i;
-
-    for(i=0;i<world->player_num;i++){
-        /* TODO */
-    }
-
-    return NULL;
-}
-
 void world_set_tile(World *world, Tile tile, int x, int y, int z) {
     long min_x, min_z;
     long ix = floor(x+0.5);
@@ -445,8 +435,6 @@ void world_set_tile(World *world, Tile tile, int x, int y, int z) {
 
         long cx = ix;
         long cz = iz;
-
-        Tile t;
 
         ix -= min_x;
         iz -= min_z;

@@ -2,8 +2,8 @@ mibicraft_sources += [
   'client/main.c',
   'client/game.c',
   'client/button.c',
-  'client/world.c',
-  'client/chunk.c',
+  'client/client_world.c',
+  'client/client_chunk.c',
   
   'client/gfx/base.c',
   'client/gfx/config.c',
