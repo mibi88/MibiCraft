@@ -19,7 +19,7 @@
 #ifndef SHARED_CONFIG_H
 #define SHARED_CONFIG_H
 
-#define RENDER_DISTANCE  16
+#define RENDER_DISTANCE  8
 #define RAYCAST_DISTANCE 20
 #define THREADING        1
 #define DEBUG_WORLD      0

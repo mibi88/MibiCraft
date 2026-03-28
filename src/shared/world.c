@@ -308,10 +308,60 @@ void world_init_data(World *world) {
     }
 }
 
-static Tile get_tile(Chunk *c, int x, int y, int z, int rx, int ry, int rz,
+static Tile get_tile(Chunk *ch, int x, int y, int z, int rx, int ry, int rz,
                      void *extra) {
-    (void)extra;
-    return chunk_get_tile(c, x, y, z, rx, ry, rz);
+    World *world = extra;
+
+    long min_x, min_z;
+    long ix = x+rx;
+    long iy = y+ry;
+    long iz = z+rz;
+
+    return T_VOID;
+
+    if(iy < 0 || iy >= CHUNK_HEIGHT) return T_VOID;
+
+    /* TODO: Support multiple players */
+    if(ch != world->chunks[0]) {THREAD_LOCK_LOCK(world->chunks[0]->lock);
+    puts("c0 locked");}
+
+    min_x = world->chunks[0]->x;
+    min_z = world->chunks[0]->z;
+
+    if(ch != world->chunks[0]) {THREAD_LOCK_UNLOCK(world->chunks[0]->lock);
+    puts("c0 unlocked");}
+
+    printf("%d, %d -- %d, %d -- %ld, %ld, %ld\n", ch->x, ch->z, min_x, min_z,
+           ix, iy, iz);
+
+    if(ix >= min_x && ix < min_x+(long)world->width*CHUNK_WIDTH &&
+       iz >= min_z && iz < min_z+(long)world->height*CHUNK_DEPTH){
+        Chunk *c;
+
+        long cx = ix;
+        long cz = iz;
+
+        Tile t;
+
+        ix -= min_x;
+        iz -= min_z;
+
+        c = world->chunks[iz/CHUNK_DEPTH*world->width+ix/CHUNK_WIDTH];
+
+        printf("%d, %d -- %d, %d\n", ch->x, ch->z, c->x, c->z);
+
+        if(ch != c) {THREAD_LOCK_LOCK(c->lock);
+        puts("c locked");}
+
+        t = c->chunk_data[ix][iy][iz];
+
+        if(ch != c) {THREAD_LOCK_UNLOCK(c->lock);
+        puts("c unlocked");}
+
+        return t;
+    }
+
+    return T_VOID;
 }
 
 static THREAD_CALL(update_thread, vupdate_data) {
@@ -334,7 +384,7 @@ static THREAD_CALL(update_thread, vupdate_data) {
         }
         if(update.flags&CU_MESH) chunk_generate_model(update.chunk,
                                                       d->w->texture,
-                                                      get_tile, NULL);
+                                                      get_tile, d->w);
 
         THREAD_LOCK_UNLOCK(update.chunk->lock);
     }
