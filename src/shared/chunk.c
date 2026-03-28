@@ -200,7 +200,7 @@ const BlockProperty blocks[T_AMOUNT] = {
      {I_GRASS, I_GRASS, I_GRASS, I_GRASS, I_GRASS, I_DIRT, I_VOID},
      0, 1, 0},  /* T_GRASS */
     {(BlockShape*)&cube,
-     {I_SAND_STONE, I_DIRT, I_DIRT, I_DIRT, I_DIRT, I_DIRT, I_VOID},
+     {I_DIRT, I_DIRT, I_DIRT, I_DIRT, I_DIRT, I_DIRT, I_VOID},
      0, 1, 0},  /* T_DIRT */
     {(BlockShape*)&cube,
      {I_STONE, I_STONE, I_STONE, I_STONE, I_STONE, I_STONE, I_VOID},
@@ -1060,7 +1060,6 @@ NOBOTTOM:
                 next = get_surrounding_tile(chunk, chunk->x, 0, chunk->z, x, y,
                                             CHUNK_DEPTH, extra);
 
-                printf("%d\n", next);
                 if(NEXT_BLOCKING(face_back)) goto CHUNKNOFRONT;
 
                 /* Add a left face for this block */

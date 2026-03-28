@@ -415,11 +415,29 @@ void world_update(World *world) {
     }
 }
 
+#define UPDATE_NEIGHBOR(ix, iz) \
+    { \
+        if((ix) >= min_x && (ix) < min_x+(long)world->width*CHUNK_WIDTH && \
+           (iz) >= min_z && (iz) < min_z+(long)world->height*CHUNK_DEPTH){ \
+            Chunk *c; \
+ \
+            c = world->chunks[((iz)-min_z)/CHUNK_DEPTH*world->width+ \
+                              ((ix)-min_x)/CHUNK_WIDTH]; \
+            printf("n: %p -- %d, %d\n", (void*)c, c->x, c->z); \
+ \
+            world_update_chunk_fast(world, c, CU_MESH); \
+        } \
+    }
+
 void world_set_tile(World *world, Tile tile, int x, int y, int z) {
     long min_x, min_z;
-    long ix = floor(x+0.5);
-    long iy = floor(y+0.5);
-    long iz = floor(z+0.5);
+    long ix, iy, iz;
+
+    long tx, tz;
+
+    ix = floor(x+0.5);
+    iy = floor(y+0.5);
+    iz = floor(z+0.5);
 
     if(iy < 0 || iy >= CHUNK_HEIGHT) return;
 
@@ -435,29 +453,45 @@ void world_set_tile(World *world, Tile tile, int x, int y, int z) {
        iz >= min_z && iz < min_z+(long)world->height*CHUNK_DEPTH){
         Chunk *c;
 
-        long cx = ix;
-        long cz = iz;
+        long cx = ix-min_x;
+        long cz = iz-min_z;
 
-        ix -= min_x;
-        iz -= min_z;
-
-        c = world->chunks[iz/CHUNK_DEPTH*world->width+ix/CHUNK_WIDTH];
+        c = world->chunks[cz/CHUNK_DEPTH*world->width+cx/CHUNK_WIDTH];
+        printf("c: %p -- %d, %d\n", (void*)c, c->x, c->z);
 
         THREAD_LOCK_LOCK(c->lock);
 
-        c->chunk_data[cx-c->x][iy][cz-c->z] = tile;
+        tx = ix-c->x;
+        tz = iz-c->z;
+
+        c->chunk_data[tx][iy][tz] = tile;
 
         THREAD_LOCK_UNLOCK(c->lock);
 
         world_update_chunk_fast(world, c, CU_MESH);
     }
+
+    if(!tx){
+        UPDATE_NEIGHBOR(ix-1, iz);
+    }else if(tx == CHUNK_WIDTH-1){
+        UPDATE_NEIGHBOR(ix+1, iz);
+    }
+
+    if(!tz){
+        UPDATE_NEIGHBOR(ix, iz-1);
+    }else if(tz == CHUNK_DEPTH-1){
+        UPDATE_NEIGHBOR(ix, iz+1);
+    }
 }
 
 Tile world_get_tile(World *world, float x, float y, float z) {
     long min_x, min_z;
-    long ix = floor(x+0.5);
-    long iy = floor(y+0.5);
-    long iz = floor(z+0.5);
+
+    long ix, iy, iz;
+
+    ix = floor(x+0.5);
+    iy = floor(y+0.5);
+    iz = floor(z+0.5);
 
     if(iy < 0 || iy >= CHUNK_HEIGHT) return T_VOID;
 
