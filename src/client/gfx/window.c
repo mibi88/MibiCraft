@@ -24,6 +24,8 @@
 
 /* Win32 code */
 
+LARGE_INTEGER r;
+
 /* TODO: Find a better way to pass the window to the windowproc */
 MWWindow *_win;
 
@@ -163,6 +165,12 @@ int mw_init(MWWindow *window, int width, int height, char *title) {
     };
     RECT rect;
 
+    if(!QueryPerformanceFrequency(&r)){
+        fputs("[MibiCraft] Failed to QueryPerformanceFrequency!\n", stderr);
+        return 1;
+    }
+    r.QuadPart /= 1000;
+
     _win = window;
 
     window->class_name = malloc(sizeof(wchar_t)*strlen(title));
@@ -284,11 +292,9 @@ int mw_get_pointer_button(MWWindow *window) {
     return 0;
 }
 unsigned long mw_get_time(void) {
-    struct _timeb time;
-    long out;
-    _ftime(&time);
-    out = time.time*1000L+time.millitm;
-    return out;
+    LARGE_INTEGER ticks;
+    QueryPerformanceCounter(&ticks);
+    return ticks.QuadPart/r.QuadPart;
 }
 
 void mw_move_pointer(MWWindow *window, int x, int y) {

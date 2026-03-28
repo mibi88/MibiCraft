@@ -23,32 +23,34 @@
 
 #if THREADING
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 
 #include <windows.h>
 #include <tchar.h>
 
 #include <buildconfig.h>
 
-typedef DWORD thread_t;
+typedef HANDLE thread_t;
 
 #define THREAD_CALL(name, data) DWORD WINAPI name(LPVOID data)
 
-#define THREAD_CREATE(id, call, data) CreateThread(NULL, 0, call, data, 0, id)
-#define THREAD_JOIN(id) WaitForSingleObject(id, INFINITE)
+#define THREAD_CREATE(id, call, data) CreateThread(NULL, 0, call, data, 0, \
+                                                   *(id))
+#define THREAD_JOIN(id) WaitForSingleObject(id, INFINITE); CloseHandle(id)
 
 #define THREAD_EXIT() ExitThread(0); return 0
 
 /* XXX: Is this working correctly? */
 typedef HANDLE thread_lock_t;
 
-#define THREAD_LOCK_INIT(l) l = CreateMutex(NULL, FALSE, NULL)
+#define THREAD_LOCK_INIT(l) ((l = CreateMutex(NULL, FALSE, NULL)) == NULL)
 #define THREAD_LOCK_LOCK(l) WaitForSingleObject(l, INFINITE)
-#define THREAD_LOCK_TRYLOCK(l) WaitForSingleObject(l, 0) == WAIT_OBJECT_0
+#define THREAD_LOCK_TRYLOCK(l) WaitForSingleObject(l, 0) != WAIT_OBJECT_0
 #define THREAD_LOCK_UNLOCK(l) ReleaseMutex(l)
 #define THREAD_LOCK_FREE(l) CloseHandle(l)
 
-#define THREAD_NPROC() 1 /* TODO */
+int thread_win32_nproc(void);
+#define THREAD_NPROC() thread_win32_nproc()
 
 #else
 

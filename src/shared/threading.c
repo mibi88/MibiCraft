@@ -17,3 +17,17 @@
  */
 
 #include <shared/threading.h>
+
+#if defined(_WIN32) || defined(_WIN64)
+
+#include <windows.h>
+#include <stdio.h>
+
+int thread_win32_nproc(void) {
+    SYSTEM_INFO s;
+    GetSystemInfo(&s);
+    printf("nproc: %d\n", s.dwNumberOfProcessors);
+    return s.dwNumberOfProcessors;
+}
+
+#endif
