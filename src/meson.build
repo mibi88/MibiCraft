@@ -41,6 +41,7 @@ executable('MibiCraft', mibicraft_sources,
   install: true,
   link_args: [
     #'-ltsan',
+    #'-lasan',
   ],
   c_args: [
     has_xfixes.found() ? '-DHAS_XFIXES' : '',

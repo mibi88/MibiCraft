@@ -154,6 +154,55 @@ int chunk_queue_empty(ChunkQueue *queue) {
     return r;
 }
 
+int chunk_queue_resize(ChunkQueue *queue, size_t new_size) {
+    void *ptr;
+
+    THREAD_LOCK_LOCK(queue->lock);
+
+    if(new_size <= queue->end){
+        size_t len;
+        size_t new_start;
+        size_t new_end;
+
+        len = queue->end-queue->start;
+
+        if(len > new_size){
+            THREAD_LOCK_UNLOCK(queue->lock);
+            return 1;
+        }
+
+        new_start = (new_size-len)/2;
+        new_end = new_start+len;
+
+        memmove(queue->data+new_start, queue->data+queue->start,
+                len*sizeof(ChunkUpdate));
+        queue->start = new_start;
+        queue->end = new_end;
+    }
+
+    ptr = realloc(queue->data, new_size*sizeof(ChunkUpdate));
+    if(ptr == NULL){
+        THREAD_LOCK_UNLOCK(queue->lock);
+
+        return 2;
+    }
+    queue->data = ptr;
+    queue->size = new_size;
+
+    THREAD_LOCK_UNLOCK(queue->lock);
+
+    return 0;
+}
+
+void chunk_queue_clear(ChunkQueue *queue) {
+    THREAD_LOCK_LOCK(queue->lock);
+
+    queue->start = queue->size/2;
+    queue->end = queue->size/2;
+
+    THREAD_LOCK_UNLOCK(queue->lock);
+}
+
 void chunk_queue_free(ChunkQueue *queue) {
 #if DEBUG_CHUNKQUEUE
     printf("%p: free\n", queue);
@@ -163,4 +212,5 @@ void chunk_queue_free(ChunkQueue *queue) {
     queue->start = 0;
     queue->end = 0;
     queue->size = 0;
+    THREAD_LOCK_FREE(queue->lock);
 }

@@ -134,6 +134,7 @@ struct world {
     ChunkQueue *queues;
     size_t queue_num;
     size_t last_queue;
+    thread_lock_t last_queue_lock;
     thread_t *threads;
     UpdateData *thread_data;
 

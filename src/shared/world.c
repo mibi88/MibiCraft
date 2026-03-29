@@ -40,9 +40,18 @@ int world_init(World *world, size_t width, size_t height, size_t player_num,
 
     world->stop = 0;
 
+    if(THREAD_LOCK_INIT(world->last_queue_lock)){
+        fputs("Failed to init last_queue_lock", stderr);
+
+        return 1;
+    }
+
     if(world->players == NULL){
         fputs("Player init failed!\n", stderr);
-        return 1;
+
+        THREAD_LOCK_FREE(world->last_queue_lock);
+
+        return 2;
     }
 
     world->chunk_data = malloc(width*height*player_num*sizeof(Chunk));
@@ -81,7 +90,9 @@ int world_init(World *world, size_t width, size_t height, size_t player_num,
         free(world->empty);
         world->empty = NULL;
 
-        return 2;
+        THREAD_LOCK_FREE(world->last_queue_lock);
+
+        return 3;
     }
 
     world->queue_num = queue_num;
@@ -119,7 +130,9 @@ int world_init(World *world, size_t width, size_t height, size_t player_num,
             free(world->empty);
             world->empty = NULL;
 
-            return 3;
+            THREAD_LOCK_FREE(world->last_queue_lock);
+
+            return 4;
         }
     }
 
@@ -168,7 +181,9 @@ int world_init(World *world, size_t width, size_t height, size_t player_num,
                 free(world->empty);
                 world->empty = NULL;
 
-                return 4;
+                THREAD_LOCK_FREE(world->last_queue_lock);
+
+                return 5;
             }
         }
     }
@@ -190,9 +205,11 @@ void world_update_chunk(World *world, Chunk *chunk, unsigned char flags) {
         THREAD_LOCK_UNLOCK(chunk->flags_lock);
     }
 
+    THREAD_LOCK_LOCK(world->last_queue_lock);
     chunk_queue_push(world->queues+world->last_queue, update);
 
     world->last_queue = (world->last_queue+1)%world->queue_num;
+    THREAD_LOCK_UNLOCK(world->last_queue_lock);
 }
 
 void world_update_chunk_fast(World *world, Chunk *chunk, unsigned char flags) {
@@ -207,9 +224,11 @@ void world_update_chunk_fast(World *world, Chunk *chunk, unsigned char flags) {
         THREAD_LOCK_UNLOCK(chunk->flags_lock);
     }
 
+    THREAD_LOCK_LOCK(world->last_queue_lock);
     chunk_queue_bypass(world->queues+world->last_queue, update);
 
     world->last_queue = (world->last_queue+1)%world->queue_num;
+    THREAD_LOCK_UNLOCK(world->last_queue_lock);
 }
 
 void world_update_all(World *world, size_t player, unsigned char flags) {
@@ -451,8 +470,6 @@ void world_update(World *world) {
     size_t i;
 
     for(i=0;i<world->queue_num;i++){
-        char e;
-
         if(!chunk_queue_empty(world->queues+i)){
             UpdateData *d = world->thread_data+i;
 
@@ -488,8 +505,6 @@ void world_set_tile(World *world, Tile tile, int x, int y, int z) {
     long min_x, min_z;
     long ix, iy, iz;
 
-    long tx, tz;
-
     ix = floor(x+0.5);
     iy = floor(y+0.5);
     iz = floor(z+0.5);
@@ -511,6 +526,8 @@ void world_set_tile(World *world, Tile tile, int x, int y, int z) {
         long cx = ix-min_x;
         long cz = iz-min_z;
 
+        long tx, tz;
+
         c = world->chunks[cz/CHUNK_DEPTH*world->width+cx/CHUNK_WIDTH];
         printf("c: %p -- %d, %d\n", (void*)c, c->x, c->z);
 
@@ -524,18 +541,18 @@ void world_set_tile(World *world, Tile tile, int x, int y, int z) {
         THREAD_LOCK_UNLOCK(c->lock);
 
         world_update_chunk_fast(world, c, CU_MESH);
-    }
 
-    if(!tx){
-        UPDATE_NEIGHBOR(ix-1, iz);
-    }else if(tx == CHUNK_WIDTH-1){
-        UPDATE_NEIGHBOR(ix+1, iz);
-    }
+        if(!tx){
+            UPDATE_NEIGHBOR(ix-1, iz);
+        }else if(tx == CHUNK_WIDTH-1){
+            UPDATE_NEIGHBOR(ix+1, iz);
+        }
 
-    if(!tz){
-        UPDATE_NEIGHBOR(ix, iz-1);
-    }else if(tz == CHUNK_DEPTH-1){
-        UPDATE_NEIGHBOR(ix, iz+1);
+        if(!tz){
+            UPDATE_NEIGHBOR(ix, iz-1);
+        }else if(tz == CHUNK_DEPTH-1){
+            UPDATE_NEIGHBOR(ix, iz+1);
+        }
     }
 }
 
@@ -587,13 +604,7 @@ Tile world_get_tile(World *world, float x, float y, float z) {
     return T_VOID;
 }
 
-int world_change_size(World *world, int width, int height) {
-    /* FIXME */
-
-    return 0;
-}
-
-void world_free(World *world) {
+static void stop_threads(World *world) {
     size_t i;
 
     world->stop = 1;
@@ -601,9 +612,135 @@ void world_free(World *world) {
         if(world->thread_data[i].w != NULL){
             printf("join: %lu\n", world->threads[i]);
             THREAD_JOIN(world->threads[i]);
+            world->thread_data[i].w = NULL;
         }
     }
     world->stop = 0;
+}
+
+int world_change_size(World *world, size_t width, size_t height) {
+    void *ptr;
+    size_t i;
+
+    /* TODO: Only reload the chunks that need to be reloaded. */
+
+    stop_threads(world);
+
+    for(i=0;i<world->queue_num;i++){
+        chunk_queue_clear(world->queues+i);
+    }
+
+    for(i=0;i<world->width*world->height*world->player_num;i++){
+        chunk_free(world->chunk_data+i);
+    }
+
+    ptr = realloc(world->chunk_data, width*height*world->player_num*
+                                     sizeof(Chunk));
+    if(ptr == NULL){
+        return 1;
+    }
+    world->chunk_data = ptr;
+
+    ptr = realloc(world->chunks,
+                  width*height*world->player_num*sizeof(Chunk*));
+    if(ptr == NULL){
+        ptr = realloc(world->chunk_data, world->width*world->height*
+                                         world->player_num*sizeof(Chunk));
+        if(ptr != NULL) world->chunk_data = ptr;
+
+        return 2;
+    }
+    world->chunks = ptr;
+
+    ptr = realloc(world->empty, width*height*world->player_num*sizeof(Chunk*));
+    if(ptr == NULL){
+        ptr = realloc(world->chunk_data, world->width*world->height*
+                                         world->player_num*sizeof(Chunk));
+        if(ptr != NULL) world->chunk_data = ptr;
+
+        ptr = realloc(world->chunks, world->width*world->height*
+                                     world->player_num*sizeof(Chunk*));
+        if(ptr != NULL) world->chunks = ptr;
+
+        return 3;
+    }
+    world->empty = ptr;
+
+    for(i=0;i<world->queue_num;i++){
+        if(chunk_queue_resize(world->queues+i,
+                              width*height*world->player_num)){
+            size_t n;
+
+            ptr = realloc(world->chunk_data, world->width*world->height*
+                                             world->player_num*sizeof(Chunk));
+            if(ptr != NULL) world->chunk_data = ptr;
+
+            ptr = realloc(world->chunks, world->width*world->height*
+                                         world->player_num*sizeof(Chunk*));
+            if(ptr != NULL) world->chunks = ptr;
+
+            ptr = realloc(world->empty, world->width*world->height*
+                                        world->player_num*sizeof(Chunk*));
+            if(ptr != NULL) world->empty = ptr;
+
+            for(n=i;n--;){
+                chunk_queue_resize(world->queues+n, world->width*world->height*
+                                   world->player_num);
+            }
+            return 4;
+        }
+    }
+
+    for(i=0;i<world->player_num*width*height;i++){
+        world->chunks[i] = world->chunk_data+i;
+        if(chunk_init(world->chunk_data+i)){
+            size_t n;
+
+            for(n=i;n--;){
+                chunk_free(world->chunk_data+n);
+            }
+
+            ptr = realloc(world->chunk_data, world->width*world->height*
+                                             world->player_num*
+                                             sizeof(Chunk));
+            if(ptr != NULL) world->chunk_data = ptr;
+
+            ptr = realloc(world->chunks, world->width*world->height*
+                                         world->player_num*sizeof(Chunk*));
+            if(ptr != NULL) world->chunks = ptr;
+
+            ptr = realloc(world->empty, world->width*world->height*
+                                        world->player_num*sizeof(Chunk*));
+            if(ptr != NULL) world->empty = ptr;
+
+            for(n=0;n<world->queue_num;n++){
+                chunk_queue_resize(world->queues+n,
+                                   world->width*world->height*
+                                   world->player_num);
+            }
+
+            return 4;
+        }
+    }
+
+    printf("%ld, %ld -- %ld, %ld\n", world->width, world->height,
+                                     width, height);
+
+    world->width = width;
+    world->height = height;
+
+    /* TODO: Only update chunks that need to be updated. */
+    world_init_data(world);
+
+    puts("done");
+
+    return 0;
+}
+
+void world_free(World *world) {
+    size_t i;
+
+    stop_threads(world);
 
     for(i=0;i<world->queue_num;i++){
         chunk_queue_free(world->queues+i);
@@ -635,4 +772,6 @@ void world_free(World *world) {
     world->empty = NULL;
 
     world->queue_num = 0;
+
+    THREAD_LOCK_FREE(world->last_queue_lock);
 }

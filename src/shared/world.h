@@ -40,7 +40,7 @@ void world_update(World *world);
 Tile world_get_tile(World *world, float x, float y, float z);
 void world_set_tile(World *world, Tile tile, int x, int y, int z);
 
-int world_change_size(World *world, int width, int height);
+int world_change_size(World *world, size_t width, size_t height);
 
 void world_free(World *world);
 
