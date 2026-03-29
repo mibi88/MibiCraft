@@ -27,6 +27,8 @@
 #include <limits.h>
 #include <math.h>
 
+/* TODO: Do not remesh chunks that frequently. */
+
 int world_init(World *world, size_t width, size_t height, size_t player_num,
                size_t queue_num, int seed, unsigned int texture) {
     size_t i;
@@ -176,33 +178,17 @@ int world_init(World *world, size_t width, size_t height, size_t player_num,
     return 0;
 }
 
-Chunk *world_get_chunk(World *world, long x, long z) {
-    long min_x, min_z;
-
-    /* TODO: Support multiple players */
-    THREAD_LOCK_LOCK(world->chunks[0]->lock);
-
-    min_x = world->chunks[0]->x;
-    min_z = world->chunks[0]->z;
-
-    THREAD_LOCK_UNLOCK(world->chunks[0]->lock);
-
-    if(x >= min_x && x < min_x+(long)world->width*CHUNK_WIDTH &&
-       z >= min_z && z < min_z+(long)world->height*CHUNK_DEPTH){
-        x -= min_x;
-        z -= min_z;
-
-        return world->chunks[z/CHUNK_DEPTH*world->width+x/CHUNK_WIDTH];
-    }
-
-    return NULL;
-}
-
 void world_update_chunk(World *world, Chunk *chunk, unsigned char flags) {
     ChunkUpdate update;
 
     update.chunk = chunk;
     update.flags = flags;
+
+    if(flags&CU_MESH){
+        THREAD_LOCK_LOCK(chunk->flags_lock);
+        chunk->flags |= CF_WAITMESH;
+        THREAD_LOCK_UNLOCK(chunk->flags_lock);
+    }
 
     chunk_queue_push(world->queues+world->last_queue, update);
 
@@ -214,6 +200,12 @@ void world_update_chunk_fast(World *world, Chunk *chunk, unsigned char flags) {
 
     update.chunk = chunk;
     update.flags = flags;
+
+    if(flags&CU_MESH){
+        THREAD_LOCK_LOCK(chunk->flags_lock);
+        chunk->flags |= CF_WAITMESH;
+        THREAD_LOCK_UNLOCK(chunk->flags_lock);
+    }
 
     chunk_queue_bypass(world->queues+world->last_queue, update);
 
@@ -388,6 +380,40 @@ static Tile get_tile(Chunk *ch, int x, int y, int z, int rx, int ry, int rz,
     return T_VOID;
 }
 
+static void remesh_chunk(World *world, Chunk *chunk, long x, long z) {
+    long min_x, min_z;
+
+    /* TODO: Support multiple players */
+    if(world->chunks[0] != chunk){
+        while(THREAD_LOCK_TRYLOCK(world->chunks[0]->lock)){
+            THREAD_LOCK_UNLOCK(chunk->lock);
+            THREAD_LOCK_LOCK(chunk->lock);
+        }
+    }
+
+    min_x = world->chunks[0]->x;
+    min_z = world->chunks[0]->z;
+
+    if(world->chunks[0] != chunk) THREAD_LOCK_UNLOCK(world->chunks[0]->lock);
+
+    if(x >= min_x && x < min_x+(long)world->width*CHUNK_WIDTH &&
+       z >= min_z && z < min_z+(long)world->height*CHUNK_DEPTH){
+        Chunk *c;
+        unsigned char flags;
+
+        x -= min_x;
+        z -= min_z;
+
+        c = world->chunks[z/CHUNK_DEPTH*world->width+x/CHUNK_WIDTH];
+        THREAD_LOCK_LOCK(c->flags_lock);
+        flags = c->flags;
+        THREAD_LOCK_UNLOCK(c->flags_lock);
+        if((flags&(CF_INIT|CF_WAITMESH)) == CF_INIT){
+            world_update_chunk(world, c, CU_MESH);
+        }
+    }
+}
+
 static THREAD_CALL(update_thread, vupdate_data) {
     UpdateData *d = vupdate_data;
     ChunkUpdate update;
@@ -398,13 +424,18 @@ static THREAD_CALL(update_thread, vupdate_data) {
         if(d->w->stop) break;
         THREAD_LOCK_LOCK(update.chunk->lock);
 
-#if 0
-        printf("%d, %d\n", update.chunk->x, update.chunk->z);
-#endif
-
         if(update.flags&CU_DATA){
+            long x = update.chunk->x;
+            long z = update.chunk->z;
+
             chunk_generate_data(update.chunk, update.chunk->x,
                                 update.chunk->z, d->w->seed);
+
+            /* Update neighboring chunk meshes */
+            remesh_chunk(d->w, update.chunk, x-1, z);
+            remesh_chunk(d->w, update.chunk, x+CHUNK_WIDTH, z);
+            remesh_chunk(d->w, update.chunk, x, z-1);
+            remesh_chunk(d->w, update.chunk, x, z+CHUNK_DEPTH);
         }
         if(update.flags&CU_MESH) chunk_generate_model(update.chunk,
                                                       d->w->texture,

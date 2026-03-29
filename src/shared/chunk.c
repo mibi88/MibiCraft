@@ -955,6 +955,10 @@ void chunk_generate_model(Chunk *chunk, unsigned int texture,
     index_t *index_ptr = chunk->chunk_indices;
     size_t indices = 0;
 
+    THREAD_LOCK_LOCK(chunk->flags_lock);
+    chunk->flags &= ~CF_WAITMESH;
+    THREAD_LOCK_UNLOCK(chunk->flags_lock);
+
     /* Left/right faces */
     for(x=0;x<CHUNK_WIDTH;x++){
         for(y=0;y<CHUNK_HEIGHT;y++){
