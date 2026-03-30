@@ -99,4 +99,56 @@ typedef void thread_t;
 
 #endif
 
+/* Read-preferring MRSW locks */
+/* TODO: Do not use this implementation when the system provides MRSW locks. */
+
+typedef struct {
+    thread_lock_t lock;
+    size_t readers;
+    unsigned int writing : 1;
+} thread_rwlock_t;
+
+int thread_rw_init(thread_rwlock_t *l);
+#define THREAD_RW_INIT(l) thread_rw_init(l)
+
+#define THREAD_RW_LOCK_READ(l) \
+    { \
+        unsigned char writing; \
+ \
+        do{ \
+            THREAD_LOCK_LOCK((l)->lock); \
+            writing = (l)->writing; \
+            if(!writing) (l)->readers++; \
+            THREAD_LOCK_UNLOCK((l)->lock); \
+        }while(writing); \
+    }
+
+#define THREAD_RW_UNLOCK_READ(l) \
+    { \
+        THREAD_LOCK_LOCK((l)->lock); \
+        (l)->readers--; \
+        THREAD_LOCK_UNLOCK((l)->lock); \
+    }
+
+#define THREAD_RW_LOCK_WRITE(l) \
+    { \
+        size_t readers; \
+ \
+        do{ \
+            THREAD_LOCK_LOCK((l)->lock); \
+            readers = (l)->readers; \
+            if(!readers) (l)->writing = 1; \
+            THREAD_LOCK_UNLOCK((l)->lock); \
+        }while(readers); \
+    }
+
+#define THREAD_RW_UNLOCK_WRITE(l) \
+    { \
+        THREAD_LOCK_LOCK((l)->lock); \
+        (l)->writing = 0; \
+        THREAD_LOCK_UNLOCK((l)->lock); \
+    }
+
+#define THREAD_RW_FREE(l) THREAD_LOCK_FREE((l)->lock)
+
 #endif

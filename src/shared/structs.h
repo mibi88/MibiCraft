@@ -131,6 +131,8 @@ struct world {
     Chunk *chunk_data;
     Chunk **chunks;
 
+    thread_rwlock_t chunks_lock;
+
     ChunkQueue *queues;
     size_t queue_num;
     size_t last_queue;
@@ -142,7 +144,8 @@ struct world {
     size_t empty_chunks;
     thread_lock_t empty_lock;
 
-    int stop;
+    unsigned char stop;
+    thread_lock_t stop_lock;
 
     size_t width, height;
 

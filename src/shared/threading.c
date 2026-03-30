@@ -31,3 +31,12 @@ int thread_win32_nproc(void) {
 }
 
 #endif
+
+/* Read-preferring MRSW locks */
+int thread_rw_init(thread_rwlock_t *l) {
+    if(THREAD_LOCK_INIT(l->lock)) return 1;
+    l->writing = 0;
+    l->readers = 0;
+
+    return 0;
+}

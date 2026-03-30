@@ -16,5 +16,5 @@
  * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 
-#include <client/chunk.h>
+#include <client/client_chunk.h>
 #include <shared/structs.h>

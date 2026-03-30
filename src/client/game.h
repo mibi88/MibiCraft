@@ -36,7 +36,7 @@
 
 #include <client/button.h>
 
-#include <client/world.h>
+#include <client/client_world.h>
 
 #define COPYRIGHT "(C) 2023-2026 Mibi88"
 

@@ -23,5 +23,6 @@
 #define RAYCAST_DISTANCE 20
 #define THREADING        1
 #define DEBUG_WORLD      0
+#define UNSAFE_THREADING 0
 
 #endif
