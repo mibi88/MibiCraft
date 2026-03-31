@@ -531,16 +531,20 @@ void world_update(World *world) {
             UpdateData *d = world->thread_data+i;
 
             if(world->thread_data[i].w != NULL){
-                printf("join: %lu\n", world->threads[i]);
+                printf("join: %lu\n", i);
                 THREAD_JOIN(world->threads[i]);
             }
 
             d->w = world;
             d->queue = world->queues+i;
 
-            THREAD_CREATE(world->threads+i, update_thread, d);
-                printf("create: %lu\n", world->threads[i]);
+            if(THREAD_CREATE(world->threads+i, update_thread, d)){
+                world->thread_data[i].w = NULL;
+                fprintf(stderr, "Thread %lu creation failed\n", i);
+            }else{
+                printf("create: %lu\n", i);
             }
+        }
     }
 }
 
@@ -692,7 +696,7 @@ static void stop_threads(World *world) {
 #endif
     for(i=0;i<world->queue_num;i++){
         if(world->thread_data[i].w != NULL){
-            printf("join: %lu\n", world->threads[i]);
+            printf("join: %lu\n", i);
             THREAD_JOIN(world->threads[i]);
             world->thread_data[i].w = NULL;
         }
