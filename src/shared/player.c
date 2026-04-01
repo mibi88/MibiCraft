@@ -194,6 +194,8 @@ void player_update(Player *player, World *world, float delta) {
 }
 
 void player_respawn(Player *player, World *world) {
+    (void)world;
+
     /* TODO: Determine the spawn position correctly */
     player->entity.x = 0;
     if(player->mode == M_SPECTATOR){

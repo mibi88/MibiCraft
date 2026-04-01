@@ -36,7 +36,7 @@ LRESULT CALLBACK _mw_windowproc(HWND hwnd, UINT uMsg, WPARAM wParam,
     /*LONG width = paint_struct.rcPaint.right-paint_struct.rcPaint.left;
     LONG height = paint_struct.rcPaint.bottom-paint_struct.rcPaint.top;*/
     int w, h;
-    int i;
+    WPARAM i;
     POINTS point;
 
     switch(uMsg) {
@@ -127,6 +127,7 @@ LRESULT CALLBACK _mw_windowproc(HWND hwnd, UINT uMsg, WPARAM wParam,
              * GET_WHEEL_DELTA_WPARAM(wParam) < 0 */
             _win->mouse_buttons[GET_WHEEL_DELTA_WPARAM(wParam) > 0 ?
                                 B_SCROLLUP : B_SCROLLDOWN] = 1;
+            break;
         case WM_MOUSEMOVE:
             point = MAKEPOINTS(lParam);
 
@@ -165,11 +166,19 @@ int mw_init(MWWindow *window, int width, int height, char *title) {
     };
     RECT rect;
 
+    /* TODO: Take width and height into account */
+    (void)width;
+    (void)height;
+
     if(!QueryPerformanceFrequency(&r)){
         fputs("[MibiCraft] Failed to QueryPerformanceFrequency!\n", stderr);
         return 1;
     }
     r.QuadPart /= 1000;
+    if(!r.QuadPart){
+        fputs("[MibiCraft] Time measurements too imprecise!\n", stderr);
+        return 1;
+    }
 
     _win = window;
 

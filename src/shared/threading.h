@@ -34,8 +34,8 @@ typedef HANDLE thread_t;
 
 #define THREAD_CALL(name, data) DWORD WINAPI name(LPVOID data)
 
-#define THREAD_CREATE(id, call, data) (CreateThread(NULL, 0, call, data, 0, \
-                                                    *(id)) == NULL)
+#define THREAD_CREATE(id, call, data) ((*(id) = CreateThread(NULL, 0, call, \
+                                                            data, 0, NULL)) == NULL)
 #define THREAD_JOIN(id) WaitForSingleObject(id, INFINITE); CloseHandle(id)
 
 #define THREAD_EXIT() ExitThread(0); return 0
