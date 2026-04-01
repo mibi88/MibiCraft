@@ -40,3 +40,33 @@ int thread_rw_init(thread_rwlock_t *l) {
 
     return 0;
 }
+
+int thread_rw_trylock_read(thread_rwlock_t *l) {
+    unsigned char writing;
+    int rc = 1;
+
+    THREAD_LOCK_LOCK((l)->lock);
+    writing = (l)->writing;
+    if(!writing){
+        (l)->readers++;
+        rc = 0;
+    }
+    THREAD_LOCK_UNLOCK((l)->lock);
+
+    return rc;
+}
+
+int thread_rw_trylock_write(thread_rwlock_t *l) {
+    size_t readers;
+    int rc = 1;
+
+    THREAD_LOCK_LOCK((l)->lock);
+    readers = (l)->readers;
+    if(!readers){
+        (l)->writing = 1;
+        rc = 0;
+    }
+    THREAD_LOCK_UNLOCK((l)->lock);
+
+    return rc;
+}

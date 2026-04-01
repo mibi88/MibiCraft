@@ -389,17 +389,12 @@ static Tile get_tile(Chunk *ch, int x, int y, int z, int rx, int ry, int rz,
     c0 = world->chunks[0];
     THREAD_RW_UNLOCK_READ(&world->chunks_lock);
 
-    if(ch != c0){
-        while(THREAD_LOCK_TRYLOCK(c0->lock)){
-            THREAD_LOCK_UNLOCK(ch->lock);
-            THREAD_LOCK_LOCK(ch->lock);
-        }
-    }
+    if(ch != c0) THREAD_RW_LOCK_READ(&c0->data_lock);
 
     min_x = c0->x;
     min_z = c0->z;
 
-    if(ch != c0) THREAD_LOCK_UNLOCK(world->chunks[0]->lock);
+    if(ch != c0) THREAD_RW_UNLOCK_READ(&c0->data_lock);
 
     if(ix >= min_x && ix < min_x+(long)world->width*CHUNK_WIDTH &&
        iz >= min_z && iz < min_z+(long)world->height*CHUNK_DEPTH){
@@ -417,19 +412,14 @@ static Tile get_tile(Chunk *ch, int x, int y, int z, int rx, int ry, int rz,
         c = world->chunks[iz/CHUNK_DEPTH*world->width+ix/CHUNK_WIDTH];
         THREAD_RW_UNLOCK_READ(&world->chunks_lock);
 
-        if(ch != c){
-            while(THREAD_LOCK_TRYLOCK(c->lock)){
-                THREAD_LOCK_UNLOCK(ch->lock);
-                THREAD_LOCK_LOCK(ch->lock);
-            }
-        }
+        if(ch != c) THREAD_RW_LOCK_READ(&c->data_lock);
 
         THREAD_LOCK_LOCK(c->flags_lock);
         if(!(c->flags&CF_INIT)) t = T_VOID;
         else t = c->chunk_data[cx-c->x][iy][cz-c->z];
         THREAD_LOCK_UNLOCK(c->flags_lock);
 
-        if(ch != c) THREAD_LOCK_UNLOCK(c->lock);
+        if(ch != c) THREAD_RW_UNLOCK_READ(&c->data_lock);
 
         return t;
     }
@@ -447,17 +437,12 @@ static void remesh_chunk(World *world, Chunk *chunk, long x, long z) {
     c0 = world->chunks[0];
     THREAD_RW_UNLOCK_READ(&world->chunks_lock);
 
-    if(c0 != chunk){
-        while(THREAD_LOCK_TRYLOCK(c0->lock)){
-            THREAD_LOCK_UNLOCK(chunk->lock);
-            THREAD_LOCK_LOCK(chunk->lock);
-        }
-    }
+    if(c0 != chunk) THREAD_RW_LOCK_READ(&c0->data_lock);
 
     min_x = c0->x;
     min_z = c0->z;
 
-    if(c0 != chunk) THREAD_LOCK_UNLOCK(c0->lock);
+    if(c0 != chunk) THREAD_RW_UNLOCK_READ(&c0->data_lock);
 
     if(x >= min_x && x < min_x+(long)world->width*CHUNK_WIDTH &&
        z >= min_z && z < min_z+(long)world->height*CHUNK_DEPTH){
@@ -498,11 +483,14 @@ static THREAD_CALL(update_thread, vupdate_data) {
 #endif
 
         if(stop) break;
-        THREAD_LOCK_LOCK(update.chunk->lock);
+        THREAD_RW_LOCK_READ(&update.chunk->data_lock);
 
         if(update.flags&CU_DATA){
             long x = update.chunk->x;
             long z = update.chunk->z;
+
+            THREAD_RW_UNLOCK_READ(&update.chunk->data_lock);
+            THREAD_RW_LOCK_WRITE(&update.chunk->data_lock);
 
             chunk_generate_data(update.chunk, update.chunk->x,
                                 update.chunk->z, d->w->seed);
@@ -512,12 +500,16 @@ static THREAD_CALL(update_thread, vupdate_data) {
             remesh_chunk(d->w, update.chunk, x+CHUNK_WIDTH, z);
             remesh_chunk(d->w, update.chunk, x, z-1);
             remesh_chunk(d->w, update.chunk, x, z+CHUNK_DEPTH);
-        }
-        if(update.flags&CU_MESH) chunk_generate_model(update.chunk,
-                                                      d->w->texture,
-                                                      get_tile, d->w);
 
-        THREAD_LOCK_UNLOCK(update.chunk->lock);
+            THREAD_RW_UNLOCK_WRITE(&update.chunk->data_lock);
+            THREAD_RW_LOCK_READ(&update.chunk->data_lock);
+        }
+        if(update.flags&CU_MESH){
+            THREAD_RW_LOCK_WRITE(&update.chunk->mesh_lock);
+            chunk_generate_model(update.chunk, d->w->texture, get_tile, d->w);
+            THREAD_RW_UNLOCK_WRITE(&update.chunk->mesh_lock);
+        }
+        THREAD_RW_UNLOCK_READ(&update.chunk->data_lock);
     }
 
     THREAD_EXIT();
@@ -581,12 +573,12 @@ void world_set_tile(World *world, Tile tile, int x, int y, int z) {
     c0 = world->chunks[0];
     THREAD_RW_UNLOCK_READ(&world->chunks_lock);
 
-    THREAD_LOCK_LOCK(c0->lock);
+    THREAD_RW_LOCK_READ(&c0->data_lock);
 
     min_x = c0->x;
     min_z = c0->z;
 
-    THREAD_LOCK_UNLOCK(c0->lock);
+    THREAD_RW_UNLOCK_READ(&c0->data_lock);
 
     if(ix >= min_x && ix < min_x+(long)world->width*CHUNK_WIDTH &&
        iz >= min_z && iz < min_z+(long)world->height*CHUNK_DEPTH){
@@ -603,14 +595,14 @@ void world_set_tile(World *world, Tile tile, int x, int y, int z) {
 
         printf("c: %p -- %d, %d\n", (void*)c, c->x, c->z);
 
-        THREAD_LOCK_LOCK(c->lock);
+        THREAD_RW_LOCK_READ(&c->data_lock);
 
         tx = ix-c->x;
         tz = iz-c->z;
 
         c->chunk_data[tx][iy][tz] = tile;
 
-        THREAD_LOCK_UNLOCK(c->lock);
+        THREAD_RW_UNLOCK_READ(&c->data_lock);
 
         world_update_chunk_fast(world, c, CU_MESH);
 
@@ -646,12 +638,12 @@ Tile world_get_tile(World *world, float x, float y, float z) {
     THREAD_RW_UNLOCK_READ(&world->chunks_lock);
 
     /* TODO: Support multiple players */
-    THREAD_LOCK_LOCK(c0->lock);
+    THREAD_RW_LOCK_READ(&c0->data_lock);
 
     min_x = c0->x;
     min_z = c0->z;
 
-    THREAD_LOCK_UNLOCK(c0->lock);
+    THREAD_RW_UNLOCK_READ(&c0->data_lock);
 
     if(ix >= min_x && ix < min_x+(long)world->width*CHUNK_WIDTH &&
        iz >= min_z && iz < min_z+(long)world->height*CHUNK_DEPTH){
@@ -669,14 +661,14 @@ Tile world_get_tile(World *world, float x, float y, float z) {
         c = world->chunks[iz/CHUNK_DEPTH*world->width+ix/CHUNK_WIDTH];
         THREAD_RW_UNLOCK_READ(&world->chunks_lock);
 
-        THREAD_LOCK_LOCK(c->lock);
+        THREAD_RW_LOCK_READ(&c->data_lock);
 
         THREAD_LOCK_LOCK(c->flags_lock);
         if(!(c->flags&CF_INIT)) t = T_VOID;
         else t = c->chunk_data[cx-c->x][iy][cz-c->z];
         THREAD_LOCK_UNLOCK(c->flags_lock);
 
-        THREAD_LOCK_UNLOCK(c->lock);
+        THREAD_RW_UNLOCK_READ(&c->data_lock);
 
         return t;
     }

@@ -98,7 +98,8 @@ struct Chunk {
 
     unsigned char flags;
 
-    thread_lock_t lock;
+    thread_rwlock_t data_lock;
+    thread_rwlock_t mesh_lock;
     thread_lock_t flags_lock;
 };
 

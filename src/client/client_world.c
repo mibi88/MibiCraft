@@ -30,14 +30,21 @@ void world_render(World *world, size_t player) {
     for(i=0;i<world->width*world->height;i++) {
         Chunk *c;
 
+        long x, z;
+
         THREAD_RW_LOCK_READ(&world->chunks_lock);
         c = world->chunks[b+i];
         THREAD_RW_UNLOCK_READ(&world->chunks_lock);
 
-        if(THREAD_LOCK_TRYLOCK(c->lock)) continue;
-        gfx_draw_model(&c->chunk_model, c->x-0.5, -(CHUNK_HEIGHT/2)-0.5,
-                       c->z-0.5, 0, 0, 0);
-        THREAD_LOCK_UNLOCK(c->lock);
+        THREAD_RW_LOCK_READ(&c->data_lock);
+        x = c->x;
+        z = c->z;
+        THREAD_RW_UNLOCK_READ(&c->data_lock);
+
+        if(THREAD_RW_TRYLOCK_READ(&c->mesh_lock)) continue;
+        gfx_draw_model(&c->chunk_model, x-0.5, -(CHUNK_HEIGHT/2)-0.5,
+                       z-0.5, 0, 0, 0);
+        THREAD_RW_UNLOCK_READ(&c->mesh_lock);
     }
 
     gfx_reset_texture_transforms();

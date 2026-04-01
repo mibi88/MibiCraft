@@ -35,7 +35,8 @@ typedef HANDLE thread_t;
 #define THREAD_CALL(name, data) DWORD WINAPI name(LPVOID data)
 
 #define THREAD_CREATE(id, call, data) ((*(id) = CreateThread(NULL, 0, call, \
-                                                            data, 0, NULL)) == NULL)
+                                                             data, 0, \
+                                                             NULL)) == NULL)
 #define THREAD_JOIN(id) WaitForSingleObject(id, INFINITE); CloseHandle(id)
 
 #define THREAD_EXIT() ExitThread(0); return 0
@@ -148,6 +149,11 @@ int thread_rw_init(thread_rwlock_t *l);
         (l)->writing = 0; \
         THREAD_LOCK_UNLOCK((l)->lock); \
     }
+
+int thread_rw_trylock_read(thread_rwlock_t *l);
+#define THREAD_RW_TRYLOCK_READ(l) thread_rw_trylock_read(l)
+int thread_rw_trylock_write(thread_rwlock_t *l);
+#define THREAD_RW_TRYLOCK_WRITE(l) thread_rw_trylock_write(l)
 
 #define THREAD_RW_FREE(l) THREAD_LOCK_FREE((l)->lock)
 
