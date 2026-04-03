@@ -222,17 +222,26 @@ int world_init(World *world, size_t width, size_t height, size_t player_num,
 void world_update_chunk(World *world, Chunk *chunk, unsigned char flags) {
     ChunkUpdate update;
 
+    unsigned char old_flags;
+    unsigned char flags_update = 0;
+
     update.chunk = chunk;
     update.flags = flags;
 
     if(flags&CU_MESH){
         THREAD_LOCK_LOCK(chunk->flags_lock);
+        old_flags = chunk->flags;
         chunk->flags |= CF_WAITMESH;
+        flags_update = 1;
         THREAD_LOCK_UNLOCK(chunk->flags_lock);
     }
 
     THREAD_LOCK_LOCK(world->last_queue_lock);
-    chunk_queue_push(world->queues+world->last_queue, update);
+    if(chunk_queue_push(world->queues+world->last_queue, update)){
+        THREAD_LOCK_LOCK(chunk->flags_lock);
+        if(flags_update) chunk->flags = old_flags;
+        THREAD_LOCK_UNLOCK(chunk->flags_lock);
+    }
 
     world->last_queue = (world->last_queue+1)%world->queue_num;
     THREAD_LOCK_UNLOCK(world->last_queue_lock);
@@ -241,17 +250,26 @@ void world_update_chunk(World *world, Chunk *chunk, unsigned char flags) {
 void world_update_chunk_fast(World *world, Chunk *chunk, unsigned char flags) {
     ChunkUpdate update;
 
+    unsigned char old_flags;
+    unsigned char flags_update = 0;
+
     update.chunk = chunk;
     update.flags = flags;
 
     if(flags&CU_MESH){
         THREAD_LOCK_LOCK(chunk->flags_lock);
+        old_flags = chunk->flags;
         chunk->flags |= CF_WAITMESH;
+        flags_update = 1;
         THREAD_LOCK_UNLOCK(chunk->flags_lock);
     }
 
     THREAD_LOCK_LOCK(world->last_queue_lock);
-    chunk_queue_bypass(world->queues+world->last_queue, update);
+    if(chunk_queue_bypass(world->queues+world->last_queue, update)){
+        THREAD_LOCK_LOCK(chunk->flags_lock);
+        if(flags_update) chunk->flags = old_flags;
+        THREAD_LOCK_UNLOCK(chunk->flags_lock);
+    }
 
     world->last_queue = (world->last_queue+1)%world->queue_num;
     THREAD_LOCK_UNLOCK(world->last_queue_lock);
@@ -348,10 +366,10 @@ static void world_set_chunk_positions(World *world, size_t player) {
 
     size_t px = (px = world->players[player].entity.x,
                  px -= world->width*CHUNK_WIDTH/2,
-                 px-px%CHUNK_WIDTH);
+                 (px-px%CHUNK_WIDTH)-CHUNK_WIDTH/2);
     size_t py = (py = world->players[player].entity.z,
                  py -= world->height*CHUNK_DEPTH/2,
-                 py-py%CHUNK_DEPTH);
+                 (py-py%CHUNK_DEPTH)-CHUNK_DEPTH/2);
 
     for(y=0;y<world->height;y++,py+=CHUNK_DEPTH){
         for(x=0,cx=px;x<world->width;x++,cx+=CHUNK_WIDTH,i++){
