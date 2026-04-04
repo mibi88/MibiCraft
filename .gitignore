@@ -16,5 +16,6 @@
 *.map
 *.err
 *.obj
-*.pdf
-
+*.prf
+*.mbr
+*.smp
