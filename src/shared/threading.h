@@ -134,13 +134,15 @@ int thread_rw_init(thread_rwlock_t *l);
 #define THREAD_RW_LOCK_WRITE(l) \
     { \
         size_t readers; \
+        unsigned char writing; \
  \
         do{ \
             THREAD_LOCK_LOCK((l)->lock); \
             readers = (l)->readers; \
+            writing = (l)->writing; \
             if(!readers) (l)->writing = 1; \
             THREAD_LOCK_UNLOCK((l)->lock); \
-        }while(readers); \
+        }while(readers || writing); \
     }
 
 #define THREAD_RW_UNLOCK_WRITE(l) \

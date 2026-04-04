@@ -33,6 +33,8 @@
  * concieved this system with queues -- way of handling remeshing? */
 /* FIXME: The game sometimes freezes on Windows (I couldn't findout why yet) */
 
+#define ABS(x) ((x) < 0 ? -(x) : (x))
+
 int world_init(World *world, size_t width, size_t height, size_t player_num,
                size_t queue_num, int seed, unsigned int texture) {
     size_t i;
@@ -510,6 +512,8 @@ static THREAD_CALL(update_thread, vupdate_data) {
     UpdateData *d = vupdate_data;
     ChunkUpdate update;
 
+    unsigned char flags;
+
     /*puts("thread");*/
 
     while((update = chunk_queue_pop(d->queue)).chunk != NULL){
@@ -545,7 +549,12 @@ static THREAD_CALL(update_thread, vupdate_data) {
             THREAD_RW_UNLOCK_WRITE(&update.chunk->data_lock);
             THREAD_RW_LOCK_READ(&update.chunk->data_lock);
         }
-        if((update.flags&CU_MESH) && (update.chunk->flags&CF_INIT)){
+
+        THREAD_LOCK_LOCK(update.chunk->flags_lock);
+        flags = update.chunk->flags;
+        THREAD_LOCK_UNLOCK(update.chunk->flags_lock);
+
+        if((update.flags&CU_MESH) && (flags&CF_INIT)){
             THREAD_RW_LOCK_WRITE(&update.chunk->mesh_lock);
             chunk_generate_model(update.chunk, d->w->texture, get_tile, d->w);
             THREAD_RW_UNLOCK_WRITE(&update.chunk->mesh_lock);
@@ -584,8 +593,6 @@ static Chunk *get_empty_chunk(World *world) {
     return c;
 }
 
-#define ABS(x) ((x) < 0 ? -(x) : (x))
-
 static void world_scroll(World *world, size_t player) {
     long x, z;
     long nx, nz;
@@ -593,24 +600,30 @@ static void world_scroll(World *world, size_t player) {
     /* TODO: Support multiple players */
 
     THREAD_RW_LOCK_READ(&world->chunks_lock);
+    THREAD_RW_LOCK_READ(&world->chunks[0]->data_lock);
     x = world->chunks[0]->x;
     z = world->chunks[0]->z;
+    THREAD_RW_UNLOCK_READ(&world->chunks[0]->data_lock);
     THREAD_RW_UNLOCK_READ(&world->chunks_lock);
 
     nx = world_get_x(world, player);
     nz = world_get_z(world, player);
 
-    printf("x: %ld, z: %ld -- nx: %ld, nz: %ld\n", x, z, nx, nz);
-
     if(nx != x || nz != z){
         long dx, dz;
+
+#if DEBUG_WORLD_SCROLL
+        printf("x: %ld, z: %ld -- nx: %ld, nz: %ld\n", x, z, nx, nz);
+#endif
 
         dx = (nx-x)/CHUNK_WIDTH;
         dz = (nz-z)/CHUNK_DEPTH;
 
         if(ABS(dx) >= world->width || ABS(dz) >= world->height) goto RESET;
 
+#if DEBUG_WORLD_SCROLL
         printf("dx: %ld, dz: %ld\n", dx, dz);
+#endif
 
         THREAD_RW_LOCK_WRITE(&world->chunks_lock);
 
@@ -624,13 +637,18 @@ static void world_scroll(World *world, size_t player) {
             size_t i;
             long lz;
 
+#if DEBUG_WORLD_SCROLL
             puts("Moving the world towards -Z");
+#endif
 
             for(i=(world->height+dz)*world->width;
                 i<world->width*world->height;
                 i++){
+#if DEBUG_WORLD_SCROLL
                 printf("%lu -- Remove chunk at %d, %d\n", i,
                        world->chunks[i]->x, world->chunks[i]->z);
+#endif
+
                 if(mark_as_empty(world, world->chunks[i])){
                     fputs("World movement error!\n", stderr);
 
@@ -640,8 +658,11 @@ static void world_scroll(World *world, size_t player) {
                 }
             }
 
+#if DEBUG_WORLD_SCROLL
             printf("memmove from 0 to %lu of %lu chunks\n", -dz*world->width,
                    (world->height+dz)*world->width);
+#endif
+
             memmove(world->chunks-dz*world->width, world->chunks,
                     (world->height+dz)*world->width*sizeof(Chunk*));
 
@@ -657,17 +678,25 @@ static void world_scroll(World *world, size_t player) {
                     if((c = get_empty_chunk(world)) != NULL){
                         world->chunks[i] = c;
 
+                        THREAD_LOCK_LOCK(c->flags_lock);
+                        c->flags &= ~CF_INIT;
+                        THREAD_LOCK_UNLOCK(c->flags_lock);
                         THREAD_RW_LOCK_WRITE(&c->data_lock);
                         c->x = px;
                         c->z = nz;
-                        c->flags &= ~CF_INIT;
                         c->chunk_model.triangles = 0;
+#if DEBUG_WORLD_SCROLL
                         printf("%lu -- New chunk at: %d, %d\n", i,
                                c->x, c->z);
+#endif
+
                         THREAD_RW_UNLOCK_WRITE(&c->data_lock);
 
                         world_update_chunk(world, c, CU_MESH|CU_DATA);
-                    }else puts("got no next chunk");
+                    }else{
+                        fputs("Got no next chunk", stderr);
+                    }
+
                 }
             }
         }else if(dz > 0){
@@ -676,11 +705,16 @@ static void world_scroll(World *world, size_t player) {
 
             size_t lz;
 
+#if DEBUG_WORLD_SCROLL
             puts("Moving the world towards +Z");
+#endif
 
             for(i=0;i<world->width*(size_t)dz;i++){
+#if DEBUG_WORLD_SCROLL
                 printf("%lu -- Remove chunk at %d, %d\n", i,
                        world->chunks[i]->x, world->chunks[i]->z);
+#endif
+
                 if(mark_as_empty(world, world->chunks[i])){
                     fputs("World movement error!\n", stderr);
 
@@ -692,8 +726,10 @@ static void world_scroll(World *world, size_t player) {
 
             i = (world->height-dz)*world->width;
 
+#if DEBUG_WORLD_SCROLL
             printf("memmove from %lu to 0 of %lu chunks\n", dz*world->width,
                    i);
+#endif
 
             memmove(world->chunks, world->chunks+dz*world->width,
                     i*sizeof(Chunk*));
@@ -709,17 +745,24 @@ static void world_scroll(World *world, size_t player) {
                     if((c = get_empty_chunk(world)) != NULL){
                         world->chunks[i] = c;
 
+                        THREAD_LOCK_LOCK(c->flags_lock);
+                        c->flags &= ~CF_INIT;
+                        THREAD_LOCK_UNLOCK(c->flags_lock);
                         THREAD_RW_LOCK_WRITE(&c->data_lock);
                         c->x = px;
                         c->z = nz;
-                        c->flags &= ~CF_INIT;
                         c->chunk_model.triangles = 0;
+#if DEBUG_WORLD_SCROLL
                         printf("%lu -- New chunk at: %d, %d\n", i,
                                c->x, c->z);
+#endif
+
                         THREAD_RW_UNLOCK_WRITE(&c->data_lock);
 
                         world_update_chunk(world, c, CU_MESH|CU_DATA);
-                    }else puts("got no next chunk");
+                    }else{
+                        fputs("Got no next chunk", stderr);
+                    }
                 }
             }
         }
@@ -729,7 +772,9 @@ static void world_scroll(World *world, size_t player) {
             size_t lz;
             size_t i = 0;
 
+#if DEBUG_WORLD_SCROLL
             puts("Moving the world towards -X");
+#endif
 
             for(lz=0;lz<world->height;lz++,nz+=CHUNK_DEPTH){
                 long n;
@@ -737,8 +782,11 @@ static void world_scroll(World *world, size_t player) {
                 size_t px = nx;
 
                 for(n=world->width+dx;(size_t)n<world->width;n++){
+#if DEBUG_WORLD_SCROLL
                     printf("%lu -- Remove chunk at %d, %d\n", i+n,
                            world->chunks[i+n]->x, world->chunks[i+n]->z);
+#endif
+
                     if(mark_as_empty(world, world->chunks[i+n])){
                         fputs("World movement error!\n", stderr);
 
@@ -748,8 +796,10 @@ static void world_scroll(World *world, size_t player) {
                     }
                 }
 
+#if DEBUG_WORLD_SCROLL
                 printf("memmove from %lu to %lu of %lu chunks\n", i, i-dx,
                        world->width+dx);
+#endif
                 memmove(world->chunks+i-dx, world->chunks+i,
                         (world->width+dx)*sizeof(Chunk*));
 
@@ -759,17 +809,23 @@ static void world_scroll(World *world, size_t player) {
                     if((c = get_empty_chunk(world)) != NULL){
                         world->chunks[i] = c;
 
+                        THREAD_LOCK_LOCK(c->flags_lock);
+                        c->flags &= ~CF_INIT;
+                        THREAD_LOCK_UNLOCK(c->flags_lock);
                         THREAD_RW_LOCK_WRITE(&c->data_lock);
                         c->x = px;
                         c->z = nz;
-                        c->flags &= ~CF_INIT;
                         c->chunk_model.triangles = 0;
+#if DEBUG_WORLD_SCROLL
                         printf("%lu -- New chunk at: %d, %d\n", i,
                                c->x, c->z);
+#endif
                         THREAD_RW_UNLOCK_WRITE(&c->data_lock);
 
                         world_update_chunk(world, c, CU_MESH|CU_DATA);
-                    }else puts("got no next chunk");
+                    }else{
+                        fputs("Got no next chunk", stderr);
+                    }
                 }
 
                 i += world->width+dx;
@@ -778,7 +834,9 @@ static void world_scroll(World *world, size_t player) {
             size_t lz;
             size_t i = 0;
 
+#if DEBUG_WORLD_SCROLL
             puts("Moving the world towards +X");
+#endif
 
             for(lz=0;lz<world->height;lz++,nz+=CHUNK_DEPTH){
                 long n;
@@ -786,8 +844,10 @@ static void world_scroll(World *world, size_t player) {
                 size_t px;
 
                 for(n=0;n<dx;n++,i++){
+#if DEBUG_WORLD_SCROLL
                     printf("%lu -- Remove chunk at %d, %d\n", i,
                            world->chunks[i]->x, world->chunks[i]->z);
+#endif
                     if(mark_as_empty(world, world->chunks[i])){
                         fputs("World movement error!\n", stderr);
 
@@ -797,8 +857,10 @@ static void world_scroll(World *world, size_t player) {
                     }
                 }
 
+#if DEBUG_WORLD_SCROLL
                 printf("memmove from %lu to %lu of %lu chunks\n", i, i-dx,
                        world->width-dx);
+#endif
                 memmove(world->chunks+i-dx, world->chunks+i,
                         (world->width-dx)*sizeof(Chunk*));
 
@@ -814,25 +876,29 @@ static void world_scroll(World *world, size_t player) {
                     if((c = get_empty_chunk(world)) != NULL){
                         world->chunks[i] = c;
 
+                        THREAD_LOCK_LOCK(c->flags_lock);
+                        c->flags &= ~CF_INIT;
+                        THREAD_LOCK_UNLOCK(c->flags_lock);
                         THREAD_RW_LOCK_WRITE(&c->data_lock);
                         c->x = px;
                         c->z = nz;
-                        c->flags &= ~CF_INIT;
                         c->chunk_model.triangles = 0;
+#if DEBUG_WORLD_SCROLL
                         printf("%lu -- New chunk at: %d, %d\n", i,
                                c->x, c->z);
+#endif
                         THREAD_RW_UNLOCK_WRITE(&c->data_lock);
 
                         world_update_chunk(world, c, CU_MESH|CU_DATA);
-                    }else puts("got no next chunk");
+                    }else{
+                        fputs("Got no next chunk", stderr);
+                    }
                 }
             }
         }
 
         THREAD_RW_UNLOCK_WRITE(&world->chunks_lock);
     }
-
-    puts("done");
 
     return;
 
@@ -865,7 +931,9 @@ void world_update(World *world) {
             UpdateData *d = world->thread_data+i;
 
             if(world->thread_data[i].w != NULL){
+#if DEBUG_THREADING
                 printf("join: %lu\n", i);
+#endif
                 THREAD_JOIN(world->threads[i]);
             }
 
@@ -876,7 +944,9 @@ void world_update(World *world) {
                 world->thread_data[i].w = NULL;
                 fprintf(stderr, "Thread %lu creation failed\n", i);
             }else{
+#if DEBUG_THREADING
                 printf("create: %lu\n", i);
+#endif
             }
         }
     }

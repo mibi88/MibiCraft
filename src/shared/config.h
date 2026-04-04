@@ -26,5 +26,7 @@
 #define UNSAFE_THREADING     0
 #define CHUNK_DATA_INIT      0
 #define PLAYER_BAD_INIT_TEST 0
+#define DEBUG_THREADING      0
+#define DEBUG_WORLD_SCROLL   0
 
 #endif
