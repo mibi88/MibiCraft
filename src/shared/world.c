@@ -390,7 +390,7 @@ static void world_set_chunk_positions(World *world, size_t player) {
     px = world_get_x(world, player);
     pz = world_get_z(world, player);
 
-    printf("player: %d -- x: %f, z: %f -- px: %d, pz: %d\n", player,
+    printf("player: %lu -- x: %f, z: %f -- px: %ld, pz: %ld\n", player,
            world->players[player].entity.x, world->players[player].entity.z,
            px, pz);
 
@@ -622,14 +622,14 @@ static void world_scroll(World *world, size_t player) {
         if(dz < 0){
             long nz = z+dz*CHUNK_DEPTH;
             size_t i;
-            size_t lz;
+            long lz;
 
             puts("Moving the world towards -Z");
 
             for(i=(world->height+dz)*world->width;
                 i<world->width*world->height;
                 i++){
-                printf("%lu -- Remove chunk at %ld, %ld\n", i,
+                printf("%lu -- Remove chunk at %d, %d\n", i,
                        world->chunks[i]->x, world->chunks[i]->z);
                 if(mark_as_empty(world, world->chunks[i])){
                     fputs("World movement error!\n", stderr);
@@ -662,7 +662,7 @@ static void world_scroll(World *world, size_t player) {
                         c->z = nz;
                         c->flags &= ~CF_INIT;
                         c->chunk_model.triangles = 0;
-                        printf("%lu -- New chunk at: %ld, %ld\n", i,
+                        printf("%lu -- New chunk at: %d, %d\n", i,
                                c->x, c->z);
                         THREAD_RW_UNLOCK_WRITE(&c->data_lock);
 
@@ -679,7 +679,7 @@ static void world_scroll(World *world, size_t player) {
             puts("Moving the world towards +Z");
 
             for(i=0;i<world->width*(size_t)dz;i++){
-                printf("%lu -- Remove chunk at %ld, %ld\n", i,
+                printf("%lu -- Remove chunk at %d, %d\n", i,
                        world->chunks[i]->x, world->chunks[i]->z);
                 if(mark_as_empty(world, world->chunks[i])){
                     fputs("World movement error!\n", stderr);
@@ -714,7 +714,7 @@ static void world_scroll(World *world, size_t player) {
                         c->z = nz;
                         c->flags &= ~CF_INIT;
                         c->chunk_model.triangles = 0;
-                        printf("%lu -- New chunk at: %ld, %ld\n", i,
+                        printf("%lu -- New chunk at: %d, %d\n", i,
                                c->x, c->z);
                         THREAD_RW_UNLOCK_WRITE(&c->data_lock);
 
@@ -732,12 +732,12 @@ static void world_scroll(World *world, size_t player) {
             puts("Moving the world towards -X");
 
             for(lz=0;lz<world->height;lz++,nz+=CHUNK_DEPTH){
-                size_t n;
+                long n;
 
                 size_t px = nx;
 
-                for(n=world->width+dx;n<world->width;n++){
-                    printf("%lu -- Remove chunk at %ld, %ld\n", i+n,
+                for(n=world->width+dx;(size_t)n<world->width;n++){
+                    printf("%lu -- Remove chunk at %d, %d\n", i+n,
                            world->chunks[i+n]->x, world->chunks[i+n]->z);
                     if(mark_as_empty(world, world->chunks[i+n])){
                         fputs("World movement error!\n", stderr);
@@ -748,7 +748,7 @@ static void world_scroll(World *world, size_t player) {
                     }
                 }
 
-                printf("memmove from %lu to %lo of %lu chunks\n", i, i-dx,
+                printf("memmove from %lu to %lu of %lu chunks\n", i, i-dx,
                        world->width+dx);
                 memmove(world->chunks+i-dx, world->chunks+i,
                         (world->width+dx)*sizeof(Chunk*));
@@ -764,7 +764,7 @@ static void world_scroll(World *world, size_t player) {
                         c->z = nz;
                         c->flags &= ~CF_INIT;
                         c->chunk_model.triangles = 0;
-                        printf("%lu -- New chunk at: %ld, %ld\n", i,
+                        printf("%lu -- New chunk at: %d, %d\n", i,
                                c->x, c->z);
                         THREAD_RW_UNLOCK_WRITE(&c->data_lock);
 
@@ -781,12 +781,12 @@ static void world_scroll(World *world, size_t player) {
             puts("Moving the world towards +X");
 
             for(lz=0;lz<world->height;lz++,nz+=CHUNK_DEPTH){
-                size_t n;
+                long n;
 
                 size_t px;
 
                 for(n=0;n<dx;n++,i++){
-                    printf("%lu -- Remove chunk at %ld, %ld\n", i,
+                    printf("%lu -- Remove chunk at %d, %d\n", i,
                            world->chunks[i]->x, world->chunks[i]->z);
                     if(mark_as_empty(world, world->chunks[i])){
                         fputs("World movement error!\n", stderr);
@@ -797,7 +797,7 @@ static void world_scroll(World *world, size_t player) {
                     }
                 }
 
-                printf("memmove from %lu to %lo of %lu chunks\n", i, i-dx,
+                printf("memmove from %lu to %lu of %lu chunks\n", i, i-dx,
                        world->width-dx);
                 memmove(world->chunks+i-dx, world->chunks+i,
                         (world->width-dx)*sizeof(Chunk*));
@@ -806,7 +806,9 @@ static void world_scroll(World *world, size_t player) {
 
                 px = x+world->width*CHUNK_WIDTH;
 
-                for(n=world->width-dx;n<world->width;n++,i++,px+=CHUNK_WIDTH){
+                for(n=world->width-dx;
+                    (size_t)n<world->width;
+                    n++,i++,px+=CHUNK_WIDTH){
                     Chunk *c;
 
                     if((c = get_empty_chunk(world)) != NULL){
@@ -817,7 +819,7 @@ static void world_scroll(World *world, size_t player) {
                         c->z = nz;
                         c->flags &= ~CF_INIT;
                         c->chunk_model.triangles = 0;
-                        printf("%lu -- New chunk at: %ld, %ld\n", i,
+                        printf("%lu -- New chunk at: %d, %d\n", i,
                                c->x, c->z);
                         THREAD_RW_UNLOCK_WRITE(&c->data_lock);
 
