@@ -18,19 +18,27 @@
 
 #include <shared/player.h>
 #include <shared/raycast.h>
+#include <shared/config.h>
 
 #include <math.h>
 
 void player_init(Player *player) {
     Entity entity = {
-            CHUNK_WIDTH, CHUNK_HEIGHT/2, CHUNK_DEPTH,
-            0, 0, 0,
-            0, 0, 0,
-            PLAYER_GRAVITY,
-            {
-                -0.4, -1.5, -0.4,
-                0.4, 0.2, 0.4
-            }
+#if PLAYER_BAD_INIT_TEST
+        /* NOTE: The player should spawn at 0, CHUNK_HEIGHT/2, 0, but
+         *       this error makes for an interesting test, as it caused a
+         *       significant number of crashes that shouldn't happen. */
+        CHUNK_WIDTH, CHUNK_HEIGHT/2, CHUNK_DEPTH,
+#else
+        0, 0, 0,
+#endif
+        0, 0, 0,
+        0, 0, 0,
+        PLAYER_GRAVITY,
+        {
+            -0.4, -1.5, -0.4,
+            0.4, 0.2, 0.4
+        }
     };
     float swimming_hitbox[HITBOX_SZ*3] = {
         -0.4, -0.4, -0.4,

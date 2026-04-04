@@ -546,6 +546,15 @@ const Tile fallen_spruce_tree[TREE_WIDTH*TREE_HEIGHT*TREE_DEPTH] = {
 /**************/
 
 int chunk_init(Chunk *chunk) {
+#if CHUNK_DATA_INIT
+    size_t x, y;
+
+    for(x=0;x<CHUNK_WIDTH;x++){
+        for(y=0;y<CHUNK_HEIGHT;y++){
+            memset(chunk->chunk_data[x][y], 0, CHUNK_DEPTH);
+        }
+    }
+#endif
     if(THREAD_LOCK_INIT(chunk->flags_lock)) return 1;
 
     if(THREAD_RW_INIT(&chunk->mesh_lock)){
@@ -889,7 +898,7 @@ void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
 #endif
 
     THREAD_LOCK_LOCK(chunk->flags_lock);
-    chunk->flags = CF_INIT;
+    chunk->flags |= CF_INIT;
     THREAD_LOCK_UNLOCK(chunk->flags_lock);
 }
 

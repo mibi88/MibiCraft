@@ -19,10 +19,12 @@
 #ifndef SHARED_CONFIG_H
 #define SHARED_CONFIG_H
 
-#define RENDER_DISTANCE  1
-#define RAYCAST_DISTANCE 20
-#define THREADING        1
-#define DEBUG_WORLD      0
-#define UNSAFE_THREADING 0
+#define RENDER_DISTANCE      1
+#define RAYCAST_DISTANCE     20
+#define THREADING            1
+#define DEBUG_WORLD          0
+#define UNSAFE_THREADING     0
+#define CHUNK_DATA_INIT      0
+#define PLAYER_BAD_INIT_TEST 0
 
 #endif
