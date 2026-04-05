@@ -430,7 +430,6 @@ static Tile get_tile(Chunk *ch, int x, int y, int z, int rx, int ry, int rz,
     /* TODO: Support multiple players */
     THREAD_RW_LOCK_READ(&world->chunks_lock);
     c0 = world->chunks[0];
-    THREAD_RW_UNLOCK_READ(&world->chunks_lock);
 
     if(ch != c0) THREAD_RW_LOCK_READ(&c0->data_lock);
 
@@ -451,9 +450,7 @@ static Tile get_tile(Chunk *ch, int x, int y, int z, int rx, int ry, int rz,
         ix -= min_x;
         iz -= min_z;
 
-        THREAD_RW_LOCK_READ(&world->chunks_lock);
         c = world->chunks[iz/CHUNK_DEPTH*world->width+ix/CHUNK_WIDTH];
-        THREAD_RW_UNLOCK_READ(&world->chunks_lock);
 
         if(ch != c) THREAD_RW_LOCK_READ(&c->data_lock);
 
@@ -464,9 +461,11 @@ static Tile get_tile(Chunk *ch, int x, int y, int z, int rx, int ry, int rz,
 
         if(ch != c) THREAD_RW_UNLOCK_READ(&c->data_lock);
 
+        THREAD_RW_UNLOCK_READ(&world->chunks_lock);
         return t;
     }
 
+    THREAD_RW_UNLOCK_READ(&world->chunks_lock);
     return T_VOID;
 }
 
@@ -599,12 +598,11 @@ static void world_scroll(World *world, size_t player) {
 
     /* TODO: Support multiple players */
 
-    THREAD_RW_LOCK_READ(&world->chunks_lock);
+    THREAD_RW_LOCK_WRITE(&world->chunks_lock);
     THREAD_RW_LOCK_READ(&world->chunks[0]->data_lock);
     x = world->chunks[0]->x;
     z = world->chunks[0]->z;
     THREAD_RW_UNLOCK_READ(&world->chunks[0]->data_lock);
-    THREAD_RW_UNLOCK_READ(&world->chunks_lock);
 
     nx = world_get_x(world, player);
     nz = world_get_z(world, player);
@@ -612,7 +610,7 @@ static void world_scroll(World *world, size_t player) {
     if(nx != x || nz != z){
         long dx, dz;
 
-#if DEBUG_WORLD_SCROLL
+#if DEBUG_WORLD_SCROLL || 1
         printf("x: %ld, z: %ld -- nx: %ld, nz: %ld\n", x, z, nx, nz);
 #endif
 
@@ -624,8 +622,6 @@ static void world_scroll(World *world, size_t player) {
 #if DEBUG_WORLD_SCROLL
         printf("dx: %ld, dz: %ld\n", dx, dz);
 #endif
-
-        THREAD_RW_LOCK_WRITE(&world->chunks_lock);
 
         /* TODO: Handle having both dx != 0 and dy != 0 better: currently
          *       we are moving chunks in world->chunks uselessly in this case.
@@ -663,7 +659,14 @@ static void world_scroll(World *world, size_t player) {
                    (world->height+dz)*world->width);
 #endif
 
-            memmove(world->chunks-dz*world->width, world->chunks,
+            /* FIXME: An overflow happens here sometimes.
+             * It happened to me with a NPROC of 4 and a render distance of 4,
+             * with
+             * x: -20, y: -20 and nx: -20, ny: -28
+             * or with
+             * x: 20, z: -4 and nx: 20, nz: -12.
+             */
+            memmove(world->chunks+-dz*world->width, world->chunks,
                     (world->height+dz)*world->width*sizeof(Chunk*));
 
             i = 0;
@@ -864,7 +867,7 @@ static void world_scroll(World *world, size_t player) {
                 memmove(world->chunks+i-dx, world->chunks+i,
                         (world->width-dx)*sizeof(Chunk*));
 
-                i += dx;
+                i += world->width-1-dx;
 
                 px = x+world->width*CHUNK_WIDTH;
 
@@ -897,14 +900,24 @@ static void world_scroll(World *world, size_t player) {
             }
         }
 
-        THREAD_RW_UNLOCK_WRITE(&world->chunks_lock);
+#if PRINT_CHUNK_POS
+        {
+            size_t i;
+
+            puts("Chunk coordinates:");
+            for(i=0;i<world->width*world->height;i++){
+                printf("%d, %d\n", world->chunks[i]->x, world->chunks[i]->z);
+            }
+            puts("------------------");
+        }
+#endif
+
     }
 
+    THREAD_RW_UNLOCK_WRITE(&world->chunks_lock);
     return;
 
 RESET:
-    THREAD_RW_LOCK_WRITE(&world->chunks_lock);
-
     {
         size_t x, z;
         size_t i = 0;
@@ -1051,7 +1064,6 @@ Tile world_get_tile(World *world, float x, float y, float z) {
 
     THREAD_RW_LOCK_READ(&world->chunks_lock);
     c0 = world->chunks[0];
-    THREAD_RW_UNLOCK_READ(&world->chunks_lock);
 
     /* TODO: Support multiple players */
     THREAD_RW_LOCK_READ(&c0->data_lock);
@@ -1073,9 +1085,7 @@ Tile world_get_tile(World *world, float x, float y, float z) {
         ix -= min_x;
         iz -= min_z;
 
-        THREAD_RW_LOCK_READ(&world->chunks_lock);
         c = world->chunks[iz/CHUNK_DEPTH*world->width+ix/CHUNK_WIDTH];
-        THREAD_RW_UNLOCK_READ(&world->chunks_lock);
 
         THREAD_RW_LOCK_READ(&c->data_lock);
 
@@ -1086,9 +1096,11 @@ Tile world_get_tile(World *world, float x, float y, float z) {
 
         THREAD_RW_UNLOCK_READ(&c->data_lock);
 
+        THREAD_RW_UNLOCK_READ(&world->chunks_lock);
         return t;
     }
 
+    THREAD_RW_UNLOCK_READ(&world->chunks_lock);
     return T_VOID;
 }
 

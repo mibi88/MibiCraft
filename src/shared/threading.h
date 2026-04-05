@@ -50,8 +50,12 @@ typedef HANDLE thread_lock_t;
 #define THREAD_LOCK_UNLOCK(l) ReleaseMutex(l)
 #define THREAD_LOCK_FREE(l) CloseHandle(l)
 
+#if NPROC
+#define THREAD_NPROC() NPROC
+#else
 int thread_win32_nproc(void);
 #define THREAD_NPROC() thread_win32_nproc()
+#endif
 
 #else
 
@@ -78,9 +82,21 @@ typedef pthread_mutex_t thread_lock_t;
 #if SYS == linux
 #include <sys/sysinfo.h>
 
+#if NPROC
+#define THREAD_NPROC() NPROC
+#else
 #define THREAD_NPROC() get_nprocs()
+#endif
+
+#else
+
+
+#if NPROC
+#define THREAD_NPROC() NPROC
 #else
 #define THREAD_NPROC() 1 /* TODO: Support *BSD systems. */
+#endif
+
 #endif
 
 #endif
