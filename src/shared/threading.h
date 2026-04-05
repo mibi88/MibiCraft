@@ -21,6 +21,8 @@
 
 #include <shared/config.h>
 
+#include <stddef.h>
+
 #if THREADING
 
 #if defined(_WIN32) || defined(_WIN64)
@@ -103,16 +105,29 @@ typedef pthread_mutex_t thread_lock_t;
 
 #else
 
-typedef void thread_t;
+typedef unsigned char thread_t;
+typedef unsigned char thread_lock_t;
 
 #define THREAD_ID(id)
 
-#define THREAD_CALL(name, data) void name(void *data)
+#define THREAD_CALL(name, data) int name(void *data)
 
-#define THREAD_EXIT() return
+#define THREAD_EXIT() return 0
 
 #define THREAD_CREATE(id, call, data) call(data)
 #define THREAD_JOIN(id) ;
+
+#define THREAD_LOCK_INIT(l) 0
+#define THREAD_LOCK_LOCK(l) 0
+#define THREAD_LOCK_TRYLOCK(l) 0
+#define THREAD_LOCK_UNLOCK(l) 0
+#define THREAD_LOCK_FREE(l) 0
+
+#if NPROC
+#define THREAD_NPROC() NPROC
+#else
+#define THREAD_NPROC() 1
+#endif
 
 #endif
 
