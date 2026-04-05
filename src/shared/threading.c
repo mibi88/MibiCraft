@@ -33,6 +33,34 @@ int thread_win32_nproc(void) {
 #endif
 
 /* Read-preferring MRSW locks */
+#if !(defined(_WIN32) || defined(_WIN64)) && SYS_MRSW_LOCK
+/* pthreads implementation */
+
+#if SYS == linux
+int thread_rw_init(thread_rwlock_t *l) {
+    if(pthread_rwlockattr_init(&l->attr)){
+        return 1;
+    }
+
+    if(pthread_rwlockattr_setkind_np(&l->attr,
+                                     PTHREAD_RWLOCK_PREFER_READER_NP)){
+        pthread_rwlockattr_destroy(&l->attr);
+
+        return 2;
+    }
+
+    if(pthread_rwlock_init(&l->lock, &l->attr)){
+        pthread_rwlockattr_destroy(&l->attr);
+
+        return 3;
+    }
+
+    return 0;
+}
+#endif
+
+#else
+/* Generic implementation */
 int thread_rw_init(thread_rwlock_t *l) {
     if(THREAD_LOCK_INIT(l->lock)) return 1;
     l->writing = 0;
@@ -70,3 +98,5 @@ int thread_rw_trylock_write(thread_rwlock_t *l) {
 
     return rc;
 }
+
+#endif

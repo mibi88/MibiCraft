@@ -131,8 +131,50 @@ typedef unsigned char thread_lock_t;
 
 #endif
 
+/* XXX: Are MRSW locks nativly supported by Windows XP and later? */
+
 /* Read-preferring MRSW locks */
-/* TODO: Do not use this implementation when the system provides MRSW locks. */
+#if !(defined(_WIN32) || defined(_WIN64)) && SYS_MRSW_LOCK
+/* pthreads implementation */
+
+#if SYS == linux
+/* Linux specific implementation */
+typedef struct {
+    pthread_rwlock_t lock;
+    pthread_rwlockattr_t attr;
+} thread_rwlock_t;
+
+int thread_rw_init(thread_rwlock_t *l);
+#define THREAD_RW_INIT(l) thread_rw_init(l)
+#define THREAD_RW_LOCK_READ(l) pthread_rwlock_rdlock(&(l)->lock)
+#define THREAD_RW_UNLOCK_READ(l) pthread_rwlock_unlock(&(l)->lock)
+#define THREAD_RW_LOCK_WRITE(l) pthread_rwlock_wrlock(&(l)->lock)
+#define THREAD_RW_UNLOCK_WRITE(l) pthread_rwlock_unlock(&(l)->lock)
+#define THREAD_RW_TRYLOCK_READ(l) pthread_rwlock_tryrdlock(&(l)->lock)
+#define THREAD_RW_TRYLOCK_WRITE(l) pthread_rwlock_trywrlock(&(l)->lock)
+#define THREAD_RW_FREE(l) \
+    { \
+        pthread_rwlock_destroy(&(l)->lock); \
+        pthread_rwlockattr_destroy(&(l)->attr); \
+    }
+
+#else
+/* Generic pthreads implementation */
+typedef pthread_rwlock_t thread_rwlock_t;
+
+#define THREAD_RW_INIT(l) pthread_rwlock_init(l, NULL)
+#define THREAD_RW_LOCK_READ(l) pthread_rwlock_rdlock(l)
+#define THREAD_RW_UNLOCK_READ(l) pthread_rwlock_unlock(l)
+#define THREAD_RW_LOCK_WRITE(l) pthread_rwlock_wrlock(l)
+#define THREAD_RW_UNLOCK_WRITE(l) pthread_rwlock_unlock(l)
+#define THREAD_RW_TRYLOCK_READ(l) pthread_rwlock_tryrdlock(l)
+#define THREAD_RW_TRYLOCK_WRITE(l) pthread_rwlock_trywrlock(l)
+#define THREAD_RW_FREE(l) pthread_rwlock_destroy(l)
+
+#endif
+
+#else
+/* Generic implementation */
 
 typedef struct {
     thread_lock_t lock;
@@ -189,5 +231,7 @@ int thread_rw_trylock_write(thread_rwlock_t *l);
 #define THREAD_RW_TRYLOCK_WRITE(l) thread_rw_trylock_write(l)
 
 #define THREAD_RW_FREE(l) THREAD_LOCK_FREE((l)->lock)
+
+#endif
 
 #endif

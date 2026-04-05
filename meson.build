@@ -19,6 +19,7 @@ configure_file(
 add_project_arguments([
   '-I' + meson.project_build_root(),
   '-I' + meson.project_build_root() + '/img',
+  '-D_XOPEN_SOURCE=600'
   #'-fsanitize=thread',
   #'-fsanitize=address',
   #'-fsanitize=undefined',
