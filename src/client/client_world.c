@@ -32,11 +32,11 @@ void world_render(World *world, size_t player) {
 
         long x, z;
 
-        THREAD_RW_LOCK_READ(&world->chunks_lock);
+        if(THREAD_RW_TRYLOCK_READ(&world->chunks_lock)) continue;
         c = world->chunks[b+i];
         THREAD_RW_UNLOCK_READ(&world->chunks_lock);
 
-        THREAD_RW_LOCK_READ(&c->data_lock);
+        if(THREAD_RW_TRYLOCK_READ(&c->data_lock)) continue;
         x = c->x;
         z = c->z;
         THREAD_RW_UNLOCK_READ(&c->data_lock);
