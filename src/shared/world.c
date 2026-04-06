@@ -978,16 +978,14 @@ void world_update(World *world) {
     size_t i;
 
     for(i=0;i<world->queue_num;i++){
-        printf("check queue %lu\n", i);
         if(!chunk_queue_empty(world->queues+i)){
             UpdateData *d = world->thread_data+i;
 
             if(!d->finished) continue;
 
-            puts("will start thread");
 
             if(world->thread_data[i].w != NULL){
-#if DEBUG_THREADING || 1
+#if DEBUG_THREADING
                 printf("join: %lu\n", i);
 #endif
                 THREAD_JOIN(world->threads[i]);
@@ -1000,7 +998,7 @@ void world_update(World *world) {
                 world->thread_data[i].w = NULL;
                 fprintf(stderr, "Thread %lu creation failed\n", i);
             }else{
-#if DEBUG_THREADING || 1
+#if DEBUG_THREADING
                 printf("create: %lu\n", i);
 #endif
                 d->finished = 0;
@@ -1010,7 +1008,6 @@ void world_update(World *world) {
         }
     }
 
-    puts("scroll");
     for(i=0;i<world->player_num;i++){
         world_scroll(world, i);
     }
