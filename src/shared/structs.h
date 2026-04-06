@@ -134,7 +134,9 @@ struct world {
     Chunk *chunk_data;
     Chunk **chunks;
 
+#if UNSAFE_SCROLLING
     thread_rwlock_t chunks_lock;
+#endif
 
     ChunkQueue *queues;
     size_t queue_num;

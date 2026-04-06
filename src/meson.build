@@ -43,7 +43,7 @@ executable('MibiCraft', mibicraft_sources,
     #'-ltsan',
     #'-lasan',
     #'-fsanitize=undefined',
-    '-g',
+    #'-g',
   ],
   c_args: [
     has_xfixes.found() ? '-DHAS_XFIXES' : '',

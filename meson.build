@@ -23,7 +23,7 @@ add_project_arguments([
   #'-fsanitize=thread',
   #'-fsanitize=address',
   #'-fsanitize=undefined',
-  '-g',
+  #'-g',
 ], language: 'c')
 
 subdir('tools')
