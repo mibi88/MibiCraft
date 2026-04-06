@@ -457,12 +457,6 @@ void world_init_data(World *world) {
     }
 }
 
-/* XXX: Is there a risk that some chunk meshes are incorrect because I don't
- *      lock world->chunks_lock during the whole world scrolling operation in
- *      world_scroll, as well as in get_tile and remesh_chunk to avoid
- *      deadlocks.
- */
-
 static Tile get_tile(Chunk *ch, int x, int y, int z, int rx, int ry, int rz,
                      void *extra) {
     World *world = extra;
@@ -657,12 +651,34 @@ static Chunk *get_empty_chunk(World *world) {
     return c;
 }
 
-/* FIXME: Fix SEGV in chunk_generate_model when getting invalid tile value
- *        with chunk_get_tile (sounds like an out of bounds read) when
- *        scrolling the world. It's probably because I'm unlocking
- *        world->chunks_lock while performing the world scrolling to avoid a
- *        deadlock.
- */
+static void stop_threads(World *world) {
+    size_t i;
+
+#if !UNSAFE_THREADING
+    THREAD_LOCK_LOCK(world->stop_lock);
+#endif
+    world->stop = 1;
+#if !UNSAFE_THREADING
+    THREAD_LOCK_UNLOCK(world->stop_lock);
+#endif
+    for(i=0;i<world->queue_num;i++){
+        if(world->thread_data[i].w != NULL){
+#if DEBUG_THREADING
+            printf("join: %lu\n", i);
+#endif
+            THREAD_JOIN(world->threads[i]);
+            world->thread_data[i].w = NULL;
+        }
+        world->thread_data[i].finished = 1;
+    }
+#if !UNSAFE_THREADING
+    THREAD_LOCK_LOCK(world->stop_lock);
+#endif
+    world->stop = 0;
+#if !UNSAFE_THREADING
+    THREAD_LOCK_UNLOCK(world->stop_lock);
+#endif
+}
 
 static void world_scroll(World *world, size_t player) {
     long x, z;
@@ -684,10 +700,27 @@ static void world_scroll(World *world, size_t player) {
     nx = world_get_x(world, player);
     nz = world_get_z(world, player);
 
-    THREAD_RW_LOCK_WRITE(&world->chunks_lock);
-
     if(nx != x || nz != z){
         long dx, dz;
+
+        /* XXX: Is there a more elegant solution than stopping all the
+         *      threads?
+         *
+         * When I was not stopping the threads, I had the following issues:
+         *   -  A SEGV in chunk_generate_model when getting an invalid tile
+         *      value with get_tile (probably because of an out of bounds read)
+         *      while scrolling the world. It was probably because I was
+         *      unlocking world->chunks_lock while performing the world
+         *      scrolling to avoid a deadlock. Thus when get_tile was called,
+         *      not all chunks were adjacent to one another.
+         *  -   There was thus a risk that some chunk meshes were incorrect
+         *      because I wasn't locking world->chunks_lock during the whole
+         *      world scrolling operation in world_scroll, as well as in
+         *      get_tile and remesh_chunk to avoid deadlocks.
+         */
+        stop_threads(world);
+
+        THREAD_RW_LOCK_WRITE(&world->chunks_lock);
 
 #if DEBUG_WORLD_SCROLL || 1
         printf("x: %ld, z: %ld -- nx: %ld, nz: %ld\n", x, z, nx, nz);
@@ -696,7 +729,32 @@ static void world_scroll(World *world, size_t player) {
         dx = (nx-x)/CHUNK_WIDTH;
         dz = (nz-z)/CHUNK_DEPTH;
 
-        if(ABS(dx) >= world->width || ABS(dz) >= world->height) goto RESET;
+        if((size_t)ABS(dx) >= world->width ||
+           (size_t)ABS(dz) >= world->height){
+            size_t x, z;
+            size_t i = 0;
+
+            long px = nx;
+
+            for(z=0;z<world->height;z++,nz+=CHUNK_DEPTH){
+                for(x=0,px=nx;x<world->width;x++,i++,px+=CHUNK_WIDTH){
+                    Chunk *c;
+
+                    c = world->chunks[i];
+
+                    THREAD_RW_UNLOCK_WRITE(&world->chunks_lock);
+                    THREAD_RW_LOCK_WRITE(&c->data_lock);
+                    c->x = px;
+                    c->z = nz;
+                    THREAD_RW_UNLOCK_WRITE(&c->data_lock);
+                    THREAD_RW_LOCK_WRITE(&world->chunks_lock);
+                    world_update_chunk(world, world->chunks[i], CU_DATA|CU_MESH);
+                }
+            }
+
+            THREAD_RW_UNLOCK_WRITE(&world->chunks_lock);
+            return;
+        }
 
 #if DEBUG_WORLD_SCROLL
         printf("dx: %ld, dz: %ld\n", dx, dz);
@@ -1003,28 +1061,8 @@ static void world_scroll(World *world, size_t player) {
         }
 #endif
 
+        THREAD_RW_UNLOCK_WRITE(&world->chunks_lock);
     }
-
-    THREAD_RW_UNLOCK_WRITE(&world->chunks_lock);
-    return;
-
-RESET:
-    {
-        size_t x, z;
-        size_t i = 0;
-
-        long px = nx;
-
-        for(z=0;z<world->height;z++,nz+=CHUNK_DEPTH){
-            for(x=0,px=nx;x<world->width;x++,i++,px+=CHUNK_WIDTH){
-                world->chunks[i]->x = px;
-                world->chunks[i]->z = nz;
-                world_update_chunk(world, world->chunks[i], CU_DATA|CU_MESH);
-            }
-        }
-    }
-
-    THREAD_RW_UNLOCK_WRITE(&world->chunks_lock);
 }
 
 void world_update(World *world) {
@@ -1205,33 +1243,6 @@ Tile world_get_tile(World *world, float x, float y, float z) {
     }
 
     return T_VOID;
-}
-
-static void stop_threads(World *world) {
-    size_t i;
-
-#if !UNSAFE_THREADING
-    THREAD_LOCK_LOCK(world->stop_lock);
-#endif
-    world->stop = 1;
-#if !UNSAFE_THREADING
-    THREAD_LOCK_UNLOCK(world->stop_lock);
-#endif
-    for(i=0;i<world->queue_num;i++){
-        if(world->thread_data[i].w != NULL){
-            printf("join: %lu\n", i);
-            THREAD_JOIN(world->threads[i]);
-            world->thread_data[i].w = NULL;
-            world->thread_data[i].finished = 1;
-        }
-    }
-#if !UNSAFE_THREADING
-    THREAD_LOCK_LOCK(world->stop_lock);
-#endif
-    world->stop = 0;
-#if !UNSAFE_THREADING
-    THREAD_LOCK_UNLOCK(world->stop_lock);
-#endif
 }
 
 int world_change_size(World *world, size_t width, size_t height) {
