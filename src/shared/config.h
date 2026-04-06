@@ -29,9 +29,10 @@
 #define PLAYER_BAD_INIT_TEST 0
 #define DEBUG_THREADING      0
 #define DEBUG_WORLD_SCROLL   0
+#define DEBUG_UNLOCKING      0
 #define PRINT_CHUNK_POS      0
 /* Set NPROC to 0 to get the core count dynamically */
 #define NPROC                0
-#define SYS_MRSW_LOCK        1
+#define SYS_MRSW_LOCK        0
 
 #endif

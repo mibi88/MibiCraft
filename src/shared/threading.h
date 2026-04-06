@@ -197,12 +197,25 @@ int thread_rw_init(thread_rwlock_t *l);
         }while(writing); \
     }
 
+#if DEBUG_UNLOCKING
+#define THREAD_RW_UNLOCK_READ(l) \
+    { \
+        THREAD_LOCK_LOCK((l)->lock); \
+        if((l)->writing){ \
+            printf("Unlock read error at %s:%u\n", __FILE__, __LINE__); \
+        } \
+        (l)->writing = 0; \
+        if((l)->readers) (l)->readers--; \
+        THREAD_LOCK_UNLOCK((l)->lock); \
+    }
+#else
 #define THREAD_RW_UNLOCK_READ(l) \
     { \
         THREAD_LOCK_LOCK((l)->lock); \
         (l)->readers--; \
         THREAD_LOCK_UNLOCK((l)->lock); \
     }
+#endif
 
 #define THREAD_RW_LOCK_WRITE(l) \
     { \
@@ -218,12 +231,25 @@ int thread_rw_init(thread_rwlock_t *l);
         }while(readers || writing); \
     }
 
+#if DEBUG_UNLOCKING
+#define THREAD_RW_UNLOCK_WRITE(l) \
+    { \
+        THREAD_LOCK_LOCK((l)->lock); \
+        (l)->writing = 0; \
+        if((l)->readers){ \
+            printf("Unlock write error at %s:%u\n", __FILE__, __LINE__); \
+            (l)->readers--; \
+        } \
+        THREAD_LOCK_UNLOCK((l)->lock); \
+    }
+#else
 #define THREAD_RW_UNLOCK_WRITE(l) \
     { \
         THREAD_LOCK_LOCK((l)->lock); \
         (l)->writing = 0; \
         THREAD_LOCK_UNLOCK((l)->lock); \
     }
+#endif
 
 int thread_rw_trylock_read(thread_rwlock_t *l);
 #define THREAD_RW_TRYLOCK_READ(l) thread_rw_trylock_read(l)

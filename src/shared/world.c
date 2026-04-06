@@ -549,7 +549,7 @@ static void remesh_chunk(World *world, Chunk *chunk, long x, long z) {
 
     Chunk *c0;
 
-    THREAD_RW_UNLOCK_READ(&chunk->data_lock);
+    THREAD_RW_UNLOCK_WRITE(&chunk->data_lock);
 
     /* TODO: Support multiple players */
 #if UNSAFE_SCROLLING
@@ -567,7 +567,7 @@ static void remesh_chunk(World *world, Chunk *chunk, long x, long z) {
 
     THREAD_RW_UNLOCK_READ(&c0->data_lock);
 
-    THREAD_RW_LOCK_READ(&chunk->data_lock);
+    THREAD_RW_LOCK_WRITE(&chunk->data_lock);
 
     if(x >= min_x && x < min_x+(long)world->width*CHUNK_WIDTH &&
        z >= min_z && z < min_z+(long)world->height*CHUNK_DEPTH){
