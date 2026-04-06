@@ -30,7 +30,7 @@
 #define DEBUG_WORLD_SCROLL   0
 #define PRINT_CHUNK_POS      0
 /* Set NPROC to 0 to get the core count dynamically */
-#define NPROC                1
+#define NPROC                0
 #define SYS_MRSW_LOCK        1
 
 #endif
