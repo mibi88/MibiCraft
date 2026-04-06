@@ -123,6 +123,7 @@ typedef struct world World;
 typedef struct {
     World *w;
     ChunkQueue *queue;
+    unsigned char finished;
 } UpdateData;
 
 struct world {

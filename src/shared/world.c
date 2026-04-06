@@ -127,6 +127,7 @@ int world_init(World *world, size_t width, size_t height, size_t player_num,
 
     for(i=0;i<queue_num;i++){
         world->thread_data[i].w = NULL;
+        world->thread_data[i].finished = 1;
         if(chunk_queue_init(world->queues+i, width*height*player_num)){
             size_t n;
 
@@ -977,11 +978,16 @@ void world_update(World *world) {
     size_t i;
 
     for(i=0;i<world->queue_num;i++){
+        printf("check queue %lu\n", i);
         if(!chunk_queue_empty(world->queues+i)){
             UpdateData *d = world->thread_data+i;
 
+            if(!d->finished) continue;
+
+            puts("will start thread");
+
             if(world->thread_data[i].w != NULL){
-#if DEBUG_THREADING
+#if DEBUG_THREADING || 1
                 printf("join: %lu\n", i);
 #endif
                 THREAD_JOIN(world->threads[i]);
@@ -994,13 +1000,17 @@ void world_update(World *world) {
                 world->thread_data[i].w = NULL;
                 fprintf(stderr, "Thread %lu creation failed\n", i);
             }else{
-#if DEBUG_THREADING
+#if DEBUG_THREADING || 1
                 printf("create: %lu\n", i);
 #endif
+                d->finished = 0;
             }
+        }else{
+            world->thread_data[i].finished = 1;
         }
     }
 
+    puts("scroll");
     for(i=0;i<world->player_num;i++){
         world_scroll(world, i);
     }
@@ -1157,6 +1167,7 @@ static void stop_threads(World *world) {
             printf("join: %lu\n", i);
             THREAD_JOIN(world->threads[i]);
             world->thread_data[i].w = NULL;
+            world->thread_data[i].finished = 1;
         }
     }
 #if !UNSAFE_THREADING
