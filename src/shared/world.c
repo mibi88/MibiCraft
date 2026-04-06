@@ -128,12 +128,54 @@ int world_init(World *world, size_t width, size_t height, size_t player_num,
     for(i=0;i<queue_num;i++){
         world->thread_data[i].w = NULL;
         world->thread_data[i].finished = 1;
+        /* TODO: Remove this lock when UNSAFE_THREADING is non-zero. */
+        if(THREAD_LOCK_INIT(world->thread_data[i].finished_lock)){
+            size_t n;
+
+            fputs("thread_data finished_lock init failed!\n", stderr);
+
+            for(n=0;n<i;n++){
+                THREAD_LOCK_FREE(world->thread_data[n].finished_lock);
+                chunk_queue_free(world->queues+n);
+            }
+
+            free(world->chunk_data);
+            world->chunk_data = NULL;
+
+            free(world->chunks);
+            world->chunks = NULL;
+
+            free(world->queues);
+            world->queues = NULL;
+
+            free(world->threads);
+            world->threads = NULL;
+
+            free(world->thread_data);
+            world->thread_data = NULL;
+
+            free(world->players);
+            world->players = NULL;
+
+            free(world->empty);
+            world->empty = NULL;
+
+            THREAD_LOCK_FREE(world->last_queue_lock);
+            THREAD_RW_FREE(&world->chunks_lock);
+            THREAD_LOCK_FREE(world->stop_lock);
+
+            return 4;
+        }
+
         if(chunk_queue_init(world->queues+i, width*height*player_num)){
             size_t n;
 
             fputs("Queue init failed!\n", stderr);
 
+            THREAD_LOCK_FREE(world->thread_data[i].finished_lock);
+
             for(n=0;n<i;n++){
+                THREAD_LOCK_FREE(world->thread_data[n].finished_lock);
                 chunk_queue_free(world->queues+n);
             }
 
@@ -580,7 +622,9 @@ static THREAD_CALL(update_thread, vupdate_data) {
         THREAD_RW_UNLOCK_READ(&update.chunk->data_lock);
     }
 
+    THREAD_LOCK_LOCK(d->finished_lock);
     d->finished = 1;
+    THREAD_LOCK_UNLOCK(d->finished_lock);
 
     THREAD_EXIT();
 }
@@ -612,6 +656,13 @@ static Chunk *get_empty_chunk(World *world) {
 
     return c;
 }
+
+/* FIXME: Fix SEGV in chunk_generate_model when getting invalid tile value
+ *        with chunk_get_tile (sounds like an out of bounds read) when
+ *        scrolling the world. It's probably because I'm unlocking
+ *        world->chunks_lock while performing the world scrolling to avoid a
+ *        deadlock.
+ */
 
 static void world_scroll(World *world, size_t player) {
     long x, z;
@@ -983,8 +1034,13 @@ void world_update(World *world) {
         if(!chunk_queue_empty(world->queues+i)){
             UpdateData *d = world->thread_data+i;
 
-            if(!d->finished) continue;
+            unsigned char finished;
 
+            THREAD_LOCK_LOCK(d->finished_lock);
+            finished = d->finished;
+            THREAD_LOCK_UNLOCK(d->finished_lock);
+
+            if(!finished) continue;
 
             if(world->thread_data[i].w != NULL){
 #if DEBUG_THREADING
@@ -996,14 +1052,16 @@ void world_update(World *world) {
             d->w = world;
             d->queue = world->queues+i;
 
+            d->finished = 0;
+
             if(THREAD_CREATE(world->threads+i, update_thread, d)){
                 world->thread_data[i].w = NULL;
+                world->thread_data[i].finished = 1;
                 fprintf(stderr, "Thread %lu creation failed\n", i);
             }else{
 #if DEBUG_THREADING
                 printf("create: %lu\n", i);
 #endif
-                d->finished = 0;
             }
         }
     }
