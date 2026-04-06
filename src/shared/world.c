@@ -580,6 +580,8 @@ static THREAD_CALL(update_thread, vupdate_data) {
         THREAD_RW_UNLOCK_READ(&update.chunk->data_lock);
     }
 
+    d->finished = 1;
+
     THREAD_EXIT();
 }
 
@@ -1003,8 +1005,6 @@ void world_update(World *world) {
 #endif
                 d->finished = 0;
             }
-        }else{
-            world->thread_data[i].finished = 1;
         }
     }
 
