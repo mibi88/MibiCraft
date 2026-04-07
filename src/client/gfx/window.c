@@ -662,9 +662,9 @@ char mw_get_key_char(MWWindow *window) {
 void mw_close(MWWindow *window) {
     glXMakeCurrent(window->display, None, NULL);
     glXDestroyContext(window->display, window->glx_context);
-    /*XCloseIM(window->xim);
-    XDestroyIC(window->xic);*/
     XDestroyWindow(window->display, window->window);
+    XFree(window->visual_info);
+    XFreeColormap(window->display, window->color_map);
     XCloseDisplay(window->display);
 }
 

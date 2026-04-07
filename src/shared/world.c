@@ -785,35 +785,8 @@ static void world_scroll(World *world, size_t player) {
 
         if((size_t)ABS(dx) >= world->width ||
            (size_t)ABS(dz) >= world->height){
-            size_t x, z;
-            size_t i = 0;
 
-            long px = nx;
-
-            for(z=0;z<world->height;z++,nz+=CHUNK_DEPTH){
-                for(x=0,px=nx;x<world->width;x++,i++,px+=CHUNK_WIDTH){
-                    Chunk *c;
-
-                    c = world->chunks[i];
-
-#if UNSAFE_SCROLLING
-                    THREAD_RW_UNLOCK_WRITE(&world->chunks_lock);
-#endif
-                    THREAD_RW_LOCK_WRITE(&c->data_lock);
-                    c->x = px;
-                    c->z = nz;
-                    THREAD_RW_UNLOCK_WRITE(&c->data_lock);
-#if UNSAFE_SCROLLING
-                    THREAD_RW_LOCK_WRITE(&world->chunks_lock);
-#endif
-                    world_update_chunk(world, world->chunks[i], CU_DATA|CU_MESH);
-                }
-            }
-
-#if UNSAFE_SCROLLING
-            THREAD_RW_UNLOCK_WRITE(&world->chunks_lock);
-#endif
-            return;
+            goto RESET;
         }
 
 #if DEBUG_WORLD_SCROLL
@@ -849,7 +822,7 @@ static void world_scroll(World *world, size_t player) {
                     THREAD_RW_UNLOCK_WRITE(&world->chunks_lock);
 #endif
 
-                    return;
+                    goto RESET;
                 }
             }
 
@@ -903,7 +876,9 @@ static void world_scroll(World *world, size_t player) {
 
                         world_update_chunk(world, c, CU_MESH|CU_DATA);
                     }else{
-                        fputs("Got no next chunk", stderr);
+                        fputs("Got no next chunk\n", stderr);
+
+                        goto RESET;
                     }
 
                 }
@@ -931,7 +906,7 @@ static void world_scroll(World *world, size_t player) {
                     THREAD_RW_UNLOCK_WRITE(&world->chunks_lock);
 #endif
 
-                    return;
+                    goto RESET;
                 }
             }
 
@@ -979,7 +954,9 @@ static void world_scroll(World *world, size_t player) {
 
                         world_update_chunk(world, c, CU_MESH|CU_DATA);
                     }else{
-                        fputs("Got no next chunk", stderr);
+                        fputs("Got no next chunk\n", stderr);
+
+                        goto RESET;
                     }
                 }
             }
@@ -1012,7 +989,7 @@ static void world_scroll(World *world, size_t player) {
                         THREAD_RW_UNLOCK_WRITE(&world->chunks_lock);
 #endif
 
-                        return;
+                        goto RESET;
                     }
                 }
 
@@ -1050,7 +1027,9 @@ static void world_scroll(World *world, size_t player) {
 #endif
                         world_update_chunk(world, c, CU_MESH|CU_DATA);
                     }else{
-                        fputs("Got no next chunk", stderr);
+                        fputs("Got no next chunk\n", stderr);
+
+                        goto RESET;
                     }
                 }
 
@@ -1081,7 +1060,7 @@ static void world_scroll(World *world, size_t player) {
                         THREAD_RW_UNLOCK_WRITE(&world->chunks_lock);
 #endif
 
-                        return;
+                        goto RESET;
                     }
                 }
 
@@ -1126,7 +1105,9 @@ static void world_scroll(World *world, size_t player) {
 
                         world_update_chunk(world, c, CU_MESH|CU_DATA);
                     }else{
-                        fputs("Got no next chunk", stderr);
+                        fputs("Got no next chunk\n", stderr);
+
+                        goto RESET;
                     }
                 }
             }
@@ -1143,6 +1124,46 @@ static void world_scroll(World *world, size_t player) {
             puts("------------------");
         }
 #endif
+
+#if UNSAFE_SCROLLING
+        THREAD_RW_UNLOCK_WRITE(&world->chunks_lock);
+#endif
+    }
+
+    return;
+
+RESET:
+
+    nx = world_get_x(world, player);
+    nz = world_get_z(world, player);
+
+    {
+        size_t x, z;
+        size_t i = 0;
+
+        long px;
+
+        for(z=0;z<world->height;z++,nz+=CHUNK_DEPTH){
+            for(x=0,px=nx;x<world->width;x++,i++,px+=CHUNK_WIDTH){
+                Chunk *c;
+
+                c = world->chunk_data+i;
+
+#if UNSAFE_SCROLLING
+                THREAD_RW_UNLOCK_WRITE(&world->chunks_lock);
+#endif
+                THREAD_RW_LOCK_WRITE(&c->data_lock);
+                c->x = px;
+                c->z = nz;
+                THREAD_RW_UNLOCK_WRITE(&c->data_lock);
+#if UNSAFE_SCROLLING
+                THREAD_RW_LOCK_WRITE(&world->chunks_lock);
+#endif
+                world->chunks[i] = c;
+
+                world_update_chunk(world, world->chunks[i], CU_DATA|CU_MESH);
+            }
+        }
 
 #if UNSAFE_SCROLLING
         THREAD_RW_UNLOCK_WRITE(&world->chunks_lock);

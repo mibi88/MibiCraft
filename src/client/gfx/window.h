@@ -91,8 +91,6 @@ typedef struct {
     XWindowAttributes window_attributes;
     XEvent event;
     Atom wm_delete;
-    XIM xim;
-    XIC xic;
     long mask;
     int pointer_shown;
 } MWWindow;
