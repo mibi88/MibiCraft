@@ -27,13 +27,19 @@
 #include <limits.h>
 #include <math.h>
 
-/* TODO: Do not remesh chunks that frequently. */
+/* TODO:  Do not remesh chunks that frequently. */
 
-/* XXX: Is there a risk that the queues are full because of my new -- since I
- * concieved this system with queues -- way of handling remeshing? */
+/* XXX:   Is there a risk that the queues are full because of my new -- since I
+ *        concieved this system with queues -- way of handling remeshing? */
 /* FIXME: Chunks that should've been remeshed didn't got remeshed when
  *        neighbor generated when the world scrolls. */
-/* FIXME: AddressSanitizer reporting an out of bounds write in world_scroll. */
+/* FIXME: AddressSanitizer reporting an out of bounds write in world_scroll.
+ *        2026-04-07: Fixed a memory error when scrolling towards +X.
+ */
+/* FIXME: SEGV because getting an empty chunk failed in world_scroll (when
+ *        using a single thread and sleeping during 100 ms on every chunk
+ *        update to slow it down). */
+/* FIXME: Some chunks are sometimes missing. */
 
 #define ABS(x) ((x) < 0 ? -(x) : (x))
 
@@ -425,17 +431,25 @@ void world_update_all(World *world, size_t player, unsigned char flags) {
 }
 
 static long world_get_x(World *world, size_t player) {
-    long px = (px = floor(world->players[player].entity.x),
-               px -= world->width*CHUNK_WIDTH/2,
-               (px-px%CHUNK_WIDTH)-CHUNK_WIDTH/2);
+    /* TODO: Make something cleaner */
+
+    long px = floor(world->players[player].entity.x);
+    px -= CHUNK_WIDTH/2;
+    px = (px-px%CHUNK_WIDTH);
+    if(world->players[player].entity.x > 0) px += CHUNK_WIDTH;
+    px -= world->width*CHUNK_WIDTH/2;
 
     return px;
 }
 
 static long world_get_z(World *world, size_t player) {
-    long pz = (pz = floor(world->players[player].entity.z),
-               pz -= world->height*CHUNK_DEPTH/2,
-               (pz-pz%CHUNK_DEPTH)-CHUNK_DEPTH/2);
+    /* TODO: Make something cleaner */
+
+    long pz = floor(world->players[player].entity.z);
+    pz -= CHUNK_DEPTH/2;
+    pz = (pz-pz%CHUNK_DEPTH);
+    if(world->players[player].entity.z > 0) pz += CHUNK_DEPTH;
+    pz -= world->height*CHUNK_DEPTH/2;
 
     return pz;
 }
@@ -762,7 +776,7 @@ static void world_scroll(World *world, size_t player) {
         THREAD_RW_LOCK_WRITE(&world->chunks_lock);
 #endif
 
-#if DEBUG_WORLD_SCROLL || 1
+#if DEBUG_WORLD_SCROLL
         printf("x: %ld, z: %ld -- nx: %ld, nz: %ld\n", x, z, nx, nz);
 #endif
 
