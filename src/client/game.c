@@ -79,6 +79,8 @@ void game_init(Game *game, int seed) {
      * multiplayer. */
     game->player_id = 0;
 
+    gfx_set_backface_culling(0);
+
     gfx_enable_closing();
 }
 
@@ -222,6 +224,12 @@ void game_input(Game *game, int v1, int v2, int type) {
                             if(game->player->mode >= M_AMOUNT){
                                 game->player->mode = 0;
                             }
+                            break;
+                        case 'r':
+                            gfx_set_backface_culling(
+                                !gfx_get_backface_culling()
+                            );
+                            break;
                     }
                     break;
                 case I_MOUSE:

@@ -33,10 +33,16 @@ void gfx_start_2d(void) {
     glMatrixMode(GL_MODELVIEW);
 
     glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
 }
 
 void gfx_end_2d(void) {
     glEnable(GL_DEPTH_TEST);
+    if(_backface_culling){
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
+        glFrontFace(GL_CCW);
+    }
 
     _3d_projection_matrix(gfx_get_width(), gfx_get_height());
 }

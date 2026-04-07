@@ -49,6 +49,8 @@ int _keys[256];
 
 int _motion_blur_step = 0;
 
+int _backface_culling = 0;
+
 _Config _config;
 
 int gfx_get_time(void) {
@@ -77,6 +79,14 @@ int gfx_get_height(void) {
 
 int gfx_get_motion_blur(void) {
     return _config.motion_blur;
+}
+
+int gfx_get_backface_culling(void) {
+    return _backface_culling;
+}
+
+void gfx_set_backface_culling(int culling) {
+    _backface_culling = culling;
 }
 
 void gfx_enable_fog(float r, float g, float b, float density, float start,

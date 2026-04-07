@@ -19,6 +19,8 @@
 #ifndef CLIENT_GFX_H
 #define CLIENT_GFX_H
 
+/* FIXME: Clean this mess up. */
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -65,6 +67,10 @@ int gfx_get_width(void);
 int gfx_get_height(void);
 
 int gfx_get_motion_blur(void);
+
+int gfx_get_backface_culling(void);
+
+void gfx_set_backface_culling(int culling);
 
 void gfx_set_texture_scale(float x, float y);
 

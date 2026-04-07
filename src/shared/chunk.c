@@ -86,50 +86,58 @@ static const texture_t base_tex[] = {
     1, 0
 };
 
-static const index_t base_indices[] = {
+static const index_t indices_1[] = {
     0, 1, 3,
     3, 1, 2
 };
 
+static const index_t indices_2[] = {
+    2, 1, 0,
+    3, 2, 0
+};
+
 static const Face left_face = {
-    (vertex_t*)left_vertices, (texture_t*)base_tex, (index_t*)base_indices,
+    (vertex_t*)left_vertices, (texture_t*)base_tex, (index_t*)indices_1,
     sizeof(left_vertices)/sizeof(vertex_t)/3,
-    sizeof(base_indices)/sizeof(index_t),
+    sizeof(indices_1)/sizeof(index_t),
     1
 };
 
 static const Face right_face = {
-    (vertex_t*)right_vertices, (texture_t*)base_tex, (index_t*)base_indices,
+    (vertex_t*)right_vertices, (texture_t*)base_tex,
+    (index_t*)indices_2,
     sizeof(right_vertices)/sizeof(vertex_t)/3,
-    sizeof(base_indices)/sizeof(index_t),
+    sizeof(indices_2)/sizeof(index_t),
     1
 };
 
 static const Face front_face = {
-    (vertex_t*)front_vertices, (texture_t*)base_tex, (index_t*)base_indices,
+    (vertex_t*)front_vertices, (texture_t*)base_tex,
+    (index_t*)indices_1,
     sizeof(front_vertices)/sizeof(vertex_t)/3,
-    sizeof(base_indices)/sizeof(index_t),
+    sizeof(indices_1)/sizeof(index_t),
     1
 };
 
 static const Face back_face = {
-    (vertex_t*)back_vertices, (texture_t*)base_tex, (index_t*)base_indices,
+    (vertex_t*)back_vertices, (texture_t*)base_tex, (index_t*)indices_2,
     sizeof(back_vertices)/sizeof(vertex_t)/3,
-    sizeof(base_indices)/sizeof(index_t),
+    sizeof(indices_2)/sizeof(index_t),
     1
 };
 
 static const Face top_face = {
-    (vertex_t*)top_vertices, (texture_t*)base_tex, (index_t*)base_indices,
+    (vertex_t*)top_vertices, (texture_t*)base_tex, (index_t*)indices_2,
     sizeof(top_vertices)/sizeof(vertex_t)/3,
-    sizeof(base_indices)/sizeof(index_t),
+    sizeof(indices_2)/sizeof(index_t),
     1
 };
 
 static const Face bottom_face = {
-    (vertex_t*)bottom_vertices, (texture_t*)base_tex, (index_t*)base_indices,
+    (vertex_t*)bottom_vertices, (texture_t*)base_tex,
+    (index_t*)indices_1,
     sizeof(bottom_vertices)/sizeof(vertex_t)/3,
-    sizeof(base_indices)/sizeof(index_t),
+    sizeof(indices_1)/sizeof(index_t),
     1
 };
 

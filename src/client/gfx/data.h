@@ -38,4 +38,6 @@ extern int _keys[256];
 
 extern int _motion_blur_step;
 
+extern int _backface_culling;
+
 extern _Config _config;
