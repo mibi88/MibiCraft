@@ -1078,7 +1078,7 @@ static void world_scroll(World *world, size_t player) {
                 memmove(world->chunks+i-dx, world->chunks+i,
                         (world->width-dx)*sizeof(Chunk*));
 
-                i += world->width-1-dx;
+                i += world->width-dx-dx;
 
                 px = x+world->width*CHUNK_WIDTH;
 
