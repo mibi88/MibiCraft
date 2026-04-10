@@ -25,6 +25,7 @@ int chunk_queue_init(ChunkQueue *queue, size_t size);
 int chunk_queue_push(ChunkQueue *queue, ChunkUpdate update);
 int chunk_queue_bypass(ChunkQueue *queue, ChunkUpdate update);
 ChunkUpdate chunk_queue_pop(ChunkQueue *queue);
+size_t chunk_queue_size(ChunkQueue *queue);
 int chunk_queue_empty(ChunkQueue *queue);
 int chunk_queue_resize(ChunkQueue *queue, size_t new_size);
 void chunk_queue_clear(ChunkQueue *queue);

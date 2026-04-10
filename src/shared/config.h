@@ -31,6 +31,7 @@
 #define DEBUG_WORLD_SCROLL   0
 #define DEBUG_UNLOCKING      0
 #define DEBUG_REMESHING      0
+#define DEBUG_CHUNKQUEUE     0
 #define PRINT_CHUNK_POS      0
 /* Set NPROC to 0 to get the core count dynamically */
 #define NPROC                0

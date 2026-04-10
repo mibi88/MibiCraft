@@ -308,6 +308,7 @@ void world_update_chunk(World *world, Chunk *chunk, unsigned char flags) {
 
     THREAD_LOCK_LOCK(world->last_queue_lock);
     if(chunk_queue_push(world->queues+world->last_queue, update)){
+        fputs("Failed to push chunk!\n", stderr);
         THREAD_LOCK_LOCK(chunk->flags_lock);
         if(flags_update) chunk->flags = old_flags;
         THREAD_LOCK_UNLOCK(chunk->flags_lock);
@@ -336,6 +337,7 @@ void world_update_chunk_fast(World *world, Chunk *chunk, unsigned char flags) {
 
     THREAD_LOCK_LOCK(world->last_queue_lock);
     if(chunk_queue_bypass(world->queues+world->last_queue, update)){
+        fputs("Failed to push chunk (fast)!\n", stderr);
         THREAD_LOCK_LOCK(chunk->flags_lock);
         if(flags_update) chunk->flags = old_flags;
         THREAD_LOCK_UNLOCK(chunk->flags_lock);
@@ -646,7 +648,10 @@ static THREAD_CALL(update_thread, vupdate_data) {
         THREAD_LOCK_UNLOCK(d->w->stop_lock);
 #endif
 
-        if(stop) break;
+        if(stop){
+            chunk_queue_push(d->queue, update);
+            break;
+        }
         THREAD_RW_LOCK_READ(&update.chunk->data_lock);
 
         if(update.flags&CU_DATA){
@@ -1346,6 +1351,21 @@ void world_update(World *world) {
     size_t i;
 
     for(i=0;i<world->queue_num;i++){
+#if DEBUG_THREADING
+        {
+            UpdateData *d = world->thread_data+i;
+
+            unsigned char finished;
+
+            THREAD_LOCK_LOCK(d->finished_lock);
+            finished = d->finished;
+            THREAD_LOCK_UNLOCK(d->finished_lock);
+
+            printf("t%lu %c s: %10lu\n", i, finished ? 'f' : '-',
+                   chunk_queue_size(world->queues+i));
+        }
+#endif
+
         if(!chunk_queue_empty(world->queues+i)){
             UpdateData *d = world->thread_data+i;
 
@@ -1370,8 +1390,8 @@ void world_update(World *world) {
             d->finished = 0;
 
             if(THREAD_CREATE(world->threads+i, update_thread, d)){
-                world->thread_data[i].w = NULL;
-                world->thread_data[i].finished = 1;
+                d->w = NULL;
+                d->finished = 1;
                 fprintf(stderr, "Thread %lu creation failed\n", i);
             }else{
 #if DEBUG_THREADING

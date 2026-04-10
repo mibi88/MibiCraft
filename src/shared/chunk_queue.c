@@ -142,6 +142,18 @@ ChunkUpdate chunk_queue_pop(ChunkQueue *queue) {
     return r;
 }
 
+size_t chunk_queue_size(ChunkQueue *queue) {
+    size_t r;
+
+    THREAD_LOCK_LOCK(queue->lock);
+
+    r = queue->end-queue->start;
+
+    THREAD_LOCK_UNLOCK(queue->lock);
+
+    return r;
+}
+
 int chunk_queue_empty(ChunkQueue *queue) {
     int r;
 
