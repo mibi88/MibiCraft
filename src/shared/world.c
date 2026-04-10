@@ -849,9 +849,20 @@ static void world_scroll(World *world, size_t player) {
             size_t i;
             long lz;
 
+            Chunk **c;
+            Chunk **e;
+
 #if DEBUG_WORLD_SCROLL
             puts("Moving the world towards -Z");
 #endif
+
+            c = world->chunks+(world->height+dz-1)*world->width;
+            e = c+world->width;
+            for(;c<e;c++){
+                if(((*c)->flags&CF_INIT) && (c[world->width]->flags&CF_INIT)){
+                    (*c)->generated_neighbors--;
+                }
+            }
 
             for(i=(world->height+dz)*world->width;
                 i<world->width*world->height;
@@ -888,7 +899,6 @@ static void world_scroll(World *world, size_t player) {
                     (world->height+dz)*world->width*sizeof(Chunk*));
 
             i = 0;
-
             for(lz=0;lz<-dz;lz++){
                 size_t px = x;
                 size_t x;
@@ -897,14 +907,23 @@ static void world_scroll(World *world, size_t player) {
                     Chunk *c;
 
                     if((c = get_empty_chunk(world)) != NULL){
+                        unsigned char n = 0;
+
                         world->chunks[i] = c;
+                        if(lz == -dz-1){
+                            Chunk *cn;
+
+                            cn = world->chunks[i+world->width];
+
+                            THREAD_LOCK_LOCK(cn->flags_lock);
+                            n += !!(cn->flags&CF_INIT);
+                            THREAD_LOCK_UNLOCK(cn->flags_lock);
+                        }
 
                         THREAD_LOCK_LOCK(c->flags_lock);
 
                         c->flags &= ~CF_INIT;
-
-                        /* TODO: Do something cleaner. */
-                        c->generated_neighbors = 4;
+                        c->generated_neighbors = n;
 
                         THREAD_LOCK_UNLOCK(c->flags_lock);
 
@@ -939,6 +958,17 @@ static void world_scroll(World *world, size_t player) {
             size_t i;
 
             size_t lz;
+
+            Chunk **c;
+            Chunk **e;
+
+            c = world->chunks+dz*world->width;
+            e = c+world->width;
+            for(;c<e;c++){
+                if(((*c)->flags&CF_INIT) && (c[-world->width]->flags&CF_INIT)){
+                    (*c)->generated_neighbors--;
+                }
+            }
 
 #if DEBUG_WORLD_SCROLL
             puts("Moving the world towards +Z");
@@ -980,14 +1010,24 @@ static void world_scroll(World *world, size_t player) {
                     Chunk *c;
 
                     if((c = get_empty_chunk(world)) != NULL){
+                        unsigned char n = 0;
+
                         world->chunks[i] = c;
+
+                        if(lz == world->height-dz){
+                            Chunk *cn;
+
+                            cn = world->chunks[i-world->width];
+
+                            THREAD_LOCK_LOCK(cn->flags_lock);
+                            n += !!(cn->flags&CF_INIT);
+                            THREAD_LOCK_UNLOCK(cn->flags_lock);
+                        }
 
                         THREAD_LOCK_LOCK(c->flags_lock);
 
                         c->flags &= ~CF_INIT;
-
-                        /* TODO: Do something cleaner. */
-                        c->generated_neighbors = 4;
+                        c->generated_neighbors = n;
 
                         THREAD_LOCK_UNLOCK(c->flags_lock);
 
@@ -1032,6 +1072,11 @@ static void world_scroll(World *world, size_t player) {
 
                 size_t px = nx;
 
+                if((world->chunks[i+world->width+dx-1]->flags&CF_INIT) &&
+                   (world->chunks[i+world->width+dx-1+1]->flags&CF_INIT)){
+                    world->chunks[i+world->width+dx-1]->generated_neighbors--;
+                }
+
                 for(n=world->width+dx;(size_t)n<world->width;n++){
 #if DEBUG_WORLD_SCROLL
                     printf("%lu -- Remove chunk at %d, %d\n", i+n,
@@ -1053,6 +1098,7 @@ static void world_scroll(World *world, size_t player) {
                 printf("memmove from %lu to %lu of %lu chunks\n", i, i-dx,
                        world->width+dx);
 #endif
+
                 memmove(world->chunks+i-dx, world->chunks+i,
                         (world->width+dx)*sizeof(Chunk*));
 
@@ -1060,14 +1106,24 @@ static void world_scroll(World *world, size_t player) {
                     Chunk *c;
 
                     if((c = get_empty_chunk(world)) != NULL){
+                        unsigned char nc = 0;
+
                         world->chunks[i] = c;
+
+                        if(n == -dx-1){
+                            Chunk *cn;
+
+                            cn = world->chunks[i+1];
+
+                            THREAD_LOCK_LOCK(cn->flags_lock);
+                            nc += !!(cn->flags&CF_INIT);
+                            THREAD_LOCK_UNLOCK(cn->flags_lock);
+                        }
 
                         THREAD_LOCK_LOCK(c->flags_lock);
 
                         c->flags &= ~CF_INIT;
-
-                        /* TODO: Do something cleaner. */
-                        c->generated_neighbors = 4;
+                        c->generated_neighbors = nc;
 
                         THREAD_LOCK_UNLOCK(c->flags_lock);
 
@@ -1109,6 +1165,11 @@ static void world_scroll(World *world, size_t player) {
 
                 size_t px;
 
+                if((world->chunks[i+dx]->flags&CF_INIT) &&
+                   (world->chunks[i+dx-1]->flags&CF_INIT)){
+                    world->chunks[i+dx]->generated_neighbors--;
+                }
+
                 for(n=0;n<dx;n++,i++){
 #if DEBUG_WORLD_SCROLL
                     printf("%lu -- Remove chunk at %d, %d\n", i,
@@ -1142,14 +1203,24 @@ static void world_scroll(World *world, size_t player) {
                     Chunk *c;
 
                     if((c = get_empty_chunk(world)) != NULL){
+                        unsigned char nc = 0;
+
                         world->chunks[i] = c;
+
+                        if((size_t)n == world->width-dx){
+                            Chunk *cn;
+
+                            cn = world->chunks[i-1];
+
+                            THREAD_LOCK_LOCK(cn->flags_lock);
+                            nc += !!(cn->flags&CF_INIT);
+                            THREAD_LOCK_UNLOCK(cn->flags_lock);
+                        }
 
                         THREAD_LOCK_LOCK(c->flags_lock);
 
                         c->flags &= ~CF_INIT;
-
-                        /* TODO: Do something cleaner. */
-                        c->generated_neighbors = 4;
+                        c->generated_neighbors = nc;
 
                         THREAD_LOCK_UNLOCK(c->flags_lock);
 
