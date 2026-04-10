@@ -29,8 +29,8 @@
 
 /* TODO:  Do not remesh chunks that frequently. */
 
-/* XXX:   Is there a risk that the queues are full because of my new -- since I
- *        concieved this system with queues -- way of handling remeshing? */
+/* FIXME: Size the queues correctly and avoid pushing a chunk twice for data
+ *        generation to avoid filling the queues. */
 /* FIXME: Chunks that should've been remeshed didn't got remeshed when
  *        neighbor generated when the world scrolls. */
 /* FIXME: AddressSanitizer reporting an out of bounds write in world_scroll.
@@ -649,7 +649,10 @@ static THREAD_CALL(update_thread, vupdate_data) {
 #endif
 
         if(stop){
-            chunk_queue_push(d->queue, update);
+            if(chunk_queue_push(d->queue, update)){
+                fputs("Failed to push the chunk back on the queue!\n", stderr);
+            }
+
             break;
         }
         THREAD_RW_LOCK_READ(&update.chunk->data_lock);
