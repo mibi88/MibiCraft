@@ -197,7 +197,7 @@ void player_update(Player *player, World *world, float delta) {
             }
         }
     }else{
-        player->velocity = 10*delta;
+        player->velocity = PLAYER_SPECTATOR_SPEED*delta;
     }
 }
 

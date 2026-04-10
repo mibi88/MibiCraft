@@ -1302,6 +1302,11 @@ RESET:
 
         long px;
 
+        for(;i<world->queue_num;i++){
+            chunk_queue_clear(world->queues+i);
+        }
+
+        i = 0;
         for(z=0;z<world->height;z++,nz+=CHUNK_DEPTH){
             for(x=0,px=nx;x<world->width;x++,i++,px+=CHUNK_WIDTH){
                 Chunk *c;
@@ -1314,7 +1319,14 @@ RESET:
                 THREAD_RW_LOCK_WRITE(&c->data_lock);
                 c->x = px;
                 c->z = nz;
+                c->chunk_model.triangles = 0;
                 THREAD_RW_UNLOCK_WRITE(&c->data_lock);
+
+                THREAD_LOCK_LOCK(c->flags_lock);
+                c->flags = 0;
+                c->generated_neighbors = 0;
+                THREAD_LOCK_UNLOCK(c->flags_lock);
+
 #if UNSAFE_SCROLLING
                 THREAD_RW_LOCK_WRITE(&world->chunks_lock);
 #endif

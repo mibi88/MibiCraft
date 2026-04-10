@@ -19,7 +19,7 @@
 #ifndef SHARED_CONFIG_H
 #define SHARED_CONFIG_H
 
-#define RENDER_DISTANCE      8
+#define RENDER_DISTANCE      16
 #define RAYCAST_DISTANCE     20
 #define THREADING            1
 #define DEBUG_WORLD          0
@@ -30,10 +30,10 @@
 #define DEBUG_THREADING      0
 #define DEBUG_WORLD_SCROLL   0
 #define DEBUG_UNLOCKING      0
-#define DEBUG_REMESHING      1
+#define DEBUG_REMESHING      0
 #define PRINT_CHUNK_POS      0
 /* Set NPROC to 0 to get the core count dynamically */
-#define NPROC                1
+#define NPROC                0
 #define SYS_MRSW_LOCK        1
 
 #endif
