@@ -558,7 +558,8 @@ static Tile get_tile(Chunk *ch, int x, int y, int z, int rx, int ry, int rz,
     return T_VOID;
 }
 
-static void remesh_chunk(World *world, Chunk *chunk, long x, long z) {
+static void remesh_neighbor(World *world, Chunk *chunk, long x, long z,
+                            unsigned char side) {
     long min_x, min_z;
 
     Chunk *c0;
@@ -607,18 +608,19 @@ static void remesh_chunk(World *world, Chunk *chunk, long x, long z) {
         THREAD_RW_LOCK_READ(&c->data_lock);
 
         /* Calculate the number of neighbors */
-        if(c->x > min_x) n++;
-        if(c->x < min_x+(long)world->width*CHUNK_WIDTH-CHUNK_WIDTH) n++;
-        if(c->z > min_z) n++;
-        if(c->z < min_z+(long)world->height*CHUNK_DEPTH-CHUNK_DEPTH) n++;
+        n |= (c->x > min_x);
+        n |= (c->x < min_x+(long)world->width*CHUNK_WIDTH-CHUNK_WIDTH)<<1;
+        n |= (c->z > min_z)<<2;
+        n |= (c->z < min_z+(long)world->height*CHUNK_DEPTH-CHUNK_DEPTH)<<3;
 
         THREAD_RW_UNLOCK_READ(&c->data_lock);
 
         THREAD_LOCK_LOCK(c->flags_lock);
-        cn = (++c->generated_neighbors);
+        c->generated_neighbors |= side;
+        cn = c->generated_neighbors;
         flags = c->flags;
         THREAD_LOCK_UNLOCK(c->flags_lock);
-        if(cn >= n && (flags&(CF_INIT|CF_WAITMESH)) == CF_INIT){
+        if(cn == n && (flags&(CF_INIT|CF_WAITMESH)) == CF_INIT){
             world_update_chunk(world, c, CU_MESH);
         }
     }
@@ -658,10 +660,10 @@ static THREAD_CALL(update_thread, vupdate_data) {
                                 update.chunk->z, d->w->seed);
 
             /* Update neighboring chunk meshes */
-            remesh_chunk(d->w, update.chunk, x-1, z);
-            remesh_chunk(d->w, update.chunk, x+CHUNK_WIDTH, z);
-            remesh_chunk(d->w, update.chunk, x, z-1);
-            remesh_chunk(d->w, update.chunk, x, z+CHUNK_DEPTH);
+            remesh_neighbor(d->w, update.chunk, x-1, z, CN_RIGHT);
+            remesh_neighbor(d->w, update.chunk, x+CHUNK_WIDTH, z, CN_LEFT);
+            remesh_neighbor(d->w, update.chunk, x, z-1, CN_BELOW);
+            remesh_neighbor(d->w, update.chunk, x, z+CHUNK_DEPTH, CN_ABOVE);
 
 #if DEBUG_REMESHING
             {
@@ -681,8 +683,27 @@ static THREAD_CALL(update_thread, vupdate_data) {
                         c = world->chunks[i];
 
                         THREAD_LOCK_LOCK(c->flags_lock);
-                        printf(c->flags&CF_INIT ? c == update.chunk ? "[%d]" : " %d " : " - ",
-                               c->generated_neighbors);
+                        /*printf(c->flags&CF_INIT ?
+                               c == update.chunk ? "[%d]" : " %d " :
+                               " - ",
+                               !!(c->generated_neighbors&CN_LEFT)+
+                               !!(c->generated_neighbors&CN_RIGHT)+
+                               !!(c->generated_neighbors&CN_ABOVE)+
+                               !!(c->generated_neighbors&CN_BELOW));*/
+                        printf(c == update.chunk ?
+                               "[%c%c%c%c]" : " %c%c%c%c ",
+                               c->flags&CF_INIT ?
+                               c->generated_neighbors&CN_ABOVE ? 'A' : '-' :
+                               ' ',
+                               c->flags&CF_INIT ?
+                               c->generated_neighbors&CN_BELOW ? 'B' : '-' :
+                               ' ',
+                               c->flags&CF_INIT ?
+                               c->generated_neighbors&CN_RIGHT ? 'R' : '-' :
+                               ' ',
+                               c->flags&CF_INIT ?
+                               c->generated_neighbors&CN_LEFT ? 'L' : '-' :
+                               ' ');
 
                         THREAD_LOCK_UNLOCK(c->flags_lock);
                     }
@@ -860,7 +881,7 @@ static void world_scroll(World *world, size_t player) {
             e = c+world->width;
             for(;c<e;c++){
                 if(((*c)->flags&CF_INIT) && (c[world->width]->flags&CF_INIT)){
-                    (*c)->generated_neighbors--;
+                    (*c)->generated_neighbors &= ~CN_BELOW;
                 }
             }
 
@@ -916,7 +937,7 @@ static void world_scroll(World *world, size_t player) {
                             cn = world->chunks[i+world->width];
 
                             THREAD_LOCK_LOCK(cn->flags_lock);
-                            n += !!(cn->flags&CF_INIT);
+                            n = cn->flags&CF_INIT ? CN_BELOW : 0;
                             THREAD_LOCK_UNLOCK(cn->flags_lock);
                         }
 
@@ -966,7 +987,7 @@ static void world_scroll(World *world, size_t player) {
             e = c+world->width;
             for(;c<e;c++){
                 if(((*c)->flags&CF_INIT) && (c[-world->width]->flags&CF_INIT)){
-                    (*c)->generated_neighbors--;
+                    (*c)->generated_neighbors &= ~CN_ABOVE;
                 }
             }
 
@@ -1020,7 +1041,7 @@ static void world_scroll(World *world, size_t player) {
                             cn = world->chunks[i-world->width];
 
                             THREAD_LOCK_LOCK(cn->flags_lock);
-                            n += !!(cn->flags&CF_INIT);
+                            n = cn->flags&CF_INIT ? CN_ABOVE : 0;
                             THREAD_LOCK_UNLOCK(cn->flags_lock);
                         }
 
@@ -1074,7 +1095,8 @@ static void world_scroll(World *world, size_t player) {
 
                 if((world->chunks[i+world->width+dx-1]->flags&CF_INIT) &&
                    (world->chunks[i+world->width+dx-1+1]->flags&CF_INIT)){
-                    world->chunks[i+world->width+dx-1]->generated_neighbors--;
+                    world->chunks[i+world->width+dx-1]
+                            ->generated_neighbors &= ~CN_RIGHT;
                 }
 
                 for(n=world->width+dx;(size_t)n<world->width;n++){
@@ -1116,7 +1138,7 @@ static void world_scroll(World *world, size_t player) {
                             cn = world->chunks[i+1];
 
                             THREAD_LOCK_LOCK(cn->flags_lock);
-                            nc += !!(cn->flags&CF_INIT);
+                            nc = cn->flags&CF_INIT ? CN_RIGHT : 0;
                             THREAD_LOCK_UNLOCK(cn->flags_lock);
                         }
 
@@ -1167,7 +1189,7 @@ static void world_scroll(World *world, size_t player) {
 
                 if((world->chunks[i+dx]->flags&CF_INIT) &&
                    (world->chunks[i+dx-1]->flags&CF_INIT)){
-                    world->chunks[i+dx]->generated_neighbors--;
+                    world->chunks[i+dx]->generated_neighbors &= ~CN_LEFT;
                 }
 
                 for(n=0;n<dx;n++,i++){
@@ -1213,7 +1235,7 @@ static void world_scroll(World *world, size_t player) {
                             cn = world->chunks[i-1];
 
                             THREAD_LOCK_LOCK(cn->flags_lock);
-                            nc += !!(cn->flags&CF_INIT);
+                            nc = cn->flags&CF_INIT ? CN_LEFT : 0;
                             THREAD_LOCK_UNLOCK(cn->flags_lock);
                         }
 

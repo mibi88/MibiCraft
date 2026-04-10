@@ -77,6 +77,13 @@ enum {
     CF_WAITMESH = 2
 };
 
+enum {
+    CN_LEFT = 1,
+    CN_RIGHT = 2,
+    CN_ABOVE = 4,
+    CN_BELOW = 8
+};
+
 typedef struct Chunk Chunk;
 struct Chunk {
     /* TODO: Allocate all this stuff on the heap, and only allocate
