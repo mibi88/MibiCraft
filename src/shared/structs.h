@@ -94,13 +94,15 @@ struct Chunk {
 
     GFXModel chunk_model;
 
-    int x, z;
-
-    unsigned char flags;
-
     thread_rwlock_t data_lock;
     thread_rwlock_t mesh_lock;
     thread_lock_t flags_lock;
+
+    int x, z;
+
+    unsigned char generated_neighbors;
+
+    unsigned char flags;
 };
 
 typedef struct {

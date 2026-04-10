@@ -580,6 +580,8 @@ int chunk_init(Chunk *chunk) {
 
     chunk->flags = 0;
 
+    chunk->generated_neighbors = 0;
+
     gfx_init_model(&chunk->chunk_model, chunk->chunk_vertices,
                    chunk->chunk_indices, chunk->chunk_texture_coords, 0,
                    1, 1, 0, TYPE_VERTEX, TYPE_INDEX, TYPE_TEXTURE);

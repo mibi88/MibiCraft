@@ -581,12 +581,13 @@ static void remesh_chunk(World *world, Chunk *chunk, long x, long z) {
 
     THREAD_RW_UNLOCK_READ(&c0->data_lock);
 
-    THREAD_RW_LOCK_WRITE(&chunk->data_lock);
-
     if(x >= min_x && x < min_x+(long)world->width*CHUNK_WIDTH &&
        z >= min_z && z < min_z+(long)world->height*CHUNK_DEPTH){
         Chunk *c;
         unsigned char flags;
+
+        unsigned char n = 0;
+        unsigned char cn;
 
         x -= min_x;
         z -= min_z;
@@ -602,10 +603,26 @@ static void remesh_chunk(World *world, Chunk *chunk, long x, long z) {
         THREAD_LOCK_LOCK(c->flags_lock);
         flags = c->flags;
         THREAD_LOCK_UNLOCK(c->flags_lock);
-        if((flags&(CF_INIT|CF_WAITMESH)) == CF_INIT){
+
+        THREAD_RW_LOCK_READ(&c->data_lock);
+
+        /* Calculate the number of neighbors */
+        if(c->x > min_x) n++;
+        if(c->x < min_x+(long)world->width*CHUNK_WIDTH-CHUNK_WIDTH) n++;
+        if(c->z > min_z) n++;
+        if(c->z < min_z+(long)world->height*CHUNK_DEPTH-CHUNK_DEPTH) n++;
+
+        THREAD_RW_UNLOCK_READ(&c->data_lock);
+
+        THREAD_LOCK_LOCK(c->flags_lock);
+        cn = (++c->generated_neighbors);
+        flags = c->flags;
+        THREAD_LOCK_UNLOCK(c->flags_lock);
+        if(cn >= n && (flags&(CF_INIT|CF_WAITMESH)) == CF_INIT){
             world_update_chunk(world, c, CU_MESH);
         }
     }
+    THREAD_RW_LOCK_WRITE(&chunk->data_lock);
 }
 
 static THREAD_CALL(update_thread, vupdate_data) {
@@ -645,6 +662,35 @@ static THREAD_CALL(update_thread, vupdate_data) {
             remesh_chunk(d->w, update.chunk, x+CHUNK_WIDTH, z);
             remesh_chunk(d->w, update.chunk, x, z-1);
             remesh_chunk(d->w, update.chunk, x, z+CHUNK_DEPTH);
+
+#if DEBUG_REMESHING
+            {
+                size_t x;
+                size_t z;
+
+                size_t i;
+
+                World *world = d->w;
+
+                puts("-UPDATE-");
+
+                for(i=0,z=0;z<world->height;z++){
+                    for(x=0;x<world->width;x++,i++){
+                        Chunk *c;
+
+                        c = world->chunks[i];
+
+                        THREAD_LOCK_LOCK(c->flags_lock);
+                        printf(c->flags&CF_INIT ? c == update.chunk ? "[%d]" : " %d " : " - ",
+                               c->generated_neighbors);
+
+                        THREAD_LOCK_UNLOCK(c->flags_lock);
+                    }
+                    fputc('\n', stdout);
+                }
+                puts("--------");
+            }
+#endif
 
             THREAD_RW_UNLOCK_WRITE(&update.chunk->data_lock);
             THREAD_RW_LOCK_READ(&update.chunk->data_lock);
@@ -854,7 +900,12 @@ static void world_scroll(World *world, size_t player) {
                         world->chunks[i] = c;
 
                         THREAD_LOCK_LOCK(c->flags_lock);
+
                         c->flags &= ~CF_INIT;
+
+                        /* TODO: Do something cleaner. */
+                        c->generated_neighbors = 4;
+
                         THREAD_LOCK_UNLOCK(c->flags_lock);
 
 #if UNSAFE_SCROLLING
@@ -932,7 +983,12 @@ static void world_scroll(World *world, size_t player) {
                         world->chunks[i] = c;
 
                         THREAD_LOCK_LOCK(c->flags_lock);
+
                         c->flags &= ~CF_INIT;
+
+                        /* TODO: Do something cleaner. */
+                        c->generated_neighbors = 4;
+
                         THREAD_LOCK_UNLOCK(c->flags_lock);
 
 #if UNSAFE_SCROLLING
@@ -1007,7 +1063,12 @@ static void world_scroll(World *world, size_t player) {
                         world->chunks[i] = c;
 
                         THREAD_LOCK_LOCK(c->flags_lock);
+
                         c->flags &= ~CF_INIT;
+
+                        /* TODO: Do something cleaner. */
+                        c->generated_neighbors = 4;
+
                         THREAD_LOCK_UNLOCK(c->flags_lock);
 
 #if UNSAFE_SCROLLING
@@ -1084,7 +1145,12 @@ static void world_scroll(World *world, size_t player) {
                         world->chunks[i] = c;
 
                         THREAD_LOCK_LOCK(c->flags_lock);
+
                         c->flags &= ~CF_INIT;
+
+                        /* TODO: Do something cleaner. */
+                        c->generated_neighbors = 4;
+
                         THREAD_LOCK_UNLOCK(c->flags_lock);
 
 #if UNSAFE_SCROLLING
