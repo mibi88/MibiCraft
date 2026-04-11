@@ -953,11 +953,11 @@ static void world_scroll(World *world, size_t player) {
              * or with
              * x: 20, z: -4 and nx: 20, nz: -12.
              */
-            memmove(world->chunks+-dz*world->width, world->chunks,
+            memmove(world->chunks-dz*world->width, world->chunks,
                     (world->height+dz)*world->width*sizeof(Chunk*));
 
             i = 0;
-            for(lz=0;lz<-dz;lz++){
+            for(lz=0;lz<-dz;lz++,nz+=CHUNK_DEPTH){
                 size_t px = x;
                 size_t x;
 
