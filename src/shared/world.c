@@ -42,10 +42,15 @@
 /* FIXME: Some chunks are sometimes missing. */
 
 #define ABS(x) ((x) < 0 ? -(x) : (x))
+#define MIX(a, b) ((a) < (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+
+#define QUEUE_SIZE(q, w, h, p) MAX(1, 2*(w)*(h)*(p)/(q)+1)
 
 int world_init(World *world, size_t width, size_t height, size_t player_num,
                size_t queue_num, int seed, unsigned int texture) {
     size_t i;
+    size_t queue_size;
 
     world->width = width;
     world->height = height;
@@ -92,6 +97,8 @@ int world_init(World *world, size_t width, size_t height, size_t player_num,
 
         return 2;
     }
+
+    queue_size = QUEUE_SIZE(queue_num, width, height, player_num);
 
     world->chunk_data = malloc(width*height*player_num*sizeof(Chunk));
     world->chunks = malloc(width*height*player_num*sizeof(Chunk*));
@@ -185,7 +192,7 @@ int world_init(World *world, size_t width, size_t height, size_t player_num,
             return 4;
         }
 
-        if(chunk_queue_init(world->queues+i, width*height*player_num)){
+        if(chunk_queue_init(world->queues+i, queue_size)){
             size_t n;
 
             fputs("Queue init failed!\n", stderr);
@@ -289,62 +296,84 @@ int world_init(World *world, size_t width, size_t height, size_t player_num,
     return 0;
 }
 
-void world_update_chunk(World *world, Chunk *chunk, unsigned char flags) {
+int world_update_chunk(World *world, Chunk *chunk, unsigned char flags) {
     ChunkUpdate update;
 
     unsigned char old_flags;
-    unsigned char flags_update = 0;
+    unsigned char flag_mask;
 
-    update.chunk = chunk;
-    update.flags = flags;
+    THREAD_LOCK_LOCK(chunk->flags_lock);
 
-    if(flags&CU_MESH){
-        THREAD_LOCK_LOCK(chunk->flags_lock);
-        old_flags = chunk->flags;
-        chunk->flags |= CF_WAITMESH;
-        flags_update = 1;
-        THREAD_LOCK_UNLOCK(chunk->flags_lock);
+    flag_mask = (flags&CU_MESH ? CF_UPDATEMESH : 0) |
+                (flags&CU_DATA ? CF_UPDATEDATA : 0);
+
+    old_flags = chunk->flags;
+    chunk->flags |= flag_mask|CF_IN_QUEUE;
+    THREAD_LOCK_UNLOCK(chunk->flags_lock);
+
+    if(old_flags&CF_IN_QUEUE){
+        return 1;
     }
 
+    update.chunk = chunk;
+
     THREAD_LOCK_LOCK(world->last_queue_lock);
+
     if(chunk_queue_push(world->queues+world->last_queue, update)){
         fputs("Failed to push chunk!\n", stderr);
+
         THREAD_LOCK_LOCK(chunk->flags_lock);
-        if(flags_update) chunk->flags = old_flags;
+        chunk->flags = old_flags;
         THREAD_LOCK_UNLOCK(chunk->flags_lock);
+
+        THREAD_LOCK_UNLOCK(world->last_queue_lock);
+        return 1;
     }
 
     world->last_queue = (world->last_queue+1)%world->queue_num;
     THREAD_LOCK_UNLOCK(world->last_queue_lock);
+
+    return 0;
 }
 
-void world_update_chunk_fast(World *world, Chunk *chunk, unsigned char flags) {
+int world_update_chunk_fast(World *world, Chunk *chunk, unsigned char flags) {
     ChunkUpdate update;
 
     unsigned char old_flags;
-    unsigned char flags_update = 0;
+    unsigned char flag_mask;
 
-    update.chunk = chunk;
-    update.flags = flags;
+    THREAD_LOCK_LOCK(chunk->flags_lock);
 
-    if(flags&CU_MESH){
-        THREAD_LOCK_LOCK(chunk->flags_lock);
-        old_flags = chunk->flags;
-        chunk->flags |= CF_WAITMESH;
-        flags_update = 1;
-        THREAD_LOCK_UNLOCK(chunk->flags_lock);
+    flag_mask = (flags&CU_MESH ? CF_UPDATEMESH : 0) |
+                (flags&CU_DATA ? CF_UPDATEDATA : 0);
+
+    old_flags = chunk->flags;
+    chunk->flags |= flag_mask|CF_IN_QUEUE;
+    THREAD_LOCK_UNLOCK(chunk->flags_lock);
+
+    if(old_flags&CF_IN_QUEUE){
+        return 1;
     }
 
+    update.chunk = chunk;
+
     THREAD_LOCK_LOCK(world->last_queue_lock);
+
     if(chunk_queue_bypass(world->queues+world->last_queue, update)){
         fputs("Failed to push chunk (fast)!\n", stderr);
+
         THREAD_LOCK_LOCK(chunk->flags_lock);
-        if(flags_update) chunk->flags = old_flags;
+        chunk->flags = old_flags;
         THREAD_LOCK_UNLOCK(chunk->flags_lock);
+
+        THREAD_LOCK_UNLOCK(world->last_queue_lock);
+        return 1;
     }
 
     world->last_queue = (world->last_queue+1)%world->queue_num;
     THREAD_LOCK_UNLOCK(world->last_queue_lock);
+
+    return 0;
 }
 
 void world_update_all(World *world, size_t player, unsigned char flags) {
@@ -484,7 +513,7 @@ void world_init_data(World *world) {
 
     for(i=0;i<world->player_num;i++){
         world_set_chunk_positions(world, i);
-        world_update_all(world, i, CU_DATA|CU_MESH);
+        world_update_all(world, i, CU_MESH|CU_DATA);
         /*world_update_all(world, i, CU_MESH);*/
     }
 }
@@ -622,7 +651,7 @@ static void remesh_neighbor(World *world, Chunk *chunk, long x, long z,
         cn = c->generated_neighbors;
         flags = c->flags;
         THREAD_LOCK_UNLOCK(c->flags_lock);
-        if(cn == n && (flags&(CF_INIT|CF_WAITMESH)) == CF_INIT){
+        if(cn == n && (flags&CF_INIT)){
             world_update_chunk(world, c, CU_MESH);
         }
     }
@@ -633,12 +662,9 @@ static THREAD_CALL(update_thread, vupdate_data) {
     UpdateData *d = vupdate_data;
     ChunkUpdate update;
 
-    unsigned char flags;
-
-    /*puts("thread");*/
-
     while((update = chunk_queue_pop(d->queue)).chunk != NULL){
         unsigned char stop;
+        unsigned char flags;
 
 #if !UNSAFE_THREADING
         THREAD_LOCK_LOCK(d->w->stop_lock);
@@ -655,9 +681,15 @@ static THREAD_CALL(update_thread, vupdate_data) {
 
             break;
         }
+
+        THREAD_LOCK_LOCK(update.chunk->flags_lock);
+        flags = update.chunk->flags;
+        update.chunk->flags &= ~(CF_UPDATEMESH|CF_UPDATEDATA|CF_IN_QUEUE);
+        THREAD_LOCK_UNLOCK(update.chunk->flags_lock);
+
         THREAD_RW_LOCK_READ(&update.chunk->data_lock);
 
-        if(update.flags&CU_DATA){
+        if(flags&CF_UPDATEDATA){
             long x = update.chunk->x;
             long z = update.chunk->z;
 
@@ -666,6 +698,7 @@ static THREAD_CALL(update_thread, vupdate_data) {
 
             chunk_generate_data(update.chunk, update.chunk->x,
                                 update.chunk->z, d->w->seed);
+            flags |= CF_INIT;
 
             /* Update neighboring chunk meshes */
             remesh_neighbor(d->w, update.chunk, x-1, z, CN_RIGHT);
@@ -725,11 +758,7 @@ static THREAD_CALL(update_thread, vupdate_data) {
             THREAD_RW_LOCK_READ(&update.chunk->data_lock);
         }
 
-        THREAD_LOCK_LOCK(update.chunk->flags_lock);
-        flags = update.chunk->flags;
-        THREAD_LOCK_UNLOCK(update.chunk->flags_lock);
-
-        if((update.flags&CU_MESH) && (flags&CF_INIT)){
+        if((flags&CF_UPDATEMESH) && (flags&CF_INIT)){
             THREAD_RW_LOCK_WRITE(&update.chunk->mesh_lock);
             chunk_generate_model(update.chunk, d->w->texture, get_tile, d->w);
             THREAD_RW_UNLOCK_WRITE(&update.chunk->mesh_lock);
@@ -1311,6 +1340,14 @@ RESET:
         long px;
 
         for(;i<world->queue_num;i++){
+            ChunkUpdate update;
+
+            while((update = chunk_queue_pop(world->queues+i)).chunk != NULL){
+                THREAD_LOCK_LOCK(update.chunk->flags_lock);
+                update.chunk->flags = 0;
+                THREAD_LOCK_UNLOCK(update.chunk->flags_lock);
+            }
+
             chunk_queue_clear(world->queues+i);
         }
 
@@ -1340,7 +1377,7 @@ RESET:
 #endif
                 world->chunks[i] = c;
 
-                world_update_chunk(world, world->chunks[i], CU_DATA|CU_MESH);
+                world_update_chunk(world, world->chunks[i], CU_MESH|CU_DATA);
             }
         }
 
@@ -1364,7 +1401,7 @@ void world_update(World *world) {
             finished = d->finished;
             THREAD_LOCK_UNLOCK(d->finished_lock);
 
-            printf("t%lu %c s: %10lu\n", i, finished ? 'f' : '-',
+            printf("t%02lu %c s: %10lu\n", i, finished ? 'f' : '-',
                    chunk_queue_size(world->queues+i));
         }
 #endif
@@ -1581,11 +1618,27 @@ int world_change_size(World *world, size_t width, size_t height) {
     void *ptr;
     size_t i;
 
+    size_t old_queue_size;
+    size_t new_queue_size;
+
+    old_queue_size = QUEUE_SIZE(world->queue_num, world->width, world->height,
+                                world->player_num);
+    new_queue_size = QUEUE_SIZE(world->queue_num, width, height,
+                                world->player_num);
+
     /* TODO: Only reload the chunks that need to be reloaded. */
 
     stop_threads(world);
 
     for(i=0;i<world->queue_num;i++){
+        ChunkUpdate update;
+
+        while((update = chunk_queue_pop(world->queues+i)).chunk != NULL){
+            THREAD_LOCK_LOCK(update.chunk->flags_lock);
+            update.chunk->flags = 0;
+            THREAD_LOCK_UNLOCK(update.chunk->flags_lock);
+        }
+
         chunk_queue_clear(world->queues+i);
     }
 
@@ -1626,8 +1679,7 @@ int world_change_size(World *world, size_t width, size_t height) {
     world->empty = ptr;
 
     for(i=0;i<world->queue_num;i++){
-        if(chunk_queue_resize(world->queues+i,
-                              width*height*world->player_num)){
+        if(chunk_queue_resize(world->queues+i, new_queue_size)){
             size_t n;
 
             ptr = realloc(world->chunk_data, world->width*world->height*
@@ -1643,8 +1695,7 @@ int world_change_size(World *world, size_t width, size_t height) {
             if(ptr != NULL) world->empty = ptr;
 
             for(n=i;n--;){
-                chunk_queue_resize(world->queues+n, world->width*world->height*
-                                   world->player_num);
+                chunk_queue_resize(world->queues+n, old_queue_size);
             }
             return 4;
         }
@@ -1673,9 +1724,7 @@ int world_change_size(World *world, size_t width, size_t height) {
             if(ptr != NULL) world->empty = ptr;
 
             for(n=0;n<world->queue_num;n++){
-                chunk_queue_resize(world->queues+n,
-                                   world->width*world->height*
-                                   world->player_num);
+                chunk_queue_resize(world->queues+n, old_queue_size);
             }
 
             return 4;

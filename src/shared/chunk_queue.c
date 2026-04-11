@@ -126,7 +126,7 @@ int chunk_queue_bypass(ChunkQueue *queue, ChunkUpdate update) {
 }
 
 ChunkUpdate chunk_queue_pop(ChunkQueue *queue) {
-    ChunkUpdate r = {NULL, 0};
+    ChunkUpdate r = {NULL};
 
     THREAD_LOCK_LOCK(queue->lock);
 

@@ -74,7 +74,9 @@ typedef short int texture_t;
 
 enum {
     CF_INIT = 1,
-    CF_WAITMESH = 2
+    CF_UPDATEMESH = 2,
+    CF_UPDATEDATA = 4,
+    CF_IN_QUEUE = 8
 };
 
 enum {
@@ -114,7 +116,6 @@ struct Chunk {
 
 typedef struct {
     Chunk *chunk;
-    unsigned char flags;
 } ChunkUpdate;
 
 typedef struct {
