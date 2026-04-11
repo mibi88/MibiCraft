@@ -65,23 +65,10 @@ int world_init(World *world, size_t width, size_t height, size_t player_num,
         return 1;
     }
 
-#if UNSAFE_SCROLLING
-    if(THREAD_RW_INIT(&world->chunks_lock)){
-        fputs("Failed to init chunks_lock", stderr);
-
-        THREAD_LOCK_FREE(world->last_queue_lock);
-
-        return 1;
-    }
-#endif
-
     if(THREAD_LOCK_INIT(world->stop_lock)){
         fputs("Failed to init stop_lock", stderr);
 
         THREAD_LOCK_FREE(world->last_queue_lock);
-#if UNSAFE_SCROLLING
-        THREAD_RW_FREE(&world->chunks_lock);
-#endif
 
         return 1;
     }
@@ -90,9 +77,6 @@ int world_init(World *world, size_t width, size_t height, size_t player_num,
         fputs("Player init failed!\n", stderr);
 
         THREAD_LOCK_FREE(world->last_queue_lock);
-#if UNSAFE_SCROLLING
-        THREAD_RW_FREE(&world->chunks_lock);
-#endif
         THREAD_LOCK_FREE(world->stop_lock);
 
         return 2;
@@ -137,9 +121,6 @@ int world_init(World *world, size_t width, size_t height, size_t player_num,
         world->empty = NULL;
 
         THREAD_LOCK_FREE(world->last_queue_lock);
-#if UNSAFE_SCROLLING
-        THREAD_RW_FREE(&world->chunks_lock);
-#endif
         THREAD_LOCK_FREE(world->stop_lock);
 
         return 3;
@@ -184,9 +165,6 @@ int world_init(World *world, size_t width, size_t height, size_t player_num,
             world->empty = NULL;
 
             THREAD_LOCK_FREE(world->last_queue_lock);
-#if UNSAFE_SCROLLING
-            THREAD_RW_FREE(&world->chunks_lock);
-#endif
             THREAD_LOCK_FREE(world->stop_lock);
 
             return 4;
@@ -226,9 +204,6 @@ int world_init(World *world, size_t width, size_t height, size_t player_num,
             world->empty = NULL;
 
             THREAD_LOCK_FREE(world->last_queue_lock);
-#if UNSAFE_SCROLLING
-            THREAD_RW_FREE(&world->chunks_lock);
-#endif
             THREAD_LOCK_FREE(world->stop_lock);
 
             return 4;
@@ -281,9 +256,6 @@ int world_init(World *world, size_t width, size_t height, size_t player_num,
                 world->empty = NULL;
 
                 THREAD_LOCK_FREE(world->last_queue_lock);
-#if UNSAFE_SCROLLING
-                THREAD_RW_FREE(&world->chunks_lock);
-#endif
                 THREAD_LOCK_FREE(world->stop_lock);
 
                 return 5;
@@ -535,20 +507,10 @@ static Tile get_tile(Chunk *ch, int x, int y, int z, int rx, int ry, int rz,
     THREAD_RW_UNLOCK_WRITE(&ch->mesh_lock);
 
     /* TODO: Support multiple players */
-#if UNSAFE_SCROLLING
-    THREAD_RW_LOCK_READ(&world->chunks_lock);
-#endif
     c0 = world->chunks[0];
-#if UNSAFE_SCROLLING
-    THREAD_RW_UNLOCK_READ(&world->chunks_lock);
-#endif
-
-    THREAD_RW_LOCK_READ(&c0->data_lock);
 
     min_x = c0->x;
     min_z = c0->z;
-
-    THREAD_RW_UNLOCK_READ(&c0->data_lock);
 
     if(ix >= min_x && ix < min_x+(long)world->width*CHUNK_WIDTH &&
        iz >= min_z && iz < min_z+(long)world->height*CHUNK_DEPTH){
@@ -562,13 +524,7 @@ static Tile get_tile(Chunk *ch, int x, int y, int z, int rx, int ry, int rz,
         ix -= min_x;
         iz -= min_z;
 
-#if UNSAFE_SCROLLING
-        THREAD_RW_LOCK_READ(&world->chunks_lock);
-#endif
         c = world->chunks[iz/CHUNK_DEPTH*world->width+ix/CHUNK_WIDTH];
-#if UNSAFE_SCROLLING
-        THREAD_RW_UNLOCK_READ(&world->chunks_lock);
-#endif
 
         THREAD_RW_LOCK_READ(&c->data_lock);
 
@@ -589,29 +545,16 @@ static Tile get_tile(Chunk *ch, int x, int y, int z, int rx, int ry, int rz,
     return T_VOID;
 }
 
-static void remesh_neighbor(World *world, Chunk *chunk, long x, long z,
-                            unsigned char side) {
+static void remesh_neighbor(World *world, long x, long z, unsigned char side) {
     long min_x, min_z;
 
     Chunk *c0;
 
-    THREAD_RW_UNLOCK_WRITE(&chunk->data_lock);
-
     /* TODO: Support multiple players */
-#if UNSAFE_SCROLLING
-    THREAD_RW_LOCK_READ(&world->chunks_lock);
-#endif
     c0 = world->chunks[0];
-#if UNSAFE_SCROLLING
-    THREAD_RW_UNLOCK_READ(&world->chunks_lock);
-#endif
-
-    THREAD_RW_LOCK_READ(&c0->data_lock);
 
     min_x = c0->x;
     min_z = c0->z;
-
-    THREAD_RW_UNLOCK_READ(&c0->data_lock);
 
     if(x >= min_x && x < min_x+(long)world->width*CHUNK_WIDTH &&
        z >= min_z && z < min_z+(long)world->height*CHUNK_DEPTH){
@@ -624,27 +567,17 @@ static void remesh_neighbor(World *world, Chunk *chunk, long x, long z,
         x -= min_x;
         z -= min_z;
 
-#if UNSAFE_SCROLLING
-        THREAD_RW_LOCK_READ(&world->chunks_lock);
-#endif
         c = world->chunks[z/CHUNK_DEPTH*world->width+x/CHUNK_WIDTH];
-#if UNSAFE_SCROLLING
-        THREAD_RW_UNLOCK_READ(&world->chunks_lock);
-#endif
 
         THREAD_LOCK_LOCK(c->flags_lock);
         flags = c->flags;
         THREAD_LOCK_UNLOCK(c->flags_lock);
-
-        THREAD_RW_LOCK_READ(&c->data_lock);
 
         /* Calculate the number of neighbors */
         n |= (c->x > min_x);
         n |= (c->x < min_x+(long)world->width*CHUNK_WIDTH-CHUNK_WIDTH)<<1;
         n |= (c->z > min_z)<<2;
         n |= (c->z < min_z+(long)world->height*CHUNK_DEPTH-CHUNK_DEPTH)<<3;
-
-        THREAD_RW_UNLOCK_READ(&c->data_lock);
 
         THREAD_LOCK_LOCK(c->flags_lock);
         c->generated_neighbors |= side;
@@ -655,7 +588,6 @@ static void remesh_neighbor(World *world, Chunk *chunk, long x, long z,
             world_update_chunk(world, c, CU_MESH);
         }
     }
-    THREAD_RW_LOCK_WRITE(&chunk->data_lock);
 }
 
 static THREAD_CALL(update_thread, vupdate_data) {
@@ -698,13 +630,17 @@ static THREAD_CALL(update_thread, vupdate_data) {
 
             chunk_generate_data(update.chunk, update.chunk->x,
                                 update.chunk->z, d->w->seed);
+
+            THREAD_RW_UNLOCK_WRITE(&update.chunk->data_lock);
+            THREAD_RW_LOCK_READ(&update.chunk->data_lock);
+
             flags |= CF_INIT;
 
             /* Update neighboring chunk meshes */
-            remesh_neighbor(d->w, update.chunk, x-1, z, CN_RIGHT);
-            remesh_neighbor(d->w, update.chunk, x+CHUNK_WIDTH, z, CN_LEFT);
-            remesh_neighbor(d->w, update.chunk, x, z-1, CN_BELOW);
-            remesh_neighbor(d->w, update.chunk, x, z+CHUNK_DEPTH, CN_ABOVE);
+            remesh_neighbor(d->w, x-1, z, CN_RIGHT);
+            remesh_neighbor(d->w, x+CHUNK_WIDTH, z, CN_LEFT);
+            remesh_neighbor(d->w, x, z-1, CN_BELOW);
+            remesh_neighbor(d->w, x, z+CHUNK_DEPTH, CN_ABOVE);
 
 #if DEBUG_REMESHING
             {
@@ -753,9 +689,6 @@ static THREAD_CALL(update_thread, vupdate_data) {
                 puts("--------");
             }
 #endif
-
-            THREAD_RW_UNLOCK_WRITE(&update.chunk->data_lock);
-            THREAD_RW_LOCK_READ(&update.chunk->data_lock);
         }
 
         if((flags&CF_UPDATEMESH) && (flags&CF_INIT)){
@@ -838,18 +771,10 @@ static void world_scroll(World *world, size_t player) {
 
     /* TODO: Support multiple players */
 
-#if UNSAFE_SCROLLING
-    THREAD_RW_LOCK_READ(&world->chunks_lock);
-#endif
     c0 = world->chunks[0];
-#if UNSAFE_SCROLLING
-    THREAD_RW_UNLOCK_READ(&world->chunks_lock);
-#endif
 
-    THREAD_RW_LOCK_READ(&c0->data_lock);
     x = c0->x;
     z = c0->z;
-    THREAD_RW_UNLOCK_READ(&c0->data_lock);
 
     nx = world_get_x(world, player);
     nz = world_get_z(world, player);
@@ -857,7 +782,6 @@ static void world_scroll(World *world, size_t player) {
     if(nx != x || nz != z){
         long dx, dz;
 
-#if !UNSAFE_SCROLLING
         /* XXX: Is there a more elegant solution than stopping all the
          *      threads?
          *
@@ -874,11 +798,6 @@ static void world_scroll(World *world, size_t player) {
          *      get_tile and remesh_chunk to avoid deadlocks.
          */
         stop_threads(world);
-#endif
-
-#if UNSAFE_SCROLLING
-        THREAD_RW_LOCK_WRITE(&world->chunks_lock);
-#endif
 
 #if DEBUG_WORLD_SCROLL
         printf("x: %ld, z: %ld -- nx: %ld, nz: %ld\n", x, z, nx, nz);
@@ -933,10 +852,6 @@ static void world_scroll(World *world, size_t player) {
                 if(mark_as_empty(world, world->chunks[i])){
                     fputs("World movement error!\n", stderr);
 
-#if UNSAFE_SCROLLING
-                    THREAD_RW_UNLOCK_WRITE(&world->chunks_lock);
-#endif
-
                     goto RESET;
                 }
             }
@@ -973,33 +888,18 @@ static void world_scroll(World *world, size_t player) {
 
                             cn = world->chunks[i+world->width];
 
-                            THREAD_LOCK_LOCK(cn->flags_lock);
                             n = cn->flags&CF_INIT ? CN_BELOW : 0;
-                            THREAD_LOCK_UNLOCK(cn->flags_lock);
                         }
-
-                        THREAD_LOCK_LOCK(c->flags_lock);
 
                         c->flags &= ~CF_INIT;
                         c->generated_neighbors = n;
 
-                        THREAD_LOCK_UNLOCK(c->flags_lock);
-
-#if UNSAFE_SCROLLING
-                        THREAD_RW_UNLOCK_WRITE(&world->chunks_lock);
-#endif
-                        THREAD_RW_LOCK_WRITE(&c->data_lock);
                         c->x = px;
                         c->z = nz;
                         c->chunk_model.triangles = 0;
 #if DEBUG_WORLD_SCROLL
                         printf("%lu -- New chunk at: %d, %d\n", i,
                                c->x, c->z);
-#endif
-
-                        THREAD_RW_UNLOCK_WRITE(&c->data_lock);
-#if UNSAFE_SCROLLING
-                        THREAD_RW_LOCK_WRITE(&world->chunks_lock);
 #endif
 
                         world_update_chunk(world, c, CU_MESH|CU_DATA);
@@ -1041,10 +941,6 @@ static void world_scroll(World *world, size_t player) {
                 if(mark_as_empty(world, world->chunks[i])){
                     fputs("World movement error!\n", stderr);
 
-#if UNSAFE_SCROLLING
-                    THREAD_RW_UNLOCK_WRITE(&world->chunks_lock);
-#endif
-
                     goto RESET;
                 }
             }
@@ -1077,33 +973,18 @@ static void world_scroll(World *world, size_t player) {
 
                             cn = world->chunks[i-world->width];
 
-                            THREAD_LOCK_LOCK(cn->flags_lock);
                             n = cn->flags&CF_INIT ? CN_ABOVE : 0;
-                            THREAD_LOCK_UNLOCK(cn->flags_lock);
                         }
-
-                        THREAD_LOCK_LOCK(c->flags_lock);
 
                         c->flags &= ~CF_INIT;
                         c->generated_neighbors = n;
 
-                        THREAD_LOCK_UNLOCK(c->flags_lock);
-
-#if UNSAFE_SCROLLING
-                        THREAD_RW_UNLOCK_WRITE(&world->chunks_lock);
-#endif
-                        THREAD_RW_LOCK_WRITE(&c->data_lock);
                         c->x = px;
                         c->z = nz;
                         c->chunk_model.triangles = 0;
 #if DEBUG_WORLD_SCROLL
                         printf("%lu -- New chunk at: %d, %d\n", i,
                                c->x, c->z);
-#endif
-
-                        THREAD_RW_UNLOCK_WRITE(&c->data_lock);
-#if UNSAFE_SCROLLING
-                        THREAD_RW_LOCK_WRITE(&world->chunks_lock);
 #endif
 
                         world_update_chunk(world, c, CU_MESH|CU_DATA);
@@ -1145,10 +1026,6 @@ static void world_scroll(World *world, size_t player) {
                     if(mark_as_empty(world, world->chunks[i+n])){
                         fputs("World movement error!\n", stderr);
 
-#if UNSAFE_SCROLLING
-                        THREAD_RW_UNLOCK_WRITE(&world->chunks_lock);
-#endif
-
                         goto RESET;
                     }
                 }
@@ -1174,32 +1051,18 @@ static void world_scroll(World *world, size_t player) {
 
                             cn = world->chunks[i+1];
 
-                            THREAD_LOCK_LOCK(cn->flags_lock);
                             nc = cn->flags&CF_INIT ? CN_RIGHT : 0;
-                            THREAD_LOCK_UNLOCK(cn->flags_lock);
                         }
-
-                        THREAD_LOCK_LOCK(c->flags_lock);
 
                         c->flags &= ~CF_INIT;
                         c->generated_neighbors = nc;
 
-                        THREAD_LOCK_UNLOCK(c->flags_lock);
-
-#if UNSAFE_SCROLLING
-                        THREAD_RW_UNLOCK_WRITE(&world->chunks_lock);
-#endif
-                        THREAD_RW_LOCK_WRITE(&c->data_lock);
                         c->x = px;
                         c->z = nz;
                         c->chunk_model.triangles = 0;
 #if DEBUG_WORLD_SCROLL
                         printf("%lu -- New chunk at: %d, %d\n", i,
                                c->x, c->z);
-#endif
-                        THREAD_RW_UNLOCK_WRITE(&c->data_lock);
-#if UNSAFE_SCROLLING
-                        THREAD_RW_LOCK_WRITE(&world->chunks_lock);
 #endif
                         world_update_chunk(world, c, CU_MESH|CU_DATA);
                     }else{
@@ -1237,9 +1100,6 @@ static void world_scroll(World *world, size_t player) {
                     if(mark_as_empty(world, world->chunks[i])){
                         fputs("World movement error!\n", stderr);
 
-#if UNSAFE_SCROLLING
-                        THREAD_RW_UNLOCK_WRITE(&world->chunks_lock);
-#endif
 
                         goto RESET;
                     }
@@ -1271,22 +1131,12 @@ static void world_scroll(World *world, size_t player) {
 
                             cn = world->chunks[i-1];
 
-                            THREAD_LOCK_LOCK(cn->flags_lock);
                             nc = cn->flags&CF_INIT ? CN_LEFT : 0;
-                            THREAD_LOCK_UNLOCK(cn->flags_lock);
                         }
-
-                        THREAD_LOCK_LOCK(c->flags_lock);
 
                         c->flags &= ~CF_INIT;
                         c->generated_neighbors = nc;
 
-                        THREAD_LOCK_UNLOCK(c->flags_lock);
-
-#if UNSAFE_SCROLLING
-                        THREAD_RW_UNLOCK_WRITE(&world->chunks_lock);
-#endif
-                        THREAD_RW_LOCK_WRITE(&c->data_lock);
                         c->x = px;
                         c->z = nz;
                         c->chunk_model.triangles = 0;
@@ -1294,11 +1144,6 @@ static void world_scroll(World *world, size_t player) {
                         printf("%lu -- New chunk at: %d, %d\n", i,
                                c->x, c->z);
 #endif
-                        THREAD_RW_UNLOCK_WRITE(&c->data_lock);
-#if UNSAFE_SCROLLING
-                        THREAD_RW_LOCK_WRITE(&world->chunks_lock);
-#endif
-
                         world_update_chunk(world, c, CU_MESH|CU_DATA);
                     }else{
                         fputs("Got no next chunk\n", stderr);
@@ -1320,10 +1165,6 @@ static void world_scroll(World *world, size_t player) {
             puts("------------------");
         }
 #endif
-
-#if UNSAFE_SCROLLING
-        THREAD_RW_UNLOCK_WRITE(&world->chunks_lock);
-#endif
     }
 
     return;
@@ -1343,9 +1184,7 @@ RESET:
             ChunkUpdate update;
 
             while((update = chunk_queue_pop(world->queues+i)).chunk != NULL){
-                THREAD_LOCK_LOCK(update.chunk->flags_lock);
                 update.chunk->flags = 0;
-                THREAD_LOCK_UNLOCK(update.chunk->flags_lock);
             }
 
             chunk_queue_clear(world->queues+i);
@@ -1358,32 +1197,18 @@ RESET:
 
                 c = world->chunk_data+i;
 
-#if UNSAFE_SCROLLING
-                THREAD_RW_UNLOCK_WRITE(&world->chunks_lock);
-#endif
-                THREAD_RW_LOCK_WRITE(&c->data_lock);
                 c->x = px;
                 c->z = nz;
                 c->chunk_model.triangles = 0;
-                THREAD_RW_UNLOCK_WRITE(&c->data_lock);
 
-                THREAD_LOCK_LOCK(c->flags_lock);
                 c->flags = 0;
                 c->generated_neighbors = 0;
-                THREAD_LOCK_UNLOCK(c->flags_lock);
 
-#if UNSAFE_SCROLLING
-                THREAD_RW_LOCK_WRITE(&world->chunks_lock);
-#endif
                 world->chunks[i] = c;
 
                 world_update_chunk(world, world->chunks[i], CU_MESH|CU_DATA);
             }
         }
-
-#if UNSAFE_SCROLLING
-        THREAD_RW_UNLOCK_WRITE(&world->chunks_lock);
-#endif
     }
 }
 
@@ -1417,7 +1242,7 @@ void world_update(World *world) {
 
             if(!finished) continue;
 
-            if(world->thread_data[i].w != NULL){
+            if(d->w != NULL){
 #if DEBUG_THREADING
                 printf("join: %lu\n", i);
 #endif
@@ -1446,23 +1271,6 @@ void world_update(World *world) {
     }
 }
 
-#if UNSAFE_SCROLLING
-#define UPDATE_NEIGHBOR(ix, iz) \
-    { \
-        if((ix) >= min_x && (ix) < min_x+(long)world->width*CHUNK_WIDTH && \
-           (iz) >= min_z && (iz) < min_z+(long)world->height*CHUNK_DEPTH){ \
-            Chunk *c; \
- \
-            THREAD_RW_LOCK_READ(&world->chunks_lock); \
-            c = world->chunks[((iz)-min_z)/CHUNK_DEPTH*world->width+ \
-                              ((ix)-min_x)/CHUNK_WIDTH]; \
-            THREAD_RW_UNLOCK_READ(&world->chunks_lock); \
-            printf("n: %p -- %d, %d\n", (void*)c, c->x, c->z); \
- \
-            world_update_chunk_fast(world, c, CU_MESH); \
-        } \
-    }
-#else
 #define UPDATE_NEIGHBOR(ix, iz) \
     { \
         if((ix) >= min_x && (ix) < min_x+(long)world->width*CHUNK_WIDTH && \
@@ -1476,7 +1284,6 @@ void world_update(World *world) {
             world_update_chunk_fast(world, c, CU_MESH); \
         } \
     }
-#endif
 
 void world_set_tile(World *world, Tile tile, int x, int y, int z) {
     long min_x, min_z;
@@ -1491,20 +1298,10 @@ void world_set_tile(World *world, Tile tile, int x, int y, int z) {
     if(iy < 0 || iy >= CHUNK_HEIGHT) return;
 
     /* TODO: Support multiple players */
-#if UNSAFE_SCROLLING
-    THREAD_RW_LOCK_READ(&world->chunks_lock);
-#endif
     c0 = world->chunks[0];
-#if UNSAFE_SCROLLING
-    THREAD_RW_UNLOCK_READ(&world->chunks_lock);
-#endif
-
-    THREAD_RW_LOCK_READ(&c0->data_lock);
 
     min_x = c0->x;
     min_z = c0->z;
-
-    THREAD_RW_UNLOCK_READ(&c0->data_lock);
 
     if(ix >= min_x && ix < min_x+(long)world->width*CHUNK_WIDTH &&
        iz >= min_z && iz < min_z+(long)world->height*CHUNK_DEPTH){
@@ -1515,24 +1312,18 @@ void world_set_tile(World *world, Tile tile, int x, int y, int z) {
 
         long tx, tz;
 
-#if UNSAFE_SCROLLING
-        THREAD_RW_LOCK_READ(&world->chunks_lock);
-#endif
         c = world->chunks[cz/CHUNK_DEPTH*world->width+cx/CHUNK_WIDTH];
-#if UNSAFE_SCROLLING
-        THREAD_RW_UNLOCK_READ(&world->chunks_lock);
-#endif
 
         printf("c: %p -- %d, %d\n", (void*)c, c->x, c->z);
-
-        THREAD_RW_LOCK_READ(&c->data_lock);
 
         tx = ix-c->x;
         tz = iz-c->z;
 
+        THREAD_RW_LOCK_WRITE(&c->data_lock);
+
         c->chunk_data[tx][iy][tz] = tile;
 
-        THREAD_RW_UNLOCK_READ(&c->data_lock);
+        THREAD_RW_UNLOCK_WRITE(&c->data_lock);
 
         world_update_chunk_fast(world, c, CU_MESH);
 
@@ -1563,21 +1354,12 @@ Tile world_get_tile(World *world, float x, float y, float z) {
 
     if(iy < 0 || iy >= CHUNK_HEIGHT) return T_VOID;
 
-#if UNSAFE_SCROLLING
-    THREAD_RW_LOCK_READ(&world->chunks_lock);
-#endif
     c0 = world->chunks[0];
-#if UNSAFE_SCROLLING
-    THREAD_RW_UNLOCK_READ(&world->chunks_lock);
-#endif
 
     /* TODO: Support multiple players */
-    THREAD_RW_LOCK_READ(&c0->data_lock);
 
     min_x = c0->x;
     min_z = c0->z;
-
-    THREAD_RW_UNLOCK_READ(&c0->data_lock);
 
     if(ix >= min_x && ix < min_x+(long)world->width*CHUNK_WIDTH &&
        iz >= min_z && iz < min_z+(long)world->height*CHUNK_DEPTH){
@@ -1591,13 +1373,7 @@ Tile world_get_tile(World *world, float x, float y, float z) {
         ix -= min_x;
         iz -= min_z;
 
-#if UNSAFE_SCROLLING
-        THREAD_RW_LOCK_READ(&world->chunks_lock);
-#endif
         c = world->chunks[iz/CHUNK_DEPTH*world->width+ix/CHUNK_WIDTH];
-#if UNSAFE_SCROLLING
-        THREAD_RW_UNLOCK_READ(&world->chunks_lock);
-#endif
 
         THREAD_RW_LOCK_READ(&c->data_lock);
 
@@ -1782,8 +1558,5 @@ void world_free(World *world) {
     world->queue_num = 0;
 
     THREAD_LOCK_FREE(world->last_queue_lock);
-#if UNSAFE_SCROLLING
-    THREAD_RW_FREE(&world->chunks_lock);
-#endif
     THREAD_LOCK_FREE(world->stop_lock);
 }

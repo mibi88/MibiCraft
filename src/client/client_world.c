@@ -32,18 +32,10 @@ void world_render(World *world, size_t player) {
 
         long x, z;
 
-#if UNSAFE_SCROLLING
-        if(THREAD_RW_TRYLOCK_READ(&world->chunks_lock)) continue;
-#endif
         c = world->chunks[b+i];
-#if UNSAFE_SCROLLING
-        THREAD_RW_UNLOCK_READ(&world->chunks_lock);
-#endif
 
-        if(THREAD_RW_TRYLOCK_READ(&c->data_lock)) continue;
         x = c->x;
         z = c->z;
-        THREAD_RW_UNLOCK_READ(&c->data_lock);
 
         if(THREAD_RW_TRYLOCK_READ(&c->mesh_lock)) continue;
         gfx_draw_model(&c->chunk_model, x-0.5, -(CHUNK_HEIGHT/2)-0.5,

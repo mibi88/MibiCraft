@@ -867,8 +867,6 @@ void chunk_generate_data(Chunk *chunk, int sx, int sz, int seed) {
                         T_IRON, 50, 5, 5, seed);
     chunk_generate_ores(chunk, sx, sz, 64, T_STONE,
                         T_COAL, 60, 10, 25, seed);
-    chunk->x = sx;
-    chunk->z = sz;
     chunk_generate_structure(chunk, sx, sz, fallen_oak_tree, TREE_WIDTH,
                              TREE_HEIGHT, TREE_DEPTH,
                              properties->tree_probability*3, seed, B_PLAINS,
